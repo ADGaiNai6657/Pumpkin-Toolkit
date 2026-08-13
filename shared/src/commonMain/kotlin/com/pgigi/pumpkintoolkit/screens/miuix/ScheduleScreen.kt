@@ -1,0 +1,159 @@
+package com.pgigi.pumpkintoolkit.screens.miuix
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
+import com.pgigi.pumpkintoolkit.LocalNavigator
+import com.pgigi.pumpkintoolkit.Route
+import com.pgigi.pumpkintoolkit.components.SchedulePager
+import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
+import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Reset
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+
+@Composable
+fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = viewModel(factory = AppViewModel.Factory) ){
+    val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
+    val navigator = LocalNavigator.current
+    var title by remember { mutableStateOf("课程表") }
+    val coroutineScope = rememberCoroutineScope()
+    var loading by remember { mutableStateOf(true) }
+    var initialPage by remember { mutableIntStateOf(0) }
+    var pageCount by remember { mutableIntStateOf(0) }
+    val windowInfo = LocalWindowInfo.current
+    val screenWidthDp = windowInfo.containerDpSize.width
+
+    LaunchedEffect(viewModel.courseList.isEmpty()) {
+        loading = viewModel.courseList.isEmpty()
+    }
+
+    val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList) )
+
+
+
+    pageCount = maxOf(courseListByWeek.size,viewModel.currentWeek,AppConfig.totalWeek)
+    initialPage = viewModel.currentWeek - 1
+
+
+    val pagerState = rememberPagerState(
+        pageCount = {pageCount},
+        initialPage = initialPage.coerceIn(0, pageCount)
+    )
+
+    LaunchedEffect(pagerState.pageCount) {
+        pagerState.scrollToPage((viewModel.currentWeek - 1).coerceIn(0,pageCount))
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if(viewModel.courseList.isNotEmpty()){
+            title = "第${pagerState.currentPage + 1}周"
+        }
+    }
+
+
+    Scaffold(
+        modifier = modifier,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            SmallTopAppBar(
+                title = title,
+                actions = {
+                    AnimatedVisibility(screenWidthDp<=800.dp){
+                        IconButton(onClick = { navigator.push(Route.Settings) }) {
+                            Icon(MiuixIcons.Settings, contentDescription = "设置")
+                        }
+                    }
+                },
+                navigationIcon = {
+                    AnimatedVisibility(
+                        visible = viewModel.currentWeek-1!=pagerState.currentPage &&
+                                AppConfig.startDate!=null &&
+                                viewModel.courseList.isNotEmpty() &&
+                                (viewModel.currentWeek<=0 && pagerState.currentPage!=0),
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(
+                                        viewModel.currentWeek-1
+                                    )
+                                }
+                            }
+                        ) {
+                            Icon(MiuixIcons.Reset, contentDescription = "返回当前周")
+                        }
+                    }
+                }
+            )
+        }
+    ){paddingValues ->
+        if (loggedIn) {
+            SchedulePager(modifier = Modifier.padding(paddingValues),
+                cellHeight = AppConfig.cellHeight.dp,
+                courseListByWeek = courseListByWeek,
+                pagerState = pagerState,
+                timeList = AppConfig.timeList,
+                startDate = AppConfig.startDate)
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "请登录使用",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        if(loading && loggedIn){
+            InfiniteProgressIndicator(
+                Modifier
+                    .fillMaxSize()
+                    .background(MiuixTheme.colorScheme.windowDimming)
+            )
+        }
+
+    }
+
+}
+
+
