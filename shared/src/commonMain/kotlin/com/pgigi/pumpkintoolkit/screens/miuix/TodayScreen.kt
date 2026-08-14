@@ -77,68 +77,52 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = viewMod
         }
     ) { paddingValues ->
         val cardPadding = PaddingValues(12.dp, 6.dp)
-        var isRefreshing by rememberSaveable { mutableStateOf(false)}
-        val pullToRefreshState = rememberPullToRefreshState()
-        LaunchedEffect(isRefreshing) {
-            if (isRefreshing) {
-                delay(500.milliseconds)
-                isRefreshing = false
+        LazyColumn(state = listState, modifier = Modifier.padding(paddingValues)) {
+            items(todayCourses.size) { index ->
+                val course = todayCourses[index]
+                val classroom = course.classroom.replace("【红湘校区】", "")
+                    .replace("【雨母校区】", "")
+
+                val startIndex =
+                    (course.lessonOfDay - 1).coerceIn(0, AppConfig.timeList.size - 1)
+                val endIndex =
+                    (startIndex + course.duration - 1).coerceIn(0, AppConfig.timeList.size - 1)
+
+                Card(modifier = modifier.padding(cardPadding)) {
+                    BasicComponent(
+                        title = course.name,
+                        summary = "${AppConfig.timeList[startIndex].start}-" +
+                                "${AppConfig.timeList[endIndex].end} " +
+                                course.teacher,
+                        endActions = {
+                            Text(
+                                text = classroom,
+                                textAlign = TextAlign.Center,
+                            )
+                        },
+                    )
+                }
             }
-        }
-        PullToRefresh(
-            isRefreshing = isRefreshing,
-            onRefresh = { isRefreshing = true },
-            pullToRefreshState = pullToRefreshState,
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            LazyColumn(state = listState) {
-                items(todayCourses.size) { index ->
-                    val course = todayCourses[index]
-                    val classroom = course.classroom.replace("【红湘校区】", "")
-                        .replace("【雨母校区】", "")
-
-                    val startIndex =
-                        (course.lessonOfDay - 1).coerceIn(0, AppConfig.timeList.size - 1)
-                    val endIndex =
-                        (startIndex + course.duration - 1).coerceIn(0, AppConfig.timeList.size - 1)
-
-                    Card(modifier = modifier.padding(cardPadding)) {
-                        BasicComponent(
-                            title = course.name,
-                            summary = "${AppConfig.timeList[startIndex].start}-" +
-                                    "${AppConfig.timeList[endIndex].end} " +
-                                    course.teacher,
-                            endActions = {
-                                Text(
-                                    text = classroom,
-                                    textAlign = TextAlign.Center,
-                                )
-                            },
+            if (!loggedIn || todayCourses.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (loggedIn) "暂无课程" else "请登录使用",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .fillMaxSize(),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
-                if (!loggedIn || todayCourses.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (loggedIn) "暂无课程" else "请登录使用",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .fillMaxSize(),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-                item {
-                    BasicComponent()
-                }
-
+            }
+            item {
+                BasicComponent()
             }
         }
     }

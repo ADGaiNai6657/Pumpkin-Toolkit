@@ -66,6 +66,16 @@ object QZClient {
         return "${AppConfig.serverUrl.trimEnd('/')}/${path.trimStart('/')}"
     }
 
+    fun replaceUrlOriginPure(oldFullUrl: String, newBaseUrl: String): String {
+        // 捕获：协议://host[:port]，后面所有(path+query+fragment)分组保留
+        val regex = Regex("""^(\w+://[^/]+)(/.*)?$""")
+        val match = regex.matchEntire(oldFullUrl) ?: return oldFullUrl
+        val suffix = match.groups[2]?.value ?: ""
+        val base = newBaseUrl.trimEnd('/')
+        return base + suffix
+    }
+
+
     suspend fun login(onFailure: (reason: String) -> Unit = {}, onSuccess: (jwQuickUrl: String) -> Unit = {}): Boolean {
         try{
             val cookieList = mutableListOf<Cookie>()
@@ -102,7 +112,8 @@ object QZClient {
                 onFailure(error)
                 return false
             }
-            val location = response.headers[HttpHeaders.Location]?:""
+            val location = replaceUrlOriginPure(response.headers[HttpHeaders.Location]?:"",
+                AppConfig.serverUrl)
             if (location.trim { it.isWhitespace() }.isEmpty()) {
                 onFailure("请联系开发者")
                 println("1")
@@ -304,7 +315,6 @@ object QZClient {
     suspend fun getAllCourses(termId: String = ""): List<Course>?{
         val courses = mutableListOf<Course>()
         val cHtml = getCoursesHtml(termId)
-        println(cHtml)
         val eHtml = getExperimentCoursesHtml(termId)
         if(cHtml.isNullOrEmpty() || eHtml.isNullOrEmpty()) return null
         val cCourses = parseCourses(cHtml)
@@ -316,18 +326,22 @@ object QZClient {
     }
 
     fun parseStartDate(html: String): LocalDate?{
-        val doc = Ksoup.parse(html)
-        val trElements = doc.select("#kbtable tbody tr")
-        if(trElements.size <= 2) return null
-        val startTimeStr = trElements[1].select("td")[1].attr("title")
-        val format = LocalDate.Format {
-            year(Padding.ZERO)
-            char('年')
-            monthNumber(Padding.ZERO)
-            char('月')
-            day(Padding.ZERO)
+        try{
+            val doc = Ksoup.parse(html)
+            val trElements = doc.select("#kbtable tbody tr")
+            if (trElements.size <= 2) return null
+            val startTimeStr = trElements[1].select("td")[1].attr("title")
+            val format = LocalDate.Format {
+                year(Padding.ZERO)
+                char('年')
+                monthNumber(Padding.ZERO)
+                char('月')
+                day(Padding.ZERO)
+            }
+            return LocalDate.parse(startTimeStr, format)
+        }catch(e: Exception){
+            return null
         }
-        return LocalDate.parse(startTimeStr, format)
     }
 
     suspend fun getStartDate(termId: String = ""): LocalDate?{
@@ -351,5 +365,33 @@ object QZClient {
             return parseWeekNum(html)
         }
         return null
+    }
+
+    fun parseTerms(html: String): Map<String, String>? {
+        if (html.trim().isEmpty()) return null
+        val terms = LinkedHashMap<String, String>()
+        val doc = Ksoup.parse(html)
+        val options = doc.select("#xnxq01id option")
+        if (options.isEmpty()) return null
+        options.forEach { option ->
+            terms[option.attr("value").trim { it.isWhitespace() }] = option.text().trim { it.isWhitespace() }
+        }
+        return terms
+    }
+
+    suspend fun getTermValueMap() : Map<String, String>?{
+        val html = getCoursesHtml()
+        html?.let {
+            return parseTerms(html)
+        }
+        return null
+    }
+
+    fun parseCurrentTermValue(html: String): String? {
+        if (html.trim().isEmpty()) return null
+        val doc = Ksoup.parse(html)
+        val currentTerm =
+            doc.select("#xnxq01id option[selected]").attr("value").trim { it.isWhitespace() }
+        return if (currentTerm.isEmpty()) null else currentTerm
     }
 }

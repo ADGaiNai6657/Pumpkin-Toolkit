@@ -12,12 +12,14 @@
 		<dict>
 			<key>61.187.179.66</key>
 			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.0</string>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.0</string>
 			</dict>
 			<key>jwzx.usc.edu.cn</key>
 			<dict>
@@ -43,5 +45,9 @@
 			</dict>
 		</dict>
 	</dict>
+    <key>NSCameraUsageDescription</key>
+    <string>需要访问相机用于扫脸登录</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>需要访问相册选取图片</string>
 </dict>
 </plist>

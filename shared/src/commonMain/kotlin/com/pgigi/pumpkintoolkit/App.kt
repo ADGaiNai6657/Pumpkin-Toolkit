@@ -15,7 +15,16 @@ import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixHomeScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixLoginScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.MiuixOtherScheduleScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixSettingScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.SimpleHtmlScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.WebViewScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.WebViewWithDataScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.LostAndFoundDetailScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.LostAndFoundListScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineDetailScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineListScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineMenuScreen
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
@@ -73,6 +82,14 @@ fun App(
                 AppConfig.totalWeek = totalWeek
                 AppConfig.save()
             }
+            val map = QZClient.getTermValueMap()
+            map?.let {
+                AppConfig.termValueMap = map
+                AppConfig.termValueList.clear()
+                AppConfig.termNameList.clear()
+                AppConfig.termValueList.addAll(map.keys)
+                AppConfig.termNameList.addAll(map.values)
+            }
         }
     }
 
@@ -105,6 +122,33 @@ fun App(
                     }
                     entry<Route.Settings> {
                         MiuixSettingScreen()
+                    }
+                    entry<Route.OtherSchedule> {
+                        MiuixOtherScheduleScreen()
+                    }
+                    entry<Route.WebView>{route ->
+                        WebViewScreen(url = route.url, route.title)
+                    }
+                    entry<Route.WebViewWithData>{route ->
+                        WebViewWithDataScreen(html = route.html, route.title)
+                    }
+                    entry<Route.SunshineMenu>{
+                        SunshineMenuScreen()
+                    }
+                    entry<Route.SunshineDetail>{route ->
+                        SunshineDetailScreen(route.item)
+                    }
+                    entry<Route.SunshineList>{route ->
+                        SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
+                    }
+                    entry<Route.LostAndFoundList>{
+                        LostAndFoundListScreen()
+                    }
+                    entry<Route.LostAndFoundDetail>{route ->
+                        LostAndFoundDetailScreen(route.item)
+                    }
+                    entry<Route.SimpleHtml>{route ->
+                        SimpleHtmlScreen(html = route.html, route.title)
                     }
                 }
             }

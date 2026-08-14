@@ -18,10 +18,12 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
+import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.NumberDatePicker
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.constants.TimeList
 import com.pgigi.pumpkintoolkit.getPlatform
+import com.pgigi.pumpkintoolkit.utils.ResourceUtils
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -177,7 +179,9 @@ fun MiuixSettingScreen() {
                     },
                     valueRange = 50f..100f,
                     steps = 9,
-                    summary = "${cellHeight.roundToInt()}dp"
+                    endActions = {
+                        Text("$cellHeight dp")
+                    }
                 )
                 val lineItems = listOf("1","2","3","4")
                 WindowDropdownPreference(
@@ -186,6 +190,7 @@ fun MiuixSettingScreen() {
                     selectedIndex = AppConfig.courseNameLine - 1,
                     onSelectedIndexChange = {
                         AppConfig.courseNameLine = it + 1
+                        AppConfig.save()
                     }
                 )
                 WindowDropdownPreference(
@@ -194,6 +199,7 @@ fun MiuixSettingScreen() {
                     selectedIndex = AppConfig.courseRoomLine - 1,
                     onSelectedIndexChange = {
                         AppConfig.courseRoomLine = it + 1
+                        AppConfig.save()
                     }
                 )
                 WindowDropdownPreference(
@@ -202,6 +208,7 @@ fun MiuixSettingScreen() {
                     selectedIndex = AppConfig.courseTeacherLine - 1,
                     onSelectedIndexChange = {
                         AppConfig.courseTeacherLine = it + 1
+                        AppConfig.save()
                     }
                 )
             }
@@ -224,6 +231,7 @@ fun MiuixSettingScreen() {
                     "http://jwzx.usc.edu.cn:8924/"
                 )
                 var selectedServer by remember { mutableIntStateOf(0) }
+                selectedServer = if (AppConfig.serverUrl.equals(serverItems[1])) 1 else 0
                 WindowDropdownPreference(
                     title = "服务器",
                     items = serverItems,
@@ -246,9 +254,9 @@ fun MiuixSettingScreen() {
                         Text(getPlatform().name)
                     }
                 )
-                /*ArrowPreference(title = "开放源代码许可",
+                ArrowPreference(title = "开放源代码许可",
                     onClick = {
-                        val html = assetsHelper.getString("open-source-license.html")
+                        val html = ResourceUtils.readText("open-source-license.html")?:"Can not find the file!"
                         navigator.push(Route.SimpleHtml(html,"Open Source License of Pumpkin Toolkit"))
                     }
                 )
@@ -269,12 +277,7 @@ fun MiuixSettingScreen() {
                     onClick = {
                         uriHandler.openUri("mailto:pumpkintoolkit@pgigi.com")
                     }
-                )*/
-                /*SuperArrow(title = "测试页面",
-                onClick = {
-                    navigator.push(Route.Test)
-                }
-                )*/
+                )
             }
         }
         WindowDialog(title = "请选择开课时间", show = showDialog.value, onDismissRequest = { showDialog.value = false }) {

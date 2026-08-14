@@ -2,6 +2,7 @@ package com.pgigi.pumpkintoolkit
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,9 @@ object AppConfig {
     var totalWeek by mutableIntStateOf(0)
     var serverUrl by mutableStateOf("")
 
+    var termValueMap by mutableStateOf(mapOf<String, String>())
+    var termNameList = mutableListOf<String>()
+    var termValueList = mutableListOf<String>()
 
 
     object KEY {

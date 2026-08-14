@@ -67,9 +67,14 @@ kotlin {
             implementation(libs.datetime)
             implementation(libs.ksoup)
             implementation(libs.ktor.core)
+//            implementation(libs.ktor.resources)
             implementation(libs.kvault)
             implementation(libs.okio)
             implementation(libs.serialization.json)
+            implementation(libs.compose.webview)
+
+            implementation(libs.coil.compose)
+            implementation(libs.htmlconverter)
 
             // miuix
             implementation(libs.miuix.ui)

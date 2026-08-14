@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
+import com.pgigi.pumpkintoolkit.utils.QZClient
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
@@ -129,7 +130,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         )
                     })
                 ArrowPreference(title = "查看其他学期课表", onClick = {
-
+                    navigator.push(Route.OtherSchedule)
                 },
                     startAction = {
                         Icon(
@@ -141,7 +142,9 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(title = "教务系统",
                     onClick = {
-
+                        navigator.push(Route.WebView(
+                            QZClient.loginRedirectUrl.ifEmpty { AppConfig.serverUrl }
+                            ,"教务系统"))
                     },
                     startAction = {
                         Icon(
@@ -152,7 +155,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                 )
                 ArrowPreference(title = "线上注册及成绩单", summary = "与教务系统是两个系统, 可看专业排名成绩单",
                     onClick = {
-//                        navigator.push(Route.WebView("https://ai.usc.edu.cn:9080/gztcyAPP/","排名成绩单"))
+                        navigator.push(Route.WebView("https://ai.usc.edu.cn:9080/gztcyAPP/","排名成绩单"))
                     },
                     startAction = {
                         Icon(
@@ -165,7 +168,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(title = "阳光平台",
                     onClick = {
-//                        navigator.push(Route.SunshineMenu)
+                        navigator.push(Route.SunshineMenu)
                     },
                     startAction = {
                         Icon(

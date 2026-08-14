@@ -40,7 +40,7 @@ fun MiuixHomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel
             NavigationBar{
                 Navigation.items.forEachIndexed { index, label ->
                     NavigationBarItem(
-                        selected = viewModel.currentPagerIndex == index,
+                        selected = pagerState.currentPage == index,
                         onClick = {
                             coroutineScope.launch {
                                 viewModel.currentPagerIndex = index

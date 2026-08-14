@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -29,18 +30,28 @@ import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.SchedulePager
+import com.pgigi.pumpkintoolkit.constants.FileName
+import com.pgigi.pumpkintoolkit.constants.Texts
+import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
+import com.pgigi.pumpkintoolkit.utils.JsonUtil
+import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
+import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Reset
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
@@ -122,12 +133,62 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = view
         }
     ){paddingValues ->
         if (loggedIn) {
-            SchedulePager(modifier = Modifier.padding(paddingValues),
-                cellHeight = AppConfig.cellHeight.dp,
-                courseListByWeek = courseListByWeek,
-                pagerState = pagerState,
-                timeList = AppConfig.timeList,
-                startDate = AppConfig.startDate)
+            var isRefreshing by rememberSaveable { mutableStateOf(false)}
+            val pullToRefreshState = rememberPullToRefreshState()
+            LaunchedEffect(isRefreshing) {
+                if (isRefreshing) {
+                    delay(60000.milliseconds)
+                    isRefreshing = false
+                }
+            }
+            PullToRefresh(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    coroutineScope.launch {
+                        val list = QZClient.getAllCourses()
+                        list?.let {
+                            viewModel.courseList.clear()
+                            viewModel.courseList.addAll(list)
+                            FileStoreUtils.writeString(
+                                FileName.SCHEDULE,
+                                JsonUtil.toListJson(list, Course.serializer())
+                            )
+                        }
+                        val startDate = QZClient.getStartDate()
+                        startDate?.let {
+                            AppConfig.startDate = startDate
+                            AppConfig.save()
+                        }
+                        val totalWeek = QZClient.getWeekNum()
+                        totalWeek?.let {
+                            AppConfig.totalWeek = totalWeek
+                            AppConfig.save()
+                        }
+                        val map = QZClient.getTermValueMap()
+                        map?.let {
+                            AppConfig.termValueMap = map
+                            AppConfig.termValueList.clear()
+                            AppConfig.termNameList.clear()
+                            AppConfig.termValueList.addAll(map.keys)
+                            AppConfig.termNameList.addAll(map.values)
+                        }
+                        isRefreshing = false
+                    }
+                },
+                pullToRefreshState = pullToRefreshState,
+                modifier = Modifier.padding(paddingValues),
+                refreshTexts = Texts.REFRESH_TEXTS,
+            ) {
+                SchedulePager(
+                    modifier = Modifier.fillMaxSize(),
+                    cellHeight = AppConfig.cellHeight.dp,
+                    courseListByWeek = courseListByWeek,
+                    pagerState = pagerState,
+                    timeList = AppConfig.timeList,
+                    startDate = AppConfig.startDate
+                )
+            }
         } else {
             Box(
                 modifier = Modifier
