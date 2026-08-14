@@ -394,7 +394,7 @@ object QZClient {
         val doc = Ksoup.parse(html)
         val currentTerm =
             doc.select("#xnxq01id option[selected]").attr("value").trim { it.isWhitespace() }
-        return if (currentTerm.isEmpty()) null else currentTerm
+        return currentTerm.ifEmpty { null }
     }
 
     fun parseEmptyRooms(html: String): Map<String, Boolean>? {

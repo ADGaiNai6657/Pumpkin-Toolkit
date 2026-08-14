@@ -231,7 +231,7 @@ fun MiuixSettingScreen() {
                     "http://jwzx.usc.edu.cn:8924/"
                 )
                 var selectedServer by remember { mutableIntStateOf(0) }
-                selectedServer = if (AppConfig.serverUrl.equals(serverItems[1])) 1 else 0
+                selectedServer = if (AppConfig.serverUrl == serverItems[1]) 1 else 0
                 WindowDropdownPreference(
                     title = "服务器",
                     items = serverItems,

@@ -53,11 +53,11 @@ object PinyinUtils {
      * @return 拼音字符串；无拼音数据时返回原字符
      */
     fun toPinyin(c: Char, format: Format = Format.WITHOUT_TONE): String {
-        val pinyins = charToPinyin[c.code]
-        if (pinyins == null || pinyins.isEmpty() || pinyins[0] == NONE) {
+        val pinyin = charToPinyin[c.code]
+        if (pinyin == null || pinyin.isEmpty() || pinyin[0] == NONE) {
             return c.toString()
         }
-        return formatPinyin(pinyins[0], format)
+        return formatPinyin(pinyin[0], format)
     }
 
     /**

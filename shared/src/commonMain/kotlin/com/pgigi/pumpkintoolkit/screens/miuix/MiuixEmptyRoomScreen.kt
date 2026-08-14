@@ -352,7 +352,7 @@ fun MiuixEmptyRoomScreen(viewModel: EmptyRoomViewModel = viewModel(factory = Emp
             Row(
                 modifier = Modifier.padding(paddingValues)
             ) {
-                Operations(Modifier.width(400.dp), viewModel, numberDatePickerState, snackbarHostState = snackbarHostState,windowInfo.containerDpSize.width, { })
+                Operations(Modifier.width(400.dp), viewModel, numberDatePickerState, snackbarHostState = snackbarHostState,windowInfo.containerDpSize.width) { }
                 ResultList(Modifier.fillMaxSize())
             }
         } else {
