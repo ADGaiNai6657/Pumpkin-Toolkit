@@ -1,0 +1,317 @@
+[
+  {
+    "name": "南华楼",
+    "value": "01",
+    "school": "1"
+  },
+  {
+    "name": "核学楼",
+    "value": "02",
+    "school": "1"
+  },
+  {
+    "name": "医学楼",
+    "value": "03",
+    "school": "1"
+  },
+  {
+    "name": "护理楼",
+    "value": "04",
+    "school": "1"
+  },
+  {
+    "name": "医研楼",
+    "value": "05",
+    "school": "1"
+  },
+  {
+    "name": "形态楼",
+    "value": "06",
+    "school": "1"
+  },
+  {
+    "name": "公卫楼",
+    "value": "07",
+    "school": "1"
+  },
+  {
+    "name": "环安楼",
+    "value": "08",
+    "school": "1"
+  },
+  {
+    "name": "化工楼",
+    "value": "09",
+    "school": "1"
+  },
+  {
+    "name": "第十一教学楼",
+    "value": "11",
+    "school": "1"
+  },
+  {
+    "name": "药学楼",
+    "value": "2z",
+    "school": "1"
+  },
+  {
+    "name": "核化工楼",
+    "value": "94",
+    "school": "1"
+  },
+  {
+    "name": "心理健康教育与咨询中心",
+    "value": "96",
+    "school": "1"
+  },
+  {
+    "name": "原附属小学",
+    "value": "97",
+    "school": "1"
+  },
+  {
+    "name": "机电楼",
+    "value": "98",
+    "school": "1"
+  },
+  {
+    "name": "车辆实验楼",
+    "value": "cll",
+    "school": "1"
+  },
+  {
+    "name": "工程训练中心",
+    "value": "cxzx",
+    "school": "1"
+  },
+  {
+    "name": "大礼堂",
+    "value": "dlt",
+    "school": "1"
+  },
+  {
+    "name": "动物部",
+    "value": "dwbl",
+    "school": "1"
+  },
+  {
+    "name": "档案馆",
+    "value": "jgl",
+    "school": "1"
+  },
+  {
+    "name": "军工楼",
+    "value": "jungonglou",
+    "school": "1"
+  },
+  {
+    "name": "机械楼",
+    "value": "jxl",
+    "school": "1"
+  },
+  {
+    "name": "土木楼",
+    "value": "tmjgl",
+    "school": "1"
+  },
+  {
+    "name": "图书馆",
+    "value": "tsg",
+    "school": "1"
+  },
+  {
+    "name": "团委学生活动中心",
+    "value": "twbgl",
+    "school": "1"
+  },
+  {
+    "name": "科创楼",
+    "value": "wyl",
+    "school": "1"
+  },
+  {
+    "name": "南运动场",
+    "value": "ydcn",
+    "school": "1"
+  },
+  {
+    "name": "西山核化楼",
+    "value": "121301",
+    "school": "1"
+  },
+  {
+    "name": "后山采矿填充楼",
+    "value": "121304",
+    "school": "1"
+  },
+  {
+    "name": "后山小二楼",
+    "value": "121305",
+    "school": "1"
+  },
+  {
+    "name": "创新创业学院",
+    "value": "39772F2E934F49999CE7CAF9762962B4",
+    "school": "1"
+  },
+  {
+    "name": "雨母楼",
+    "value": "95",
+    "school": "2"
+  },
+  {
+    "name": "逸夫楼",
+    "value": "16",
+    "school": "2"
+  },
+  {
+    "name": "敏行楼",
+    "value": "13",
+    "school": "2"
+  },
+  {
+    "name": "慎行楼",
+    "value": "121306",
+    "school": "2"
+  },
+  {
+    "name": "崇业楼",
+    "value": "3E793609BB3E4097B08BEC883797C17A",
+    "school": "2"
+  },
+  {
+    "name": "崇义楼",
+    "value": "121203",
+    "school": "2"
+  },
+  {
+    "name": "崇德楼",
+    "value": "121204",
+    "school": "2"
+  },
+  {
+    "name": "崇礼楼",
+    "value": "C3870173D9404411A835CE829D5ED3ED",
+    "school": "2"
+  },
+  {
+    "name": "新运动场",
+    "value": "ydcx",
+    "school": "2"
+  },
+  {
+    "name": "图书馆",
+    "value": "15",
+    "school": "2"
+  },
+  {
+    "name": "结构实验室",
+    "value": "D85E0F2D54794377A24B5E6555B932EA",
+    "school": "2"
+  },
+  {
+    "name": "新校区一教学楼",
+    "value": "12",
+    "school": "2"
+  },
+  {
+    "name": "省儿童医院教学楼",
+    "value": "99",
+    "school": "3"
+  },
+  {
+    "name": "附属常德医院教学楼",
+    "value": "changde",
+    "school": "3"
+  },
+  {
+    "name": "长沙市第一医院教学楼",
+    "value": "changsyiy",
+    "school": "3"
+  },
+  {
+    "name": "郴州临床学院教学楼",
+    "value": "chenzhou",
+    "school": "3"
+  },
+  {
+    "name": "附属怀化医院教学楼",
+    "value": "fshhyy",
+    "school": "3"
+  },
+  {
+    "name": "附属南华医院教学楼",
+    "value": "fsnh",
+    "school": "3"
+  },
+  {
+    "name": "第二临床学院教学楼",
+    "value": "fuer",
+    "school": "3"
+  },
+  {
+    "name": "第一临床学院教学楼",
+    "value": "fuyi",
+    "school": "3"
+  },
+  {
+    "name": "衡阳市区室外场地",
+    "value": "shiqu",
+    "school": "3"
+  },
+  {
+    "name": "邵阳市中心医院教学楼",
+    "value": "syszxyy",
+    "school": "3"
+  },
+  {
+    "name": "湘潭市中心医院教学楼",
+    "value": "xiangtanzx",
+    "school": "3"
+  },
+  {
+    "name": "湘潭市第一人民医院教学楼",
+    "value": "xtsyyy",
+    "school": "3"
+  },
+  {
+    "name": "永州市人民医院教学楼",
+    "value": "yzsrmyy",
+    "school": "3"
+  },
+  {
+    "name": "资环安楼",
+    "value": "121302",
+    "school": "3"
+  },
+  {
+    "name": "第一临床学院门诊楼",
+    "value": "7265F9AA9E7C4D7C9CC81A5A0FF997A5",
+    "school": "3"
+  },
+  {
+    "name": "第二精神病医院",
+    "value": "2080BE9B09604AF8B147A94E4A758B7B",
+    "school": "3"
+  },
+  {
+    "name": "第一临床学院外科楼七楼示教室",
+    "value": "157700DAB7BC407583FC6FD2469E90C3",
+    "school": "3"
+  },
+  {
+    "name": "长沙中心医院教学楼",
+    "value": "698BECCAE973482CBA930124B60FA43D",
+    "school": "3"
+  },
+  {
+    "name": "第一临床学院第一住院部",
+    "value": "7C52D1FBA3EA4A249BAB1D9836832996",
+    "school": "3"
+  },
+  {
+    "name": "第一临床学院放射楼",
+    "value": "82958E56185D43E6BCFD120D707A6968",
+    "school": "3"
+  }
+]

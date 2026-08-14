@@ -39,4 +39,8 @@ sealed interface Route : NavKey {
     data class LostAndFoundDetail(val item: LostItem) : Route
     @Serializable
     data class SimpleHtml(val html: String, val title: String = "") :Route
+    @Serializable
+    data object EmptyRoom : Route
+    @Serializable
+    data object Plan: Route
 }

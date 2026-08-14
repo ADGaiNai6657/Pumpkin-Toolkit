@@ -4,6 +4,7 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.CoursePlan
 import com.pgigi.pumpkintoolkit.models.ExamResult
 import com.pgigi.pumpkintoolkit.qzrc.preprocessImage
 import com.pgigi.pumpkintoolkit.qzrc.recognizeCaptcha
@@ -265,9 +266,10 @@ object QZClient {
         if (table.isEmpty()) return courses
         for(i in 1..<table.size){
             val tdElements = table[i].select("td")
-            if(tdElements.size<7) continue
+            val startJ = if (i % 5 == 1) 2 else 1
+            if(tdElements.size < startJ + 7) continue
             val week = (i + 4) / 5
-            for(j in 1..7){
+            for(j in startJ..<startJ + 7){
                 val td = tdElements[j]
                 if(!td.html().contains("<br>")) continue
                 val texts = td.html()
@@ -279,7 +281,7 @@ object QZClient {
                     teacher = "",
                     classroom = texts[1].split(" ")[1],
                     weeks = week.toString(),
-                    dayOfWeek = j - 1,
+                    dayOfWeek = j - startJ,
                     lessonOfDay = (i%5)*2-1,
                     duration = 2
                 )
@@ -393,5 +395,69 @@ object QZClient {
         val currentTerm =
             doc.select("#xnxq01id option[selected]").attr("value").trim { it.isWhitespace() }
         return if (currentTerm.isEmpty()) null else currentTerm
+    }
+
+    fun parseEmptyRooms(html: String): Map<String, Boolean>? {
+        if (html.trim().isEmpty()) return null
+        val emptyRooms = mutableMapOf<String, Boolean>()
+        val doc = Ksoup.parse(html.replace("&nbsp;".toRegex(), ""))
+        val trElements = doc.select("#kbtable tbody tr")
+        if(trElements.isEmpty()) {
+            return emptyRooms
+        }
+        loop@ for (tr in trElements) {
+            val tdElements = tr.select("td")
+            var roomName = ""
+            tdElements.forEachIndexed { index, td ->
+                if(index == 0) {
+                    roomName = td.text().trim().replace("（", "(").replace("）", ")")
+                    emptyRooms[roomName] = true
+                }else{
+                    if(td.text().trim().isNotEmpty()&&roomName.isNotEmpty()) {
+                        emptyRooms[roomName] = false
+                        continue@loop
+                    }
+                }
+            }
+        }
+        return emptyRooms
+    }
+
+    suspend fun getEmptyRooms(termId: String, buildingId: String, day: Int, week: Int, lesson: Int): Map<String, Boolean>?{
+        val html = getEmptyRoomsHtml(termId,buildingId,day,week,lesson)
+        html?.let {
+            return parseEmptyRooms(html)
+        }
+        return null
+    }
+
+    suspend fun getCoursePlan(): List<CoursePlan>? {
+        val html = getHtml(url("jsxsd/pyfa/pyfa_query"))
+        if (html.isNullOrEmpty()) return null
+        val doc = Ksoup.parse(html)
+        val trElements = doc.select("table#dataList tbody tr")
+        if (trElements.isEmpty()) return null
+        val plans = mutableListOf<CoursePlan>()
+        trElements.forEachIndexed { index, tr ->
+            if(index != 0) {
+                try{
+                    val tdElements = tr.select("td")
+                    val plan = CoursePlan(
+                        tdElements[3].text().trim(),
+                        tdElements[1].text().trim(),
+                        tdElements[2].text().trim(),
+                        tdElements[4].text().trim(),
+                        tdElements[5].text().trim().toFloat(),
+                        tdElements[6].text().trim().toInt(),
+                        tdElements[7].text().trim(),
+                        tdElements[8].text().trim(),
+                        tdElements[9].text().trim(),
+                        tdElements[10].text().trim()
+                    )
+                    plans.add(plan)
+                }catch (_: Exception){ }
+            }
+        }
+        return if (plans.isEmpty()) null else plans
     }
 }

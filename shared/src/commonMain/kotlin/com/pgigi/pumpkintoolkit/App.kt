@@ -13,9 +13,11 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.ui.NavDisplay
 import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.screens.miuix.MiuixEmptyRoomScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixHomeScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixLoginScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixOtherScheduleScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.MiuixPlanScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixSettingScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.SimpleHtmlScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.WebViewScreen
@@ -149,6 +151,12 @@ fun App(
                     }
                     entry<Route.SimpleHtml>{route ->
                         SimpleHtmlScreen(html = route.html, route.title)
+                    }
+                    entry<Route.EmptyRoom> {
+                        MiuixEmptyRoomScreen()
+                    }
+                    entry<Route.Plan> {
+                        MiuixPlanScreen()
                     }
                 }
             }

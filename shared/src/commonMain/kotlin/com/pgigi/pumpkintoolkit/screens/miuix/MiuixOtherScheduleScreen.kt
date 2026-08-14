@@ -30,6 +30,7 @@ import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.SchedulePager
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
 import com.pgigi.pumpkintoolkit.viewmodel.OtherScheduleViewModel
@@ -74,6 +75,7 @@ fun MiuixOtherScheduleScreen(viewModel: OtherScheduleViewModel = viewModel(facto
             val tmpList = QZClient.getAllCourses(termId)
             tmpList?.let {
                 viewModel.courseListMap[termId] = tmpList
+                println(JsonUtil.toListJson(tmpList, Course.serializer()))
             }
         }
         viewModel.courseListMap[termId]?.let {

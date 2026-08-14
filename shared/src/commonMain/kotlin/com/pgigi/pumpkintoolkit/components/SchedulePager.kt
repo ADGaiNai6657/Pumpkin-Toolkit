@@ -1,5 +1,6 @@
 package com.pgigi.pumpkintoolkit.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -19,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -27,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +56,7 @@ import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Location
 import top.yukonga.miuix.kmp.icon.extended.Months
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.lightColorScheme
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import kotlin.time.Clock
 
@@ -101,8 +106,21 @@ object CourseDetailSheet{
     }
 }
 
+object ConflictSheet {
+    var show = mutableStateOf(false)
+    val courses = mutableStateListOf<Course>()
+
+    fun show(conflictCourses: List<Course>) {
+        courses.clear()
+        courses.addAll(conflictCourses)
+        show.value = true
+    }
+}
+
 @Composable
-fun CourseCell(course: Course, modifier: Modifier = Modifier){
+fun CourseCell(course: Course, conflictCourses: List<Course> = emptyList(), modifier: Modifier = Modifier){
+    val hasConflict = conflictCourses.size > 1
+
     val colorIndex = remember(course.name) {
         colorMap.getOrPut(course.name) { colorIndex.value++ }
     }
@@ -117,34 +135,51 @@ fun CourseCell(course: Course, modifier: Modifier = Modifier){
 
     val textColor = Color.White
 
-    Column(modifier = modifier
+    Box(modifier = modifier
         .clip(RoundedCornerShape(4.dp))
         .background(baseColor.copy(alpha = 0.75f))
         .fillMaxWidth()
         .clickable(true) {
-            CourseDetailSheet.show(course)
+            if (hasConflict) {
+                ConflictSheet.show(conflictCourses)
+            } else {
+                CourseDetailSheet.show(course)
+            }
         }
     ) {
+        Column {
+            Text(text = course.name,
+                modifier = Modifier.padding(3.dp),
+                maxLines = AppConfig.courseNameLine,
+                overflow = TextOverflow.Ellipsis,
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp)
+            Text(text = "@$classroom",
+                modifier = Modifier.padding(3.dp),
+                maxLines = AppConfig.courseRoomLine,
+                overflow = TextOverflow.Ellipsis,
+                color = textColor,
+                fontSize = 10.sp)
+            Text(text = course.teacher,
+                modifier = Modifier.padding(3.dp),
+                maxLines = AppConfig.courseTeacherLine,
+                overflow = TextOverflow.Ellipsis,
+                color = textColor,
+                fontSize = 10.sp)
+        }
 
-        Text(text = course.name,
-            modifier = Modifier.padding(3.dp),
-            maxLines = AppConfig.courseNameLine,
-            overflow = TextOverflow.Ellipsis,
-            color = textColor,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp)
-        Text(text = "@$classroom",
-            modifier = Modifier.padding(3.dp),
-            maxLines = AppConfig.courseRoomLine,
-            overflow = TextOverflow.Ellipsis,
-            color = textColor,
-            fontSize = 10.sp)
-        Text(text = course.teacher,
-            modifier = Modifier.padding(3.dp),
-            maxLines = AppConfig.courseTeacherLine,
-            overflow = TextOverflow.Ellipsis,
-            color = textColor,
-            fontSize = 10.sp)
+        if (hasConflict) {
+            Canvas(modifier = Modifier.align(Alignment.BottomEnd).size(20.dp)) {
+                val path = Path().apply {
+                    moveTo(size.width, 0f)
+                    lineTo(size.width, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                }
+                drawPath(path, color = Color(0xFFFF0000))
+            }
+        }
     }
 
 }
@@ -152,12 +187,20 @@ fun CourseCell(course: Course, modifier: Modifier = Modifier){
 @Composable
 fun CourseRow(dayCourses: List<Course>, cellHeight: Dp = 70.dp, modifier: Modifier = Modifier) {
 
+    val courseGroups = remember(dayCourses) {
+        groupConflictingCourses(dayCourses)
+    }
+
     Box(modifier = modifier.height(cellHeight * 10)) {
-        dayCourses.forEach { course ->
-            CourseCell(course, Modifier
-                .padding(1.dp)
-                .padding(top = cellHeight * (course.lessonOfDay - 1) + 1.dp)
-                .height(cellHeight * course.duration - 2.dp)
+        courseGroups.forEach { group ->
+            val course = group.first()
+            CourseCell(
+                course = course,
+                conflictCourses = group,
+                modifier = Modifier
+                    .padding(1.dp)
+                    .padding(top = cellHeight * (course.lessonOfDay - 1) + 1.dp)
+                    .height(cellHeight * course.duration - 2.dp)
             )
         }
     }
@@ -359,6 +402,24 @@ fun SchedulePager(modifier: Modifier = Modifier,
         )
         BasicComponent()
     }
+
+    WindowBottomSheet(
+        show = ConflictSheet.show.value,
+        title = "课程详细 (${ConflictSheet.courses.size}门)",
+        onDismissRequest = { ConflictSheet.show.value = false }
+    ) {
+        ConflictSheet.courses.forEach { course ->
+            BasicComponent(
+                title = course.name,
+                summary = "@${course.classroom} ${course.teacher}",
+                onClick = {
+                    ConflictSheet.show.value = false
+                    CourseDetailSheet.show(course)
+                }
+            )
+        }
+        BasicComponent()
+    }
 }
 
 
@@ -403,12 +464,35 @@ private fun mergeCoursesForDisplay(courses: List<Course>): List<Course> {
         result.add(current)
     }
 
-    // 保留不在 1-8 节范围内的课程原样展示
+    // 保留未被分块处理的课程（跨节次边界或超出范围的课程）
     result.addAll(sortedCourses.filter { course ->
         val start = course.lessonOfDay
         val end = course.lessonOfDay + course.duration - 1
-        end < 1 || start > 8
+        !(start in 1..4 && end in 1..4) && !(start in 5..8 && end in 5..8)
     })
 
     return result.sortedBy { it.lessonOfDay }
+}
+
+private fun groupConflictingCourses(courses: List<Course>): List<List<Course>> {
+    val sorted = courses.sortedBy { it.lessonOfDay }
+    if (sorted.isEmpty()) return emptyList()
+
+    val groups = mutableListOf<MutableList<Course>>()
+    var currentGroup = mutableListOf(sorted.first())
+    var currentMaxEnd = sorted.first().let { it.lessonOfDay + it.duration - 1 }
+
+    for (course in sorted.drop(1)) {
+        if (course.lessonOfDay <= currentMaxEnd) {
+            currentGroup.add(course)
+            currentMaxEnd = maxOf(currentMaxEnd, course.lessonOfDay + course.duration - 1)
+        } else {
+            groups.add(currentGroup)
+            currentGroup = mutableListOf(course)
+            currentMaxEnd = course.lessonOfDay + course.duration - 1
+        }
+    }
+    groups.add(currentGroup)
+
+    return groups
 }

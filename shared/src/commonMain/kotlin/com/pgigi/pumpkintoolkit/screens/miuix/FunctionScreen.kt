@@ -112,7 +112,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         )
                     })
                 ArrowPreference(title = "空教室查询", onClick = {
-
+                    navigator.push(Route.EmptyRoom)
                 },
                     startAction = {
                         Icon(
@@ -121,7 +121,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         )
                     })
                 ArrowPreference(title = "课程执行计划", onClick = {
-
+                    navigator.push(Route.Plan)
                 },
                     startAction = {
                         Icon(
