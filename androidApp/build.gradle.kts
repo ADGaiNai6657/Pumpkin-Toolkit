@@ -1,9 +1,24 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.FileInputStream
+import java.util.Properties
+import kotlin.apply
 
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
 }
+
+val envProperties = Properties().apply {
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        load(FileInputStream(envFile))
+    }
+}
+
+val password = envProperties.getProperty("KEYSTORE_PASSWORD")
+val key0 = envProperties.getProperty("KEY_ALIAS")
+val keyPwd = envProperties.getProperty("KEY_PASSWORD")
+val keyStorePath = envProperties.getProperty("KEY_STORE_PATH")
 
 kotlin {
     compilerOptions {
@@ -31,6 +46,18 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+
+    signingConfigs {
+        getByName("debug") {
+            keyStorePath?.let{
+                storeFile = file(keyStorePath)
+                storePassword = password?:""
+                keyAlias = key0?:""
+                keyPassword = keyPwd?:""
+            }
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
