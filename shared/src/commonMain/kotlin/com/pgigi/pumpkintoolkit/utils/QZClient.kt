@@ -5,7 +5,8 @@ import com.fleeksoft.ksoup.nodes.Document
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.models.CoursePlan
-import com.pgigi.pumpkintoolkit.models.ExamResult
+import com.pgigi.pumpkintoolkit.models.ExamInfo
+import com.pgigi.pumpkintoolkit.models.ExamScore
 import com.pgigi.pumpkintoolkit.qzrc.preprocessImage
 import com.pgigi.pumpkintoolkit.qzrc.recognizeCaptcha
 import io.ktor.client.HttpClient
@@ -233,11 +234,11 @@ object QZClient {
         }
         return courses
     }
-    fun parseExamResults(html: String): List<ExamResult>? {
+    fun parseExamScores(html: String): List<ExamScore>? {
         if (html.trim().isEmpty()) return null
         val doc = Ksoup.parse(html)
         val resElements = doc.select("table#dataList tbody tr")
-        val results = mutableListOf<ExamResult>()
+        val results = mutableListOf<ExamScore>()
         if (resElements.isEmpty()) return results
         for (elem in resElements) {
             val tds = elem.select("td")
@@ -254,7 +255,7 @@ object QZClient {
             } catch (_: Exception) {
                 continue
             }
-            results.add(ExamResult(name, credit, gradePoint, score, totalClassHours))
+            results.add(ExamScore(name, credit, gradePoint, score, totalClassHours))
         }
         return results
     }
@@ -306,7 +307,7 @@ object QZClient {
     suspend fun getExperimentCoursesHtml(termId: String = ""): String? {
         return getHtml(url("jsxsd/syjx/toXskb.do?xnxq01id=$termId"))
     }
-    suspend fun getExamResultHtml(termId: String = "", display: String="all"): String? {
+    suspend fun getExamScoreHtml(termId: String = "", display: String="all"): String? {
         return getHtml(url("jsxsd/kscj/cjcx_list?kksj=${termId}&xsfs=${display}"))
     }
 
@@ -348,10 +349,8 @@ object QZClient {
 
     suspend fun getStartDate(termId: String = ""): LocalDate?{
         val html = getScheduleHtml(termId)
-        html?.let {
-            return parseStartDate(html)
-        }
-        return null
+        if (html.isNullOrBlank()) return null
+        return parseStartDate(html)
     }
 
     fun parseWeekNum(html: String): Int{
@@ -363,10 +362,9 @@ object QZClient {
 
     suspend fun getWeekNum(termId: String = ""): Int?{
         val html = getScheduleHtml(termId)
-        html?.let {
-            return parseWeekNum(html)
-        }
-        return null
+        if (html.isNullOrBlank()) return null
+        return parseWeekNum(html)
+
     }
 
     fun parseTerms(html: String): Map<String, String>? {
@@ -383,10 +381,8 @@ object QZClient {
 
     suspend fun getTermValueMap() : Map<String, String>?{
         val html = getCoursesHtml()
-        html?.let {
-            return parseTerms(html)
-        }
-        return null
+        if (html.isNullOrBlank()) return null
+        return parseTerms(html)
     }
 
     fun parseCurrentTermValue(html: String): String? {
@@ -395,6 +391,12 @@ object QZClient {
         val currentTerm =
             doc.select("#xnxq01id option[selected]").attr("value").trim { it.isWhitespace() }
         return currentTerm.ifEmpty { null }
+    }
+
+    suspend fun getDefaultTermId() : String?{
+        val html = getCoursesHtml()
+        if (html.isNullOrBlank()) return null
+        return parseCurrentTermValue(html)
     }
 
     fun parseEmptyRooms(html: String): Map<String, Boolean>? {
@@ -425,10 +427,8 @@ object QZClient {
 
     suspend fun getEmptyRooms(termId: String, buildingId: String, day: Int, week: Int, lesson: Int): Map<String, Boolean>?{
         val html = getEmptyRoomsHtml(termId,buildingId,day,week,lesson)
-        html?.let {
-            return parseEmptyRooms(html)
-        }
-        return null
+        if (html.isNullOrBlank()) return null
+        return parseEmptyRooms(html)
     }
 
     suspend fun getCoursePlan(): List<CoursePlan>? {
@@ -459,5 +459,58 @@ object QZClient {
             }
         }
         return if (plans.isEmpty()) null else plans
+    }
+
+    fun parseExams1(html: String): List<ExamInfo> {
+        val doc: Document = Ksoup.parse(html)
+        return doc.select("table#dataList tr")
+            .mapNotNull { row ->
+                val cells = row.select("td")
+                if (cells.size < 9) return@mapNotNull null
+                ExamInfo(
+                    courseName = cells[2].text().trim(),
+                    examWeek = cells[3].text().trim().toIntOrNull() ?: 0,
+                    examDayOfWeek = cells[4].text().trim().toIntOrNull() ?: 0,
+                    examTimeRaw = cells[5].text().trim(),
+                    examLocation = cells[6].text().trim(),
+                    campus = cells[7].text().trim(),
+                    seatNumber = cells[8].text().trim().toIntOrNull(),
+                )
+            }
+    }
+
+    fun parseExams2(html: String): List<ExamInfo> {
+        val doc: Document = Ksoup.parse(html)
+        return doc.select("table#dataList tr")
+            .mapNotNull { row ->
+                val cells = row.select("td")
+                if (cells.size < 9) return@mapNotNull null
+                ExamInfo(
+                    courseName = cells[2].text().trim(),
+                    examWeek = cells[3].text().trim().toIntOrNull() ?: 0,
+                    examDayOfWeek = cells[4].text().trim().toIntOrNull() ?: 0,
+                    examTimeRaw = cells[6].text().trim(),
+                    examLocation = cells[7].text().trim(),
+                    campus = cells[8].text().trim(),
+                    seatNumber = null,
+                )
+            }
+    }
+
+    suspend fun getExams(termId: String = ""): List<ExamInfo>? {
+        val h1 = getHtml(url("jsxsd/xsks/xsksap_list?xnxqid=$termId"))
+        val h2 = getHtml(url("jsxsd/xsks/xsstk_list.do?xnxqid=$termId"))
+        if (h1.isNullOrBlank() || h2.isNullOrBlank()) return null
+        val list = mutableListOf<ExamInfo>()
+        list.addAll(parseExams1(h1))
+        list.addAll(parseExams2(h2))
+
+        return list
+    }
+
+    suspend fun getExamScores(termId: String = ""): List<ExamScore>?{
+        val html = getExamScoreHtml(termId)
+        if (html.isNullOrBlank()) return null
+        return parseExamScores(html)
     }
 }

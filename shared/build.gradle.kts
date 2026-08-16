@@ -52,6 +52,8 @@ kotlin {
             implementation(libs.miuix.preference.android)
             implementation(libs.miuix.icons.android)
             implementation(libs.miuix.navigation3.android)
+            implementation(libs.miuix.blur.android)
+            implementation(libs.miuix.shader.android)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -81,6 +83,9 @@ kotlin {
             implementation(libs.miuix.preference)
             implementation(libs.miuix.icons)
             implementation(libs.miuix.navigation3)
+            implementation(libs.miuix.blur)
+            implementation(libs.miuix.shader)
+
         }
         iosArm64Main.dependencies {
             implementation(libs.ktor.darwin)
@@ -89,6 +94,8 @@ kotlin {
             implementation(libs.miuix.preference.iosarm64)
             implementation(libs.miuix.icons.iosarm64)
             implementation(libs.miuix.navigation3.iosarm64)
+            implementation(libs.miuix.blur.iosarm64)
+            implementation(libs.miuix.shader.iosarm64)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

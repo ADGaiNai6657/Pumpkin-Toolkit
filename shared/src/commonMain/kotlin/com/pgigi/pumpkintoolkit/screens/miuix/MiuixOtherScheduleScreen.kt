@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
-import com.pgigi.pumpkintoolkit.components.SchedulePager
+import com.pgigi.pumpkintoolkit.components.miuix.SchedulePager
 import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient

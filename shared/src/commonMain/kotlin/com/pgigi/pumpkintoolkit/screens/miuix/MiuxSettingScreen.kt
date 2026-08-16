@@ -1,8 +1,11 @@
 package com.pgigi.pumpkintoolkit.screens.miuix
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,13 +16,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.ColorSchemeMode
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
-import com.pgigi.pumpkintoolkit.components.NumberDatePicker
+import com.pgigi.pumpkintoolkit.components.miuix.NumberDatePicker
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.constants.TimeList
 import com.pgigi.pumpkintoolkit.getPlatform
@@ -35,6 +41,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SliderDefaults
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
@@ -43,10 +50,9 @@ import top.yukonga.miuix.kmp.basic.TextButtonColors
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.RangeSliderPreference
 import top.yukonga.miuix.kmp.preference.SliderPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -83,6 +89,19 @@ fun MiuixSettingScreen() {
         ) {
             SmallTitle("主题设置")
             Card(modifier = Modifier.padding(cardPadding)){
+                val uiItems = listOf("Miuix", "Material 3")
+                WindowDropdownPreference(
+                    title = "UI 风格",
+                    items = uiItems,
+                    selectedIndex = if (AppConfig.uiMode == 2) 1 else 0,
+                    onSelectedIndexChange = {
+                        val newMode = if (it == 1) 2 else 0
+                        if (newMode != AppConfig.uiMode) {
+                            AppConfig.uiMode = newMode
+                            AppConfig.save()
+                        }
+                    }
+                )
                 val colorItems = listOf("跟随系统", "浅色模式", "深色模式")
                 var selectedColor by remember { mutableIntStateOf(0) }
                 selectedColor = when (AppConfig.colorSchemeMode) {
@@ -106,14 +125,25 @@ fun MiuixSettingScreen() {
                         }
                     }
                 )
-                /*SwitchPreference(
+                SwitchPreference(
                     title = "悬浮导航栏",
                     checked = AppConfig.floatingNavigation,
                     onCheckedChange = {
                         AppConfig.floatingNavigation = it
                         AppConfig.save()
                     }
-                )*/
+                )
+                AnimatedVisibility(AppConfig.floatingNavigation){
+                    SwitchPreference(
+                        title = "导航栏液态玻璃效果",
+                        summary = "Android 需 13+(SDK 33+) 版本才能使用",
+                        checked = AppConfig.enableBlurEffect,
+                        onCheckedChange = {
+                            AppConfig.enableBlurEffect = it
+                            AppConfig.save()
+                        }
+                    )
+                }
             }
 
             SmallTitle("课表设置")
@@ -156,7 +186,15 @@ fun MiuixSettingScreen() {
                 )
                 ArrowPreference(title = "课表开始时间",
                     endActions = {
-                        Text(if(AppConfig.startDate==null) "" else AppConfig.startDate.toString())
+                        Text(
+                            text = if(AppConfig.startDate==null) "" else AppConfig.startDate.toString(),
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .weight(1f, fill = false),
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            textAlign = TextAlign.End,
+                        )
                     },
                     onClick = {
                         if(AppConfig.startDate == null){
@@ -180,8 +218,19 @@ fun MiuixSettingScreen() {
                     valueRange = 50f..100f,
                     steps = 9,
                     endActions = {
-                        Text("$cellHeight dp")
-                    }
+                        Text(
+                            text = "$cellHeight dp",
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .weight(1f, fill = false),
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            textAlign = TextAlign.End,
+                        )
+                    },
+                    hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                    keyPoints = listOf(50f,55f,60f,65f,70f,75f,80f,85f,90f,95f,100f),
+                    showKeyPoints = true
                 )
                 val lineItems = listOf("1","2","3","4")
                 WindowDropdownPreference(
@@ -213,16 +262,17 @@ fun MiuixSettingScreen() {
                 )
             }
 
-            /*SmallTitle("成绩查询")
+            SmallTitle("成绩查询")
             Card(modifier = Modifier.padding(cardPadding)) {
                 SwitchPreference(title = "隐藏不及格成绩",
-                    checked = AppConfig.hideFailExam,
+                    summary = "应该永远都用不到这个功能吧",
+                    checked = AppConfig.hideFailScore,
                     onCheckedChange = {
-                        AppConfig.hideFailExam = it
+                        AppConfig.hideFailScore = it
                         AppConfig.save()
                     }
                 )
-            }*/
+            }
 
             SmallTitle("教务系统")
             Card(modifier = Modifier.padding(cardPadding)) {
@@ -244,6 +294,27 @@ fun MiuixSettingScreen() {
                         }
                     }
                 )
+                val termFilterItems = remember(AppConfig.rawTermValueMap) {
+                    listOf("不过滤") + AppConfig.rawTermValueMap.values.toList()
+                }
+                var selectedTermFilter by remember { mutableIntStateOf(0) }
+                selectedTermFilter = if (AppConfig.termFilterStartId.isEmpty()) 0
+                    else AppConfig.rawTermValueMap.keys.indexOf(AppConfig.termFilterStartId) + 1
+                WindowDropdownPreference(
+                    title = "学期过滤",
+                    items = termFilterItems,
+                    selectedIndex = selectedTermFilter,
+                    onSelectedIndexChange = {
+                        if (it != selectedTermFilter) {
+                            selectedTermFilter = it
+                            val newFilterId = if (it == 0) ""
+                                else AppConfig.rawTermValueMap.keys.elementAtOrNull(it - 1) ?: ""
+                            AppConfig.termFilterStartId = newFilterId
+                            AppConfig.applyTermFilter()
+                            AppConfig.save()
+                        }
+                    }
+                )
             }
 
             SmallTitle("关于")
@@ -251,7 +322,15 @@ fun MiuixSettingScreen() {
                 BasicComponent (
                     title = "操作系统",
                     endActions = {
-                        Text(getPlatform().name)
+                        Text(
+                            text = getPlatform().name,
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .weight(1f, fill = false),
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            textAlign = TextAlign.End,
+                        )
                     }
                 )
                 ArrowPreference(title = "开放源代码许可",
@@ -263,7 +342,15 @@ fun MiuixSettingScreen() {
                 BasicComponent(
                     title = "问题反馈",
                     endActions = {
-                        Text("nggjx@pgigi.com")
+                        Text(
+                            text = "nggjx@pgigi.com",
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .weight(1f, fill = false),
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            textAlign = TextAlign.End,
+                        )
                     },
                     onClick = {
                         uriHandler.openUri("mailto:nggjx@pgigi.com")
@@ -272,20 +359,30 @@ fun MiuixSettingScreen() {
                 BasicComponent(
                     title = "问题反馈",
                     endActions = {
-                        Text("pumpkintoolkit@pgigi.com")
+                        Text(
+                            text = "pumpkintoolkit@pgigi.com",
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .weight(1f, fill = false),
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            textAlign = TextAlign.End,
+                        )
                     },
                     onClick = {
                         uriHandler.openUri("mailto:pumpkintoolkit@pgigi.com")
                     }
                 )
             }
+
+            Spacer(modifier = Modifier.height(64.dp))
         }
         WindowDialog(title = "请选择开课时间", show = showDialog.value, onDismissRequest = { showDialog.value = false }) {
             val dismiss = LocalDismissState.current
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 val localDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                 val numberDatePickerState = rememberNumberDatePickerState(if(AppConfig.startDate==null) localDate else AppConfig.startDate!!)
-                Text(text = "请注意: 星期日算一周的第一天!")
+//                Text(text = "请注意: 星期日算一周的第一天!")
                 NumberDatePicker(
                     numberDatePickerState = numberDatePickerState,
                     start = LocalDate(localDate.year-1, 1, 1),

@@ -13,7 +13,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import com.pgigi.pumpkintoolkit.ColorSchemeMode
 import kotlin.collections.set
 import kotlin.time.Clock
 
@@ -23,6 +23,9 @@ object AppConfig {
 
     // UI
     var colorSchemeMode by mutableStateOf(ColorSchemeMode.System)
+    var uiMode by mutableIntStateOf(0) // 0=Miuix, 2=Material 3
+    var floatingNavigation by mutableStateOf(true)
+    var enableBlurEffect by mutableStateOf(true)
 
     // 课表
     var cellHeight by mutableIntStateOf(70)
@@ -31,7 +34,7 @@ object AppConfig {
     var courseTeacherLine by mutableIntStateOf(2)
     var startDate by mutableStateOf<LocalDate?>(null)
     var timeSeason by mutableIntStateOf(0) // 0自动, 1夏秋, 2冬春
-    var defaultTerm by mutableStateOf("")
+    var defaultTermId by mutableStateOf("")
     var totalWeekNum by mutableStateOf(0)
 
     var timeList by mutableStateOf(when(timeSeason){
@@ -48,21 +51,30 @@ object AppConfig {
     var termValueMap by mutableStateOf(mapOf<String, String>())
     var termNameList = mutableListOf<String>()
     var termValueList = mutableListOf<String>()
+    var rawTermValueMap by mutableStateOf(mapOf<String, String>())
+    var termFilterStartId by mutableStateOf("")
+
+    var hideFailScore by mutableStateOf(false)
 
 
     object KEY {
         const val COLOR_MODE = "color_mode"
+        const val UI_MODE = "ui_mode"
+        const val FLOATING_NAVIGATION = "floating_navigation"
+        const val ENABLE_BLUR_EFFECT = "enable_blur_effect"
         const val CELL_HEIGHT = "cell_height"
         const val COURSE_NAME_LINE = "course_name_line"
         const val COURSE_ROOM_LINE = "course_room_line"
         const val COURSE_TEACHER_LINE = "course_teacher_line"
         const val TIME_SEASON = "time_season"
         const val START_DATE = "start_date"
-        const val DEFAULT_TERM = "default_term"
+        const val DEFAULT_TERM = "default_term_id"
         const val USERNAME = "username"
         const val PASSWORD = "password"
         const val SERVER_URL = "server_url"
         const val TOTAL_WEEK = "total_week"
+        const val TERM_FILTER_START = "term_filter_start"
+        const val HIDE_FAIL_SCORE = "hide_fail_score"
     }
 
 
@@ -73,6 +85,9 @@ object AppConfig {
             ColorSchemeMode.Dark.name -> ColorSchemeMode.Dark
             else -> ColorSchemeMode.System
         }
+        uiMode = kvault.getInt(KEY.UI_MODE) ?: 0
+        floatingNavigation = (kvault.getInt(KEY.FLOATING_NAVIGATION) ?: 1) == 1
+        enableBlurEffect = (kvault.getInt(KEY.ENABLE_BLUR_EFFECT) ?: 1) == 1
         cellHeight = kvault.getInt(KEY.CELL_HEIGHT)?:70
         courseNameLine = kvault.getInt(KEY.COURSE_NAME_LINE)?:4
         courseRoomLine = kvault.getInt(KEY.COURSE_ROOM_LINE)?:2
@@ -87,26 +102,52 @@ object AppConfig {
         }
 
         startDate = kvault.getString(KEY.START_DATE)?.let { LocalDate.parse(it) }
-        defaultTerm = kvault.getString(KEY.DEFAULT_TERM)?:""
+        defaultTermId = kvault.getString(KEY.DEFAULT_TERM)?:""
         username = kvault.getString(KEY.USERNAME)?:""
         password = kvault.getString(KEY.PASSWORD)?:""
         serverUrl = kvault.getString(KEY.SERVER_URL)?:"http://61.187.179.66:8924/"
         totalWeek = kvault.getInt(KEY.TOTAL_WEEK)?:0
+        termFilterStartId = kvault.getString(KEY.TERM_FILTER_START)?:""
+        hideFailScore = (kvault.getInt(KEY.HIDE_FAIL_SCORE) ?: 0) == 1
     }
 
     fun save(){
         kvault.putString(KEY.COLOR_MODE,colorSchemeMode.name)
+        kvault.putInt(KEY.UI_MODE, uiMode)
+        kvault.putInt(KEY.FLOATING_NAVIGATION, if (floatingNavigation) 1 else 0)
+        kvault.putInt(KEY.ENABLE_BLUR_EFFECT, if (enableBlurEffect) 1 else 0)
         kvault.putInt(KEY.CELL_HEIGHT,cellHeight)
         kvault.putInt(KEY.COURSE_NAME_LINE,courseNameLine)
         kvault.putInt(KEY.COURSE_ROOM_LINE,courseRoomLine)
         kvault.putInt(KEY.COURSE_TEACHER_LINE,courseTeacherLine)
         kvault.putString(KEY.USERNAME,username)
         kvault.putString(KEY.PASSWORD,password)
-        kvault.putString(KEY.DEFAULT_TERM,defaultTerm)
+        kvault.putString(KEY.DEFAULT_TERM,defaultTermId)
         startDate?.toString()?.let { kvault.putString(KEY.START_DATE, it) }
         kvault.putInt(KEY.TIME_SEASON,timeSeason)
         kvault.putString(KEY.SERVER_URL,serverUrl)
         kvault.putInt(KEY.TOTAL_WEEK,totalWeek)
+        kvault.putString(KEY.TERM_FILTER_START, termFilterStartId)
+        kvault.putInt(KEY.HIDE_FAIL_SCORE, if (hideFailScore) 1 else 0)
+    }
+
+    fun updateTermData(map: Map<String, String>) {
+        rawTermValueMap = map
+        applyTermFilter()
+    }
+
+    fun applyTermFilter() {
+        val raw = rawTermValueMap
+        val filtered = if (termFilterStartId.isNotEmpty()) {
+            raw.filterKeys { it >= termFilterStartId }
+        } else {
+            raw
+        }
+        termValueMap = filtered
+        termValueList.clear()
+        termValueList.addAll(filtered.keys)
+        termNameList.clear()
+        termNameList.addAll(filtered.values)
     }
 
 }

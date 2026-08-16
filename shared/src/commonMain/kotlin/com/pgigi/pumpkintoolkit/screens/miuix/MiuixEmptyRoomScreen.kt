@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
-import com.pgigi.pumpkintoolkit.components.NumberDatePicker
+import com.pgigi.pumpkintoolkit.components.miuix.NumberDatePicker
 import com.pgigi.pumpkintoolkit.components.NumberDatePickerState
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
@@ -207,7 +207,7 @@ fun Operations(modifier: Modifier = Modifier, viewModel: EmptyRoomViewModel, num
                         WeekCalculator(AppConfig.startDate!!, 1)
 
                     val emptyRooms = QZClient.getEmptyRooms(
-                        AppConfig.defaultTerm,
+                        AppConfig.defaultTermId,
                         viewModel.buildingList[viewModel.selectedBuilding],
                         localDate.dayOfWeek.isoDayNumber,
                         weekCalculator.getWeekNumber(localDate).toInt(),

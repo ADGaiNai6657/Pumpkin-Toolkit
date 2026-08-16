@@ -29,16 +29,18 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
-import com.pgigi.pumpkintoolkit.components.SchedulePager
+import com.pgigi.pumpkintoolkit.components.miuix.SchedulePager
 import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.constants.Texts
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.ScheduleCache
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
@@ -149,11 +151,17 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = view
                         val list = QZClient.getAllCourses()
                         list?.let {
                             viewModel.courseList.clear()
-                            viewModel.courseList.addAll(list)
-                            FileStoreUtils.writeString(
-                                FileName.SCHEDULE,
-                                JsonUtil.toListJson(list, Course.serializer())
+                        viewModel.courseList.addAll(list)
+                        FileStoreUtils.writeString(
+                            FileName.SCHEDULE,
+                            JsonUtil.toJson(
+                                ScheduleCache(
+                                    updateTime = Clock.System.now().toEpochMilliseconds(),
+                                    courses = list
+                                ),
+                                ScheduleCache.serializer()
                             )
+                        )
                         }
                         val startDate = QZClient.getStartDate()
                         startDate?.let {
@@ -167,11 +175,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = view
                         }
                         val map = QZClient.getTermValueMap()
                         map?.let {
-                            AppConfig.termValueMap = map
-                            AppConfig.termValueList.clear()
-                            AppConfig.termNameList.clear()
-                            AppConfig.termValueList.addAll(map.keys)
-                            AppConfig.termNameList.addAll(map.values)
+                            AppConfig.updateTermData(it)
                         }
                         isRefreshing = false
                     }

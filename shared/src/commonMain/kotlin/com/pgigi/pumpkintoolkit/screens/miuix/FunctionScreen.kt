@@ -16,6 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
@@ -66,9 +68,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(
                     title = "教务系统账号",
-                    endActions = {
-                        Text(AppConfig.username)
-                    },
+                    summary = AppConfig.username.ifBlank { "未登录" },
                     onClick = {
                         navigator.push(Route.Login)
                     },
@@ -94,7 +94,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
             }
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(title = "考试查询", onClick = {
-
+                    navigator.push(Route.Exam)
                 },
                     startAction = {
                         Icon(
@@ -103,7 +103,7 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         )
                     })
                 ArrowPreference(title = "成绩查询", onClick = {
-
+                    navigator.push(Route.ExamScore)
                 },
                     startAction = {
                         Icon(

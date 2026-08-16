@@ -42,5 +42,11 @@ sealed interface Route : NavKey {
     @Serializable
     data object EmptyRoom : Route
     @Serializable
+    data object Exam : Route
+
+    @Serializable
+    data object ExamScore : Route
+
+    @Serializable
     data object Plan: Route
 }

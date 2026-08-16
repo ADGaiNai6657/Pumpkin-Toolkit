@@ -13,6 +13,9 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.ui.NavDisplay
 import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.ScheduleCache
+import com.pgigi.pumpkintoolkit.screens.miuix.MiuixExamScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.MiuixExamScoreScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixEmptyRoomScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixHomeScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.MiuixLoginScreen
@@ -27,13 +30,31 @@ import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.LostAndFoundListScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineDetailScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineListScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineMenuScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3AppTheme
+import com.pgigi.pumpkintoolkit.screens.material3.Material3ExamScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3ExamScoreScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3EmptyRoomScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3HomeScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3LoginScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3OtherScheduleScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3PlanScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3SettingScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3SimpleHtmlScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3WebViewScreen
+import com.pgigi.pumpkintoolkit.screens.material3.Material3WebViewWithDataScreen
+import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3LostAndFoundDetailScreen
+import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3LostAndFoundListScreen
+import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3SunshineDetailScreen
+import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3SunshineListScreen
+import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3SunshineMenuScreen
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
 import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import kotlin.time.Clock
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode as MiuixColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
@@ -57,9 +78,17 @@ fun App(
     coroutineScope.launch {
         val courseStr = FileStoreUtils.readString(FileName.SCHEDULE)
         courseStr?.let {
-            val list = JsonUtil.parseListJson(courseStr, Course.serializer())
-            viewModel.courseList.clear()
-            viewModel.courseList.addAll(list)
+            try {
+                val cache = JsonUtil.parseJson(it, ScheduleCache.serializer())
+                viewModel.courseList.clear()
+                viewModel.courseList.addAll(cache.courses)
+            } catch (_: Exception) {
+                try {
+                    val list = JsonUtil.parseListJson(it, Course.serializer())
+                    viewModel.courseList.clear()
+                    viewModel.courseList.addAll(list)
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -71,7 +100,13 @@ fun App(
                 viewModel.courseList.addAll(list)
                 FileStoreUtils.writeString(
                     FileName.SCHEDULE,
-                    JsonUtil.toListJson(list, Course.serializer())
+                    JsonUtil.toJson(
+                        ScheduleCache(
+                            updateTime = Clock.System.now().toEpochMilliseconds(),
+                            courses = list
+                        ),
+                        ScheduleCache.serializer()
+                    )
                 )
             }
             val startDate = QZClient.getStartDate()
@@ -86,11 +121,12 @@ fun App(
             }
             val map = QZClient.getTermValueMap()
             map?.let {
-                AppConfig.termValueMap = map
-                AppConfig.termValueList.clear()
-                AppConfig.termNameList.clear()
-                AppConfig.termValueList.addAll(map.keys)
-                AppConfig.termNameList.addAll(map.values)
+                AppConfig.updateTermData(it)
+            }
+            val defaultTermId = QZClient.getDefaultTermId()
+            defaultTermId?.let {
+                AppConfig.defaultTermId = defaultTermId
+                AppConfig.save()
             }
         }
     }
@@ -106,70 +142,146 @@ fun App(
     CompositionLocalProvider(
         LocalNavigator provides navigator,
     ){
-        val controller = remember(AppConfig.colorSchemeMode) {
-            when (AppConfig.colorSchemeMode) {
-                ColorSchemeMode.Light -> ThemeController(ColorSchemeMode.Light)
-                ColorSchemeMode.Dark -> ThemeController(ColorSchemeMode.Dark)
-                else -> ThemeController(ColorSchemeMode.System)
-            }
-        }
-        MiuixTheme(controller = controller){
-            val entryProvider = remember(viewModel.backStack) {
-                entryProvider<NavKey> {
-                    entry<Route.Home> {
-                        MiuixHomeScreen()
+        when (AppConfig.uiMode) {
+            2 -> {
+                Material3AppTheme {
+                    val entryProvider = remember(viewModel.backStack) {
+                        entryProvider<NavKey> {
+                            entry<Route.Home> {
+                                Material3HomeScreen()
+                            }
+                            entry<Route.Login> {
+                                Material3LoginScreen()
+                            }
+                            entry<Route.Settings> {
+                                Material3SettingScreen()
+                            }
+                            entry<Route.OtherSchedule> {
+                                Material3OtherScheduleScreen()
+                            }
+                            entry<Route.WebView>{route ->
+                                Material3WebViewScreen(url = route.url, route.title)
+                            }
+                            entry<Route.WebViewWithData>{route ->
+                                Material3WebViewWithDataScreen(html = route.html, route.title)
+                            }
+                            entry<Route.SunshineMenu>{
+                                Material3SunshineMenuScreen()
+                            }
+                            entry<Route.SunshineDetail>{route ->
+                                Material3SunshineDetailScreen(route.item)
+                            }
+                            entry<Route.SunshineList>{route ->
+                                Material3SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
+                            }
+                            entry<Route.LostAndFoundList>{
+                                Material3LostAndFoundListScreen()
+                            }
+                            entry<Route.LostAndFoundDetail>{route ->
+                                Material3LostAndFoundDetailScreen(route.item)
+                            }
+                            entry<Route.SimpleHtml>{route ->
+                                Material3SimpleHtmlScreen(html = route.html, route.title)
+                            }
+                            entry<Route.EmptyRoom> {
+                                Material3EmptyRoomScreen()
+                            }
+                            entry<Route.Exam> {
+                                Material3ExamScreen()
+                            }
+                            entry<Route.ExamScore> {
+                                Material3ExamScoreScreen()
+                            }
+                            entry<Route.Plan> {
+                                Material3PlanScreen()
+                            }
+                        }
                     }
-                    entry<Route.Login> {
-                        MiuixLoginScreen()
-                    }
-                    entry<Route.Settings> {
-                        MiuixSettingScreen()
-                    }
-                    entry<Route.OtherSchedule> {
-                        MiuixOtherScheduleScreen()
-                    }
-                    entry<Route.WebView>{route ->
-                        WebViewScreen(url = route.url, route.title)
-                    }
-                    entry<Route.WebViewWithData>{route ->
-                        WebViewWithDataScreen(html = route.html, route.title)
-                    }
-                    entry<Route.SunshineMenu>{
-                        SunshineMenuScreen()
-                    }
-                    entry<Route.SunshineDetail>{route ->
-                        SunshineDetailScreen(route.item)
-                    }
-                    entry<Route.SunshineList>{route ->
-                        SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
-                    }
-                    entry<Route.LostAndFoundList>{
-                        LostAndFoundListScreen()
-                    }
-                    entry<Route.LostAndFoundDetail>{route ->
-                        LostAndFoundDetailScreen(route.item)
-                    }
-                    entry<Route.SimpleHtml>{route ->
-                        SimpleHtmlScreen(html = route.html, route.title)
-                    }
-                    entry<Route.EmptyRoom> {
-                        MiuixEmptyRoomScreen()
-                    }
-                    entry<Route.Plan> {
-                        MiuixPlanScreen()
-                    }
+
+                    val entries = rememberDecoratedNavEntries(
+                        backStack = viewModel.backStack,
+                        entryProvider = entryProvider,
+                    )
+
+                    NavDisplay(
+                        entries = entries,
+                        onBack = { navigator.pop() }
+                    )
                 }
             }
+            else -> {
+                val controller = remember(AppConfig.colorSchemeMode) {
+                when (AppConfig.colorSchemeMode) {
+                    ColorSchemeMode.Light -> ThemeController(MiuixColorSchemeMode.Light)
+                    ColorSchemeMode.Dark -> ThemeController(MiuixColorSchemeMode.Dark)
+                    else -> ThemeController(MiuixColorSchemeMode.System)
+                }
+            }
+            MiuixTheme(controller = controller){
+                val entryProvider = remember(viewModel.backStack) {
+                    entryProvider<NavKey> {
+                        entry<Route.Home> {
+                            MiuixHomeScreen()
+                        }
+                        entry<Route.Login> {
+                            MiuixLoginScreen()
+                        }
+                        entry<Route.Settings> {
+                            MiuixSettingScreen()
+                        }
+                        entry<Route.OtherSchedule> {
+                            MiuixOtherScheduleScreen()
+                        }
+                        entry<Route.WebView>{route ->
+                            WebViewScreen(url = route.url, route.title)
+                        }
+                        entry<Route.WebViewWithData>{route ->
+                            WebViewWithDataScreen(html = route.html, route.title)
+                        }
+                        entry<Route.SunshineMenu>{
+                            SunshineMenuScreen()
+                        }
+                        entry<Route.SunshineDetail>{route ->
+                            SunshineDetailScreen(route.item)
+                        }
+                        entry<Route.SunshineList>{route ->
+                            SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
+                        }
+                        entry<Route.LostAndFoundList>{
+                            LostAndFoundListScreen()
+                        }
+                        entry<Route.LostAndFoundDetail>{route ->
+                            LostAndFoundDetailScreen(route.item)
+                        }
+                        entry<Route.SimpleHtml>{route ->
+                            SimpleHtmlScreen(html = route.html, route.title)
+                        }
+                        entry<Route.EmptyRoom> {
+                            MiuixEmptyRoomScreen()
+                        }
+                        entry<Route.Exam> {
+                            MiuixExamScreen()
+                        }
+                        entry<Route.ExamScore> {
+                            MiuixExamScoreScreen()
+                        }
+                        entry<Route.Plan> {
+                            MiuixPlanScreen()
+                        }
+                    }
+                }
 
-            val entries = rememberDecoratedNavEntries(
-                backStack = viewModel.backStack,
-                entryProvider = entryProvider,
-            )
+                val entries = rememberDecoratedNavEntries(
+                    backStack = viewModel.backStack,
+                    entryProvider = entryProvider,
+                )
 
-            NavDisplay(
-                entries = entries,
-                onBack = { navigator.pop() }
-            )
+                NavDisplay(
+                    entries = entries,
+                    onBack = { navigator.pop() }
+                )
+            }
+        }
         }
     }
 }

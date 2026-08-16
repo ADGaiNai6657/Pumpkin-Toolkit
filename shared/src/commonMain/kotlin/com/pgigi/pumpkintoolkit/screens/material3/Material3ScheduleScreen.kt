@@ -1,0 +1,232 @@
+package com.pgigi.pumpkintoolkit.screens.material3
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.LocalNavigator
+import com.pgigi.pumpkintoolkit.Route
+import com.pgigi.pumpkintoolkit.components.material3.SchedulePager
+import com.pgigi.pumpkintoolkit.constants.FileName
+import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.ScheduleCache
+import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
+import com.pgigi.pumpkintoolkit.utils.JsonUtil
+import com.pgigi.pumpkintoolkit.utils.QZClient
+import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
+import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.icon.extended.Reset
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import kotlin.time.Duration.Companion.milliseconds
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Material3ScheduleScreen(
+    modifier: Modifier = Modifier,
+    viewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)
+) {
+    val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
+    val navigator = LocalNavigator.current
+    var title by remember { mutableStateOf("课程表") }
+    val coroutineScope = rememberCoroutineScope()
+    val hapticFeedback = LocalHapticFeedback.current
+    var loading by remember { mutableStateOf(true) }
+    var refreshing by remember { mutableStateOf(false) }
+    var initialPage by remember { mutableIntStateOf(0) }
+    var pageCount by remember { mutableIntStateOf(0) }
+    val windowInfo = LocalWindowInfo.current
+    val screenWidthDp = windowInfo.containerDpSize.width
+
+    LaunchedEffect(viewModel.courseList.isEmpty()) {
+        loading = viewModel.courseList.isEmpty()
+    }
+
+    val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList))
+
+    pageCount = maxOf(courseListByWeek.size, viewModel.currentWeek, AppConfig.totalWeek)
+    initialPage = viewModel.currentWeek - 1
+
+    val pagerState = rememberPagerState(
+        pageCount = { pageCount },
+        initialPage = initialPage.coerceIn(0, pageCount)
+    )
+
+    LaunchedEffect(pagerState.pageCount) {
+        pagerState.scrollToPage((viewModel.currentWeek - 1).coerceIn(0, pageCount))
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (viewModel.courseList.isNotEmpty()) {
+            title = "第${pagerState.currentPage + 1}周"
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            TopAppBar(
+                title = { Text(title) },
+                actions = {
+                    AnimatedVisibility(screenWidthDp <= 800.dp) {
+                        IconButton(onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            navigator.push(Route.Settings)
+                        }) {
+                            Icon(MiuixIcons.Settings, contentDescription = "设置")
+                        }
+                    }
+                    AnimatedVisibility(loggedIn) {
+                        IconButton(onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            refreshing = true
+                            coroutineScope.launch {
+                                val list = QZClient.getAllCourses()
+                                list?.let {
+                                    viewModel.courseList.clear()
+                                    viewModel.courseList.addAll(list)
+                                    FileStoreUtils.writeString(
+                                        FileName.SCHEDULE,
+                                        JsonUtil.toJson(
+                                            ScheduleCache(
+                                                updateTime = Clock.System.now().toEpochMilliseconds(),
+                                                courses = list
+                                            ),
+                                            ScheduleCache.serializer()
+                                        )
+                                    )
+                                }
+                                val startDate = QZClient.getStartDate()
+                                startDate?.let {
+                                    AppConfig.startDate = startDate
+                                    AppConfig.save()
+                                }
+                                val totalWeek = QZClient.getWeekNum()
+                                totalWeek?.let {
+                                    AppConfig.totalWeek = totalWeek
+                                    AppConfig.save()
+                                }
+                                val map = QZClient.getTermValueMap()
+                                map?.let {
+                                    AppConfig.updateTermData(it)
+                                }
+                                refreshing = false
+                            }
+                        }) {
+                            Icon(MiuixIcons.Refresh, contentDescription = "刷新")
+                        }
+                    }
+                },
+                navigationIcon = {
+                    AnimatedVisibility(
+                        visible = viewModel.currentWeek - 1 != pagerState.currentPage &&
+                                AppConfig.startDate != null &&
+                                viewModel.courseList.isNotEmpty() &&
+                                (viewModel.currentWeek <= 0 && pagerState.currentPage != 0),
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        IconButton(
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(viewModel.currentWeek - 1)
+                                }
+                            }
+                        ) {
+                            Icon(MiuixIcons.Reset, contentDescription = "返回当前周")
+                        }
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        if (loggedIn) {
+            LaunchedEffect(refreshing) {
+                if (refreshing) {
+                    delay(60000.milliseconds)
+                    refreshing = false
+                }
+            }
+            Box(modifier = Modifier.padding(paddingValues)) {
+                SchedulePager(
+                    modifier = Modifier.fillMaxSize(),
+                    cellHeight = AppConfig.cellHeight.dp,
+                    courseListByWeek = courseListByWeek,
+                    pagerState = pagerState,
+                    timeList = AppConfig.timeList,
+                    startDate = AppConfig.startDate
+                )
+                if (refreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.TopCenter)
+                    )
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "请登录使用",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        if (loading && loggedIn) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+    }
+}

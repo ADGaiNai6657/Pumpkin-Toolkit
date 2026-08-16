@@ -3,7 +3,7 @@ package com.pgigi.pumpkintoolkit.models
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ExamResult(
+data class ExamScore(
     var name: String = "",
     var credit: Float = 0f,
     var grade: Float = 0f,

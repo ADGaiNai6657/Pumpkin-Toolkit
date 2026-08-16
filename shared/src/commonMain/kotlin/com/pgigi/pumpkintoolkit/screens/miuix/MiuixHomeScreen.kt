@@ -1,22 +1,37 @@
 package com.pgigi.pumpkintoolkit.screens.miuix
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.components.FloatingBottomBar
+import com.pgigi.pumpkintoolkit.components.FloatingBottomBarMode
+import com.pgigi.pumpkintoolkit.components.isLiquidGlassSupported
 import com.pgigi.pumpkintoolkit.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.GridView
 import top.yukonga.miuix.kmp.icon.extended.ListView
@@ -32,39 +47,80 @@ object Navigation {
 fun MiuixHomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)) {
 
     val coroutineScope = rememberCoroutineScope()
+    val hapticFeedback = LocalHapticFeedback.current
     var pagerCount by remember { mutableIntStateOf(Navigation.items.size) }
     val pagerState = rememberPagerState(pageCount = { pagerCount }, initialPage = viewModel.currentPagerIndex)
+    val liquidGlassSupported = isLiquidGlassSupported()
+    val useBlur = AppConfig.floatingNavigation && AppConfig.enableBlurEffect && liquidGlassSupported
+    val backdrop = if (useBlur) rememberLayerBackdrop() else null
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            NavigationBar{
-                Navigation.items.forEachIndexed { index, label ->
-                    NavigationBarItem(
-                        selected = pagerState.currentPage == index,
-                        onClick = {
-                            coroutineScope.launch {
-                                viewModel.currentPagerIndex = index
-                                pagerState.animateScrollToPage(index)
-                            }
-                        },
-                        icon = Navigation.icons[index],
-                        label = label
-                    )
+            if (!AppConfig.floatingNavigation) {
+                NavigationBar {
+                    Navigation.items.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                coroutineScope.launch {
+                                    viewModel.currentPagerIndex = index
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            icon = Navigation.icons[index],
+                            label = item
+                        )
+                    }
                 }
             }
         }
     ) { paddingValues ->
-        HorizontalPager(
-            state = pagerState,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding()),
-            beyondViewportPageCount = 1
+                .padding(paddingValues)
         ) {
-            when (it) {
-                0 -> TodayScreen()
-                1 -> ScheduleScreen()
-                2 -> FunctionScreen()
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
+                beyondViewportPageCount = 1
+            ) {
+                when (it) {
+                    0 -> TodayScreen()
+                    1 -> ScheduleScreen()
+                    2 -> FunctionScreen()
+                }
+            }
+
+            if (AppConfig.floatingNavigation) {
+                FloatingBottomBar(
+                    items = Navigation.items,
+                    selectedIndex = { pagerState.currentPage },
+                    onSelected = { index ->
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        coroutineScope.launch {
+                            viewModel.currentPagerIndex = index
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
+                    backdrop = backdrop,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp),
+                    mode = if (useBlur) FloatingBottomBarMode.LiquidGlass else FloatingBottomBarMode.None,
+                    iconContent = { _, index ->
+                        Icon(Navigation.icons[index], contentDescription = null)
+                    },
+                    labelContent = { item, _ ->
+                        Text(item)
+                    }
+                )
             }
         }
     }
