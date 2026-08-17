@@ -1,6 +1,7 @@
 package com.pgigi.pumpkintoolkit
 
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavBackStack
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.SharedFlow
  * Supports push/replace/pop/popUntil and result APIs: navigateForResult/setResult/observeResult/clearResult.
  */
 class Navigator(
-    val backStack: MutableList<NavKey>,
+    val backStack: NavBackStack,
 ) {
     private val resultBus = mutableMapOf<String, MutableSharedFlow<Any>>()
 

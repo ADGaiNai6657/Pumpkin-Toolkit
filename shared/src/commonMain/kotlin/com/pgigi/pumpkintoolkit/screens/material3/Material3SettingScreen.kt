@@ -46,8 +46,9 @@ import com.pgigi.pumpkintoolkit.components.material3.M3TrailingText
 import com.pgigi.pumpkintoolkit.components.material3.NumberDatePicker
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.constants.TimeList
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
 import com.pgigi.pumpkintoolkit.getPlatform
-import com.pgigi.pumpkintoolkit.utils.ResourceUtils
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -113,18 +114,18 @@ fun Material3SettingScreen() {
                         )
                     },
                 )
-                val colorItems = listOf("跟随系统", "关闭", "开启")
+                val colorItems = listOf("跟随系统", "浅色模式", "深色模式")
                 val selectedColor = when (AppConfig.colorSchemeMode) {
                     ColorSchemeMode.Light -> 1
                     ColorSchemeMode.Dark -> 2
                     else -> 0
                 }
                 M3Row(
-                    title = "颜色模式",
+                    title = "主题模式",
                     trailingContent = { M3TrailingText(colorItems[selectedColor]) },
                     onClick = {
                         pickerDialog = PickerState(
-                            title = "深色模式",
+                            title = "主题模式",
                             items = colorItems,
                             selectedIndex = selectedColor,
                             onSelected = {
@@ -171,6 +172,45 @@ fun Material3SettingScreen() {
                         AppConfig.save()
                     },
                 )
+                val predictiveBackAnimationItems = PredictiveBackAnimation.entries.map { it.displayName }
+                M3Row(
+                    title = "预测返回动画",
+                    summary = "部分设备不支持",
+                    trailingContent = { M3TrailingText(AppConfig.predictiveBackAnimation.displayName) },
+                    onClick = {
+                        pickerDialog = PickerState(
+                            title = "预测返回动画",
+                            items = predictiveBackAnimationItems,
+                            selectedIndex = PredictiveBackAnimation.entries.indexOf(AppConfig.predictiveBackAnimation),
+                            onSelected = {
+                                AppConfig.predictiveBackAnimation = PredictiveBackAnimation.entries[it]
+                                AppConfig.save()
+                            }
+                        )
+                    },
+                )
+                AnimatedVisibility(AppConfig.predictiveBackAnimation == PredictiveBackAnimation.Scale){
+                    val exitDirectionItems =
+                        PredictiveBackExitDirection.entries.map { it.displayName }
+                    M3Row(
+                        title = "返回退出方向",
+                        trailingContent = { M3TrailingText(AppConfig.predictiveBackExitDirection.displayName) },
+                        onClick = {
+                            pickerDialog = PickerState(
+                                title = "返回退出方向",
+                                items = exitDirectionItems,
+                                selectedIndex = PredictiveBackExitDirection.entries.indexOf(
+                                    AppConfig.predictiveBackExitDirection
+                                ),
+                                onSelected = {
+                                    AppConfig.predictiveBackExitDirection =
+                                        PredictiveBackExitDirection.entries[it]
+                                    AppConfig.save()
+                                }
+                            )
+                        },
+                    )
+                }
             }
 
             // Schedule settings
@@ -399,9 +439,7 @@ fun Material3SettingScreen() {
                 M3Row(
                     title = "开放源代码许可",
                     onClick = {
-                        val html = ResourceUtils.readText("open-source-license.html")
-                            ?: "Can not find the file!"
-                        navigator.push(Route.SimpleHtml(html, "Open Source License of Pumpkin Toolkit"))
+                        navigator.push(Route.OssLicense)
                     },
                 )
                 M3Row(

@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.1"
+agp = "9.1.0"
 android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -12,7 +12,7 @@ material3 = "1.11.0-alpha07"
 ktor = "3.4.0"
 datetime = "0.7.1"
 
-miuix = "0.9.3"
+miuix = "0.9.4-rc01"
 navigation3 = "1.1.4"
 ksoup = "0.2.6"
 kvault = "1.12.0"
@@ -57,7 +57,7 @@ miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons", version.ref = "miu
 miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur", version.ref = "miuix"}
 miuix-shader = { module = "top.yukonga.miuix.kmp:miuix-shader", version.ref = "miuix"}
 miuix-squicle = { module = "top.yukonga.miuix.kmp:miuix-squicle", version.ref = "miuix"}
-miuix-navigation3 = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui", version.ref = "miuix"}
+miuix-nav = { module = "top.yukonga.miuix.kmp:miuix-nav", version.ref = "miuix"}
 
 miuix-ui-android = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version.ref = "miuix"}
 miuix-preference-android = { module = "top.yukonga.miuix.kmp:miuix-preference-android", version.ref = "miuix"}
@@ -65,7 +65,7 @@ miuix-icons-android = { module = "top.yukonga.miuix.kmp:miuix-icons-android", ve
 miuix-blur-android = { module = "top.yukonga.miuix.kmp:miuix-blur-android", version.ref = "miuix"}
 miuix-shader-android = { module = "top.yukonga.miuix.kmp:miuix-shader-android", version.ref = "miuix"}
 miuix-squicle-android = { module = "top.yukonga.miuix.kmp:miuix-squicle-android", version.ref = "miuix"}
-miuix-navigation3-android = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui-android", version.ref = "miuix"}
+miuix-nav-android = { module = "top.yukonga.miuix.kmp:miuix-nav-android", version.ref = "miuix"}
 
 miuix-ui-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-ui-iosarm64", version.ref = "miuix"}
 miuix-preference-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-preference-iosarm64", version.ref = "miuix"}
@@ -73,7 +73,7 @@ miuix-icons-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-icons-iosarm64", 
 miuix-blur-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-blur-iosarm64", version.ref = "miuix"}
 miuix-shader-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-shader-iosarm64", version.ref = "miuix"}
 miuix-squicle-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-squicle-iosarm64", version.ref = "miuix"}
-miuix-navigation3-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui-iosarm64", version.ref = "miuix"}
+miuix-nav-iosarm64 = { module = "top.yukonga.miuix.kmp:miuix-nav-iosarm64", version.ref = "miuix"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

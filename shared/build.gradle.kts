@@ -25,7 +25,7 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_11
+            jvmTarget = JvmTarget.JVM_21
         }
         androidResources {
             enable = true
@@ -51,7 +51,7 @@ kotlin {
             implementation(libs.miuix.ui.android)
             implementation(libs.miuix.preference.android)
             implementation(libs.miuix.icons.android)
-            implementation(libs.miuix.navigation3.android)
+            implementation(libs.miuix.nav.android)
             implementation(libs.miuix.blur.android)
             implementation(libs.miuix.shader.android)
         }
@@ -82,7 +82,7 @@ kotlin {
             implementation(libs.miuix.ui)
             implementation(libs.miuix.preference)
             implementation(libs.miuix.icons)
-            implementation(libs.miuix.navigation3)
+            implementation(libs.miuix.nav)
             implementation(libs.miuix.blur)
             implementation(libs.miuix.shader)
 
@@ -93,7 +93,7 @@ kotlin {
             implementation(libs.miuix.ui.iosarm64)
             implementation(libs.miuix.preference.iosarm64)
             implementation(libs.miuix.icons.iosarm64)
-            implementation(libs.miuix.navigation3.iosarm64)
+            implementation(libs.miuix.nav.iosarm64)
             implementation(libs.miuix.blur.iosarm64)
             implementation(libs.miuix.shader.iosarm64)
         }

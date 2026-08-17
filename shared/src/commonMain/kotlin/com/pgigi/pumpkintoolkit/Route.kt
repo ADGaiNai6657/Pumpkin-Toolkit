@@ -1,12 +1,12 @@
 package com.pgigi.pumpkintoolkit
 
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import com.pgigi.pumpkintoolkit.models.sunshine.GuestBookItem
 import com.pgigi.pumpkintoolkit.models.sunshine.LostItem
 import kotlinx.serialization.Serializable
 
 /**
- * Type-safe navigation keys for Navigation3.
+ * Type-safe navigation keys for miuix-nav.
  * Each destination is a NavKey (data object/data class) and can be saved/restored in the back stack.
  */
 sealed interface Route : NavKey {
@@ -39,6 +39,10 @@ sealed interface Route : NavKey {
     data class LostAndFoundDetail(val item: LostItem) : Route
     @Serializable
     data class SimpleHtml(val html: String, val title: String = "") :Route
+    @Serializable
+    data object OssLicense : Route
+    @Serializable
+    data class OssLicenseDetail(val license: com.pgigi.pumpkintoolkit.models.OssLicense) : Route
     @Serializable
     data object EmptyRoom : Route
     @Serializable

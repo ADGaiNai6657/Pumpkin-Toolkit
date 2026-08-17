@@ -14,6 +14,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import com.pgigi.pumpkintoolkit.ColorSchemeMode
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
 import kotlin.collections.set
 import kotlin.time.Clock
 
@@ -26,6 +28,8 @@ object AppConfig {
     var uiMode by mutableIntStateOf(0) // 0=Miuix, 2=Material
     var floatingNavigation by mutableStateOf(false)
     var enableBlurEffect by mutableStateOf(true)
+    var predictiveBackAnimation by mutableStateOf(PredictiveBackAnimation.AOSP)
+    var predictiveBackExitDirection by mutableStateOf(PredictiveBackExitDirection.FOLLOW_GESTURE)
 
     // 课表
     var cellHeight by mutableIntStateOf(70)
@@ -64,6 +68,8 @@ object AppConfig {
         const val UI_MODE = "ui_mode"
         const val FLOATING_NAVIGATION = "floating_navigation"
         const val ENABLE_BLUR_EFFECT = "enable_blur_effect"
+        const val PREDICTIVE_BACK_ANIMATION = "predictive_back_animation"
+        const val PREDICTIVE_BACK_EXIT_DIRECTION = "predictive_back_exit_direction"
         const val CELL_HEIGHT = "cell_height"
         const val COURSE_NAME_LINE = "course_name_line"
         const val COURSE_ROOM_LINE = "course_room_line"
@@ -91,6 +97,8 @@ object AppConfig {
         uiMode = kvault.getInt(KEY.UI_MODE) ?: 0
         floatingNavigation = kvault.getBoolean(KEY.FLOATING_NAVIGATION)?:false
         enableBlurEffect = kvault.getBoolean(KEY.ENABLE_BLUR_EFFECT)?:true
+        predictiveBackAnimation = PredictiveBackAnimation.fromName(kvault.getString(KEY.PREDICTIVE_BACK_ANIMATION))
+        predictiveBackExitDirection = PredictiveBackExitDirection.fromName(kvault.getString(KEY.PREDICTIVE_BACK_EXIT_DIRECTION))
         cellHeight = kvault.getInt(KEY.CELL_HEIGHT)?:70
         courseNameLine = kvault.getInt(KEY.COURSE_NAME_LINE)?:4
         courseRoomLine = kvault.getInt(KEY.COURSE_ROOM_LINE)?:2
@@ -120,6 +128,8 @@ object AppConfig {
         kvault.putInt(KEY.UI_MODE, uiMode)
         kvault.putBoolean(KEY.FLOATING_NAVIGATION, floatingNavigation)
         kvault.putBoolean(KEY.ENABLE_BLUR_EFFECT, enableBlurEffect)
+        kvault.putString(KEY.PREDICTIVE_BACK_ANIMATION, predictiveBackAnimation.name)
+        kvault.putString(KEY.PREDICTIVE_BACK_EXIT_DIRECTION, predictiveBackExitDirection.name)
         kvault.putInt(KEY.CELL_HEIGHT,cellHeight)
         kvault.putInt(KEY.COURSE_NAME_LINE,courseNameLine)
         kvault.putInt(KEY.COURSE_ROOM_LINE,courseRoomLine)

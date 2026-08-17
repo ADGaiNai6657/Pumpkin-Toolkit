@@ -12,7 +12,7 @@ import org.jetbrains.compose.resources.readResourceBytes
  *
  * 使用示例：
  * ```
- * val text = ResourceUtils.readText("open-source-license.html")
+ * val text = ResourceUtils.readText("data/config.json")
  * val bytes = ResourceUtils.readBytes("data/config.json")
  * ```
  */
