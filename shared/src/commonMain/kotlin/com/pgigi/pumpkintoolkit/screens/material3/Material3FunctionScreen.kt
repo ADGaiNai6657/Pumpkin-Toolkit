@@ -24,6 +24,7 @@ import com.pgigi.pumpkintoolkit.utils.QZClient
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.icon.extended.Contacts
+import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.File
 import top.yukonga.miuix.kmp.icon.extended.Location
 import top.yukonga.miuix.kmp.icon.extended.Notes
@@ -101,6 +102,12 @@ fun Material3FunctionScreen(modifier: Modifier = Modifier) {
                     title = "查看其他学期课表",
                     icon = MiuixIcons.VerticalSplit,
                     onClick = { navigator.push(Route.OtherSchedule) },
+                    showDivider = false
+                )
+                M3Row(
+                    title = "学生评教",
+                    icon = MiuixIcons.Edit,
+                    onClick = { navigator.push(Route.EvaluationMenu) },
                     showDivider = false
                 )
             }

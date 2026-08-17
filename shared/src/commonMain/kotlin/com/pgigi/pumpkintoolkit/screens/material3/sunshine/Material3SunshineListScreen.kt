@@ -52,6 +52,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.ListView
+import top.yukonga.miuix.kmp.icon.extended.Search
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,7 +169,7 @@ fun Material3SunshineListScreen(
                                 getList()
                             }
                         }) {
-                            Icon(MiuixIcons.ListView, contentDescription = "搜索")
+                            Icon(MiuixIcons.Search, contentDescription = "搜索")
                         }
                     }
                 )

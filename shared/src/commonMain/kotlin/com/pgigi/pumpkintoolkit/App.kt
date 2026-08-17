@@ -30,6 +30,9 @@ import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.LostAndFoundListScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineDetailScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineListScreen
 import com.pgigi.pumpkintoolkit.screens.miuix.sunshine.SunshineMenuScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.evaluation.MiuixEvaluationDetailScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.evaluation.MiuixEvaluationListScreen
+import com.pgigi.pumpkintoolkit.screens.miuix.evaluation.MiuixEvaluationMenuScreen
 import com.pgigi.pumpkintoolkit.screens.material3.Material3AppTheme
 import com.pgigi.pumpkintoolkit.screens.material3.Material3ExamScreen
 import com.pgigi.pumpkintoolkit.screens.material3.Material3ExamScoreScreen
@@ -47,6 +50,9 @@ import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3LostAndFound
 import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3SunshineDetailScreen
 import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3SunshineListScreen
 import com.pgigi.pumpkintoolkit.screens.material3.sunshine.Material3SunshineMenuScreen
+import com.pgigi.pumpkintoolkit.screens.material3.evaluation.Material3EvaluationDetailScreen
+import com.pgigi.pumpkintoolkit.screens.material3.evaluation.Material3EvaluationListScreen
+import com.pgigi.pumpkintoolkit.screens.material3.evaluation.Material3EvaluationMenuScreen
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
@@ -111,8 +117,10 @@ fun App(
             }
             val startDate = QZClient.getStartDate()
             startDate?.let {
-                AppConfig.startDate = startDate
-                AppConfig.save()
+                if(!AppConfig.lockStartDate){
+                    AppConfig.startDate = startDate
+                    AppConfig.save()
+                }
             }
             val totalWeek = QZClient.getWeekNum()
             totalWeek?.let {
@@ -195,6 +203,15 @@ fun App(
                             entry<Route.Plan> {
                                 Material3PlanScreen()
                             }
+                            entry<Route.EvaluationMenu> {
+                                Material3EvaluationMenuScreen()
+                            }
+                            entry<Route.EvaluationList> { route ->
+                                Material3EvaluationListScreen(route.actionUrl, route.title)
+                            }
+                            entry<Route.EvaluationDetail> { route ->
+                                Material3EvaluationDetailScreen(route.actionUrl, route.title)
+                            }
                         }
                     }
 
@@ -267,6 +284,15 @@ fun App(
                         }
                         entry<Route.Plan> {
                             MiuixPlanScreen()
+                        }
+                        entry<Route.EvaluationMenu> {
+                            MiuixEvaluationMenuScreen()
+                        }
+                        entry<Route.EvaluationList> { route ->
+                            MiuixEvaluationListScreen(route.actionUrl, route.title)
+                        }
+                        entry<Route.EvaluationDetail> { route ->
+                            MiuixEvaluationDetailScreen(route.actionUrl, route.title)
                         }
                     }
                 }

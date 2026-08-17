@@ -49,4 +49,11 @@ sealed interface Route : NavKey {
 
     @Serializable
     data object Plan: Route
+
+    @Serializable
+    data object EvaluationMenu : Route
+    @Serializable
+    data class EvaluationList(val actionUrl: String, val title: String = "评教列表") : Route
+    @Serializable
+    data class EvaluationDetail(val actionUrl: String, val title: String = "评教详情") : Route
 }

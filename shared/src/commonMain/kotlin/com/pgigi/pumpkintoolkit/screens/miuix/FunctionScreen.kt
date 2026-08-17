@@ -34,6 +34,7 @@ import top.yukonga.miuix.kmp.basic.TextButtonColors
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.icon.extended.Contacts
+import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.File
 import top.yukonga.miuix.kmp.icon.extended.Location
 import top.yukonga.miuix.kmp.icon.extended.Notes
@@ -136,6 +137,15 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         Icon(
                             imageVector = MiuixIcons.VerticalSplit,
                             contentDescription = "其他学期课表"
+                        )
+                    })
+                ArrowPreference(title = "学生评教", onClick = {
+                    navigator.push(Route.EvaluationMenu)
+                },
+                    startAction = {
+                        Icon(
+                            imageVector = MiuixIcons.Edit,
+                            contentDescription = "学生评教"
                         )
                     })
             }

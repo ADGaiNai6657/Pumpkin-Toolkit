@@ -97,7 +97,6 @@ fun Material3SettingScreen() {
                 val uiIndex = if (AppConfig.uiMode == 2) 1 else 0
                 M3Row(
                     title = "UI 风格",
-                    icon = null,
                     trailingContent = { M3TrailingText(uiItems[uiIndex]) },
                     onClick = {
                         pickerDialog = PickerState(
@@ -114,7 +113,7 @@ fun Material3SettingScreen() {
                         )
                     },
                 )
-                val colorItems = listOf("跟随系统", "浅色模式", "深色模式")
+                val colorItems = listOf("跟随系统", "关闭", "开启")
                 val selectedColor = when (AppConfig.colorSchemeMode) {
                     ColorSchemeMode.Light -> 1
                     ColorSchemeMode.Dark -> 2
@@ -122,11 +121,10 @@ fun Material3SettingScreen() {
                 }
                 M3Row(
                     title = "颜色模式",
-                    icon = null,
                     trailingContent = { M3TrailingText(colorItems[selectedColor]) },
                     onClick = {
                         pickerDialog = PickerState(
-                            title = "颜色模式",
+                            title = "深色模式",
                             items = colorItems,
                             selectedIndex = selectedColor,
                             onSelected = {
@@ -142,7 +140,6 @@ fun Material3SettingScreen() {
                 )
                 M3Row(
                     title = "悬浮导航栏",
-                    icon = null,
                     trailingContent = {
                         Switch(
                             checked = AppConfig.floatingNavigation,
@@ -157,27 +154,23 @@ fun Material3SettingScreen() {
                         AppConfig.save()
                     },
                 )
-                AnimatedVisibility(AppConfig.floatingNavigation){
-                    M3Row(
-                        title = "导航栏液态玻璃效果",
-                        icon = null,
-                        summary = "Android 需 13+(SDK 33+) 版本才能使用",
-                        trailingContent = {
-                            Switch(
-                                checked = AppConfig.enableBlurEffect,
-                                onCheckedChange = {
-                                    AppConfig.enableBlurEffect = it
-                                    AppConfig.save()
-                                }
-                            )
-                        },
-                        onClick = {
-                            AppConfig.enableBlurEffect = !AppConfig.enableBlurEffect
-                            AppConfig.save()
-                        },
-                        showDivider = false
-                    )
-                }
+                M3Row(
+                    title = "模糊效果",
+                    summary = "Android 需 13+(SDK 33+) 版本才能使用",
+                    trailingContent = {
+                        Switch(
+                            checked = AppConfig.enableBlurEffect,
+                            onCheckedChange = {
+                                AppConfig.enableBlurEffect = it
+                                AppConfig.save()
+                            }
+                        )
+                    },
+                    onClick = {
+                        AppConfig.enableBlurEffect = !AppConfig.enableBlurEffect
+                        AppConfig.save()
+                    },
+                )
             }
 
             // Schedule settings
@@ -186,7 +179,6 @@ fun Material3SettingScreen() {
                 val timeTypeItems = listOf("自动切换", "夏秋时间", "秋冬时间")
                 M3Row(
                     title = "课程时间",
-                    icon = null,
                     trailingContent = { M3TrailingText(timeTypeItems[AppConfig.timeSeason]) },
                     onClick = {
                         pickerDialog = PickerState(
@@ -209,12 +201,28 @@ fun Material3SettingScreen() {
                 )
                 M3Row(
                     title = "课表开始时间",
-                    icon = null,
                     trailingContent = {
                         M3TrailingText(AppConfig.startDate?.toString() ?: "")
                     },
                     onClick = {
                         showDialog.value = true
+                    },
+                )
+                M3Row(
+                    title = "锁定课表开始时间",
+                    summary = "关闭此按钮将自动同步课表开始时间",
+                    trailingContent = {
+                        Switch(
+                            checked = AppConfig.lockStartDate,
+                            onCheckedChange = {
+                                AppConfig.lockStartDate = it
+                                AppConfig.save()
+                            }
+                        )
+                    },
+                    onClick = {
+                        AppConfig.lockStartDate = !AppConfig.lockStartDate
+                        AppConfig.save()
                     },
                 )
 
@@ -260,7 +268,6 @@ fun Material3SettingScreen() {
                 val lineItems = listOf("1", "2", "3", "4")
                 M3Row(
                     title = "课程名称显示行数",
-                    icon = null,
                     trailingContent = { M3TrailingText(lineItems[AppConfig.courseNameLine - 1]) },
                     onClick = {
                         pickerDialog = PickerState(
@@ -276,7 +283,6 @@ fun Material3SettingScreen() {
                 )
                 M3Row(
                     title = "课程教室显示行数",
-                    icon = null,
                     trailingContent = { M3TrailingText(lineItems[AppConfig.courseRoomLine - 1]) },
                     onClick = {
                         pickerDialog = PickerState(
@@ -292,7 +298,6 @@ fun Material3SettingScreen() {
                 )
                 M3Row(
                     title = "课程教师显示行数",
-                    icon = null,
                     trailingContent = { M3TrailingText(lineItems[AppConfig.courseTeacherLine - 1]) },
                     onClick = {
                         pickerDialog = PickerState(
@@ -313,7 +318,6 @@ fun Material3SettingScreen() {
             M3GroupSection {
                 M3Row(
                     title = "隐藏不及格成绩",
-                    icon = null,
                     summary = "应该永远都用不到这个功能吧",
                     trailingContent = {
                         Switch(
@@ -342,7 +346,6 @@ fun Material3SettingScreen() {
                 val selectedServer = if (AppConfig.serverUrl == serverItems[1]) 1 else 0
                 M3Row(
                     title = "服务器",
-                    icon = null,
                     trailingContent = { M3TrailingText(serverItems[selectedServer]) },
                     onClick = {
                         pickerDialog = PickerState(
@@ -363,7 +366,6 @@ fun Material3SettingScreen() {
                     else AppConfig.rawTermValueMap.keys.indexOf(AppConfig.termFilterStartId) + 1
                 M3Row(
                     title = "学期过滤",
-                    icon = null,
                     summary = "早于所选学期的将不再显示",
                     trailingContent = {
                         M3TrailingText(termFilterItems.getOrElse(termFilterIndex) { "不过滤" })
@@ -392,7 +394,6 @@ fun Material3SettingScreen() {
             M3GroupSection {
                 M3Row(
                     title = "操作系统",
-                    icon = null,
                     trailingContent = { M3TrailingText(getPlatform().name) },
                 )
                 M3Row(

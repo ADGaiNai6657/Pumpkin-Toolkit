@@ -23,8 +23,8 @@ object AppConfig {
 
     // UI
     var colorSchemeMode by mutableStateOf(ColorSchemeMode.System)
-    var uiMode by mutableIntStateOf(0) // 0=Miuix, 2=Material 3
-    var floatingNavigation by mutableStateOf(true)
+    var uiMode by mutableIntStateOf(0) // 0=Miuix, 2=Material
+    var floatingNavigation by mutableStateOf(false)
     var enableBlurEffect by mutableStateOf(true)
 
     // 课表
@@ -56,6 +56,8 @@ object AppConfig {
 
     var hideFailScore by mutableStateOf(false)
 
+    var lockStartDate by mutableStateOf(false)
+
 
     object KEY {
         const val COLOR_MODE = "color_mode"
@@ -75,6 +77,7 @@ object AppConfig {
         const val TOTAL_WEEK = "total_week"
         const val TERM_FILTER_START = "term_filter_start"
         const val HIDE_FAIL_SCORE = "hide_fail_score"
+        const val LOCK_START_DATE = "lock_start_date"
     }
 
 
@@ -86,8 +89,8 @@ object AppConfig {
             else -> ColorSchemeMode.System
         }
         uiMode = kvault.getInt(KEY.UI_MODE) ?: 0
-        floatingNavigation = (kvault.getInt(KEY.FLOATING_NAVIGATION) ?: 1) == 1
-        enableBlurEffect = (kvault.getInt(KEY.ENABLE_BLUR_EFFECT) ?: 1) == 1
+        floatingNavigation = kvault.getBoolean(KEY.FLOATING_NAVIGATION)?:false
+        enableBlurEffect = kvault.getBoolean(KEY.ENABLE_BLUR_EFFECT)?:true
         cellHeight = kvault.getInt(KEY.CELL_HEIGHT)?:70
         courseNameLine = kvault.getInt(KEY.COURSE_NAME_LINE)?:4
         courseRoomLine = kvault.getInt(KEY.COURSE_ROOM_LINE)?:2
@@ -108,14 +111,15 @@ object AppConfig {
         serverUrl = kvault.getString(KEY.SERVER_URL)?:"http://61.187.179.66:8924/"
         totalWeek = kvault.getInt(KEY.TOTAL_WEEK)?:0
         termFilterStartId = kvault.getString(KEY.TERM_FILTER_START)?:""
-        hideFailScore = (kvault.getInt(KEY.HIDE_FAIL_SCORE) ?: 0) == 1
+        hideFailScore = kvault.getBoolean(KEY.HIDE_FAIL_SCORE)?:false
+        lockStartDate = kvault.getBoolean(KEY.LOCK_START_DATE)?:false
     }
 
     fun save(){
         kvault.putString(KEY.COLOR_MODE,colorSchemeMode.name)
         kvault.putInt(KEY.UI_MODE, uiMode)
-        kvault.putInt(KEY.FLOATING_NAVIGATION, if (floatingNavigation) 1 else 0)
-        kvault.putInt(KEY.ENABLE_BLUR_EFFECT, if (enableBlurEffect) 1 else 0)
+        kvault.putBoolean(KEY.FLOATING_NAVIGATION, floatingNavigation)
+        kvault.putBoolean(KEY.ENABLE_BLUR_EFFECT, enableBlurEffect)
         kvault.putInt(KEY.CELL_HEIGHT,cellHeight)
         kvault.putInt(KEY.COURSE_NAME_LINE,courseNameLine)
         kvault.putInt(KEY.COURSE_ROOM_LINE,courseRoomLine)
@@ -128,7 +132,8 @@ object AppConfig {
         kvault.putString(KEY.SERVER_URL,serverUrl)
         kvault.putInt(KEY.TOTAL_WEEK,totalWeek)
         kvault.putString(KEY.TERM_FILTER_START, termFilterStartId)
-        kvault.putInt(KEY.HIDE_FAIL_SCORE, if (hideFailScore) 1 else 0)
+        kvault.putBoolean(KEY.HIDE_FAIL_SCORE, hideFailScore)
+        kvault.putBoolean(KEY.LOCK_START_DATE, lockStartDate)
     }
 
     fun updateTermData(map: Map<String, String>) {

@@ -102,7 +102,7 @@ fun MiuixSettingScreen() {
                         }
                     }
                 )
-                val colorItems = listOf("跟随系统", "浅色模式", "深色模式")
+                val colorItems = listOf("跟随系统", "关闭", "开启")
                 var selectedColor by remember { mutableIntStateOf(0) }
                 selectedColor = when (AppConfig.colorSchemeMode) {
                     ColorSchemeMode.Light -> 1
@@ -110,7 +110,7 @@ fun MiuixSettingScreen() {
                     else -> 0
                 }
                 WindowDropdownPreference(
-                    title = "颜色模式",
+                    title = "深色模式",
                     items = colorItems,
                     selectedIndex = selectedColor,
                     onSelectedIndexChange = {
@@ -133,17 +133,15 @@ fun MiuixSettingScreen() {
                         AppConfig.save()
                     }
                 )
-                AnimatedVisibility(AppConfig.floatingNavigation){
-                    SwitchPreference(
-                        title = "导航栏液态玻璃效果",
-                        summary = "Android 需 13+(SDK 33+) 版本才能使用",
-                        checked = AppConfig.enableBlurEffect,
-                        onCheckedChange = {
-                            AppConfig.enableBlurEffect = it
-                            AppConfig.save()
-                        }
-                    )
-                }
+                SwitchPreference(
+                    title = "模糊效果",
+                    summary = "Android 需 13+(SDK 33+) 版本才能使用",
+                    checked = AppConfig.enableBlurEffect,
+                    onCheckedChange = {
+                        AppConfig.enableBlurEffect = it
+                        AppConfig.save()
+                    }
+                )
             }
 
             SmallTitle("课表设置")
@@ -203,6 +201,15 @@ fun MiuixSettingScreen() {
                             datePickerState.selectedDateMillis = AppConfig.startDate!!.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
                         }
                         showDialog.value = true
+                    }
+                )
+                SwitchPreference(
+                    title = "锁定课表开始时间",
+                    summary = "关闭此按钮将自动同步课表开始时间",
+                    checked = AppConfig.lockStartDate,
+                    onCheckedChange = {
+                        AppConfig.lockStartDate = it
+                        AppConfig.save()
                     }
                 )
 

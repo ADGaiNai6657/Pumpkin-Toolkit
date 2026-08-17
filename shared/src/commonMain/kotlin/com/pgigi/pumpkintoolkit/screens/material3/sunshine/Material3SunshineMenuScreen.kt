@@ -61,7 +61,6 @@ fun Material3SunshineMenuScreen() {
                         title = "列表清单",
                         icon = MiuixIcons.ListView,
                         onClick = { navigator.push(Route.SunshineList()) },
-                        showDivider = true
                     )
                     M3Row(
                         title = "政策咨询",
@@ -74,7 +73,6 @@ fun Material3SunshineMenuScreen() {
                                 )
                             )
                         },
-                        showDivider = true
                     )
                     M3Row(
                         title = "我要建议",
@@ -87,7 +85,6 @@ fun Material3SunshineMenuScreen() {
                                 )
                             )
                         },
-                        showDivider = true
                     )
                     M3Row(
                         title = "我要表扬",
@@ -100,7 +97,6 @@ fun Material3SunshineMenuScreen() {
                                 )
                             )
                         },
-                        showDivider = true
                     )
                     M3Row(
                         title = "我要反映",
@@ -113,7 +109,6 @@ fun Material3SunshineMenuScreen() {
                                 )
                             )
                         },
-                        showDivider = true
                     )
                     M3Row(
                         title = "投诉受理",
@@ -126,7 +121,6 @@ fun Material3SunshineMenuScreen() {
                                 )
                             )
                         },
-                        showDivider = true
                     )
                     M3Row(
                         title = "失物招领",

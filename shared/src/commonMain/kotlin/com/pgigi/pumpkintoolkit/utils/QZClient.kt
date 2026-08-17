@@ -13,6 +13,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -23,11 +24,16 @@ import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
 import io.ktor.http.encodeURLPath
 import io.ktor.http.setCookie
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
+import test.xspj.EvaluationDetail
+import test.xspj.EvaluationItem
+import test.xspj.EvaluationListItem
+import test.xspj.EvaluationMenuItem
 
 object QZClient {
     val client = HttpClient {
@@ -61,7 +67,7 @@ object QZClient {
     }
 
 
-    private fun List<Cookie>.toCookieString() : String {
+    private fun List<Cookie>.toHeaderString() : String {
         return this.joinToString("; ") { "${it.name}=${it.value}" }
     }
     private fun url(path: String): String {
@@ -96,7 +102,7 @@ object QZClient {
                 return false
             }
             response = client.post(url("Logon.do?method=logon")){
-                header(HttpHeaders.Cookie, cookieList.toCookieString())
+                header(HttpHeaders.Cookie, cookieList.toHeaderString())
                 header(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
                 setBody((
                         "userAccount=${username}" +
@@ -122,7 +128,7 @@ object QZClient {
                 return false
             }
             response = client.get(location) {
-                header(HttpHeaders.Cookie, cookieList.toCookieString())
+                header(HttpHeaders.Cookie, cookieList.toHeaderString())
             }
             if(response.status != HttpStatusCode.Found){
                 onFailure("请联系开发者: Code="+response.status)
@@ -170,7 +176,7 @@ object QZClient {
                     { retry++ })
                 if(logged){
                     val html = client.get(url) {
-                        header(HttpHeaders.Cookie, cookies.toCookieString())
+                        header(HttpHeaders.Cookie, cookies.toHeaderString())
                     }.bodyAsText()
                     val doc = Ksoup.parse(html)
                     if(doc.title().trim()=="登录") {
@@ -513,4 +519,260 @@ object QZClient {
         if (html.isNullOrBlank()) return null
         return parseExamScores(html)
     }
+
+    fun parseEvaluationMenuItems(html: String): List<EvaluationMenuItem>?{
+        if(html.isBlank()) return null
+        val list = mutableListOf<EvaluationMenuItem>()
+        val doc = Ksoup.parse(html)
+        val trs = doc.select("table tbody tr")
+
+        if(trs.size<=1) return list
+
+        for (i in 1..<trs.size){
+            val tds = trs[i].select("td")
+            if(tds.size<7) continue
+            val a = tds[6].selectFirst("a")
+            a?.let {
+                val url = a.attr("href")
+                if(url.isNotBlank()){
+                    list.add(EvaluationMenuItem(
+                        termName = tds[1].text(),
+                        evaluationName = tds[3].text(),
+                        actionUrl = url
+                    ))
+                }
+            }
+        }
+        return list
+    }
+
+    fun parseEvaluationListItems(html:String): List<EvaluationListItem>?{
+        if(html.isBlank()) return null
+        val list = mutableListOf<EvaluationListItem>()
+        val doc = Ksoup.parse(html)
+        val trs = doc.select("table tbody tr")
+
+        if(trs.size<=1) return list
+
+        for (i in 1..<trs.size){
+            val tds = trs[i].select("td")
+            if(tds.size<16) continue
+            val a = tds[15].selectFirst("a")
+            a?.let {
+                val url = a.attr("href")
+                if(url.isNotBlank()){
+                    list.add(EvaluationListItem(
+                        courseName = tds[2].text(),
+                        teacher = tds[3].text(),
+                        score = tds[5].text().toFloat(),
+                        isSubmit = tds[7].text().trim().contentEquals("是"),
+                        actionUrl = url,
+                    ))
+                }
+            }
+        }
+        return list
+    }
+
+    fun parseEvaluationListTotalPage(html: String): Int?{
+        val doc = Ksoup.parse(html)
+        val element = doc.selectFirst(".Nsb_r_list_fy3")
+        element?.let {
+            val pattern = Regex("共(\\d+)页")
+            val matchResult = pattern.find(element.text())
+            return matchResult?.groupValues?.get(1)?.toIntOrNull()
+        }
+        return null
+    }
+
+    fun parseEvaluationDetail(html: String): EvaluationDetail?{
+        val doc = Ksoup.parse(html)
+        val inputs = doc.select("input")
+
+        val keyValueMap = mutableMapOf<String, String>()
+        val evaluationIdSet = mutableSetOf<String>()
+
+        inputs.forEach {
+            if(
+                it.attr("name").startsWith("pj0601id_") &&
+                it.attr("checked")!="checked"
+            ) return@forEach
+            if(it.attr("name").startsWith("pj0601fz_")) return@forEach
+            if(it.attr("name")=="pj06xh") {
+                evaluationIdSet.add(it.attr("value"))
+                return@forEach
+            }
+            keyValueMap[it.attr("name")] = it.attr("value")
+        }
+
+        val trs = doc.select("table#table1 tbody tr")
+        val evaluationList = mutableListOf<EvaluationItem>()
+
+        if(trs.size<=1) return null
+
+        for(i in 1..<trs.size){
+            val tds = trs[i].select("td")
+            if (tds.size < 2) continue
+            if (tds[1].attr("name")!="zbtd") continue
+            val title = tds[0].text().replace(" ","")
+
+            val inputs = tds.select("input")
+            var evaluationId : String? = null
+            val scoreKeyValueMap = mutableMapOf<String, Float>()
+
+            inputs.forEach {
+                if(it.attr("name")=="pj06xh") evaluationId = it.attr("value")
+            }
+            evaluationId?.let {
+                inputs.forEach {
+                    if(it.attr("name").startsWith("pj0601fz_")){
+                        val key = it.attr("name").removePrefix("pj0601fz_${evaluationId}_")
+                        val value = it.attr("value").toFloat()
+                        scoreKeyValueMap[key] = value
+                    }
+                }
+                evaluationList.add(
+                    EvaluationItem(
+                        title = title,
+                        evaluationId = evaluationId,
+                        scoreKeyValueMap = scoreKeyValueMap
+                    )
+                )
+            }
+        }
+
+        val commentElement = doc.selectFirst("textarea#jynr")
+        val comment = if(commentElement!==null) commentElement.text() else ""
+
+        return EvaluationDetail(
+            keyValueMap = keyValueMap,
+            evaluationIdSet = evaluationIdSet,
+            evaluationList = evaluationList,
+            comment = comment
+        )
+    }
+
+    suspend fun getEvaluationMenuHItems(): List<EvaluationMenuItem>?{
+        try{
+            val h1 = client.get(url("jsxsd/xspj/xspj_find.do")) {
+                header(HttpHeaders.Cookie, cookies.toHeaderString())
+            }.bodyAsText()
+            return parseEvaluationMenuItems(h1)
+        }catch (e: Exception){
+            return null
+        }
+    }
+
+    suspend fun getEvaluationListItems(actionUrl: String): List<EvaluationListItem>?{
+        try {
+            val html = client.get(url(actionUrl)) {
+                header(HttpHeaders.Cookie, cookies.toHeaderString())
+            }.bodyAsText()
+            if(html.isBlank()) return null
+            val pageSize = parseEvaluationListTotalPage(html)
+
+            pageSize?.let{
+                val list = mutableListOf<EvaluationListItem>()
+                for (i in 1..pageSize) {
+                    val html =client.post(url(actionUrl)) {
+                        header(HttpHeaders.Cookie, cookies.toHeaderString())
+                        setBody(FormDataContent(Parameters.build {
+                            append("pageIndex", i.toString())
+                        }))
+                    }.bodyAsText()
+                    val l = parseEvaluationListItems(html)
+                    l?.let {
+                        list.addAll(l)
+                    }
+                }
+                return list
+            }
+            return null
+        } catch (e: Exception) {
+            return null
+        }
+    }
+
+    suspend fun getEvaluationDetail(actionUrl: String): EvaluationDetail?{
+        try {
+            val html = client.get(url(actionUrl)) {
+                header(HttpHeaders.Cookie, cookies.toHeaderString())
+            }.bodyAsText()
+            if(html.isBlank()) return null
+            return parseEvaluationDetail(html)
+        } catch (e: Exception) {
+            return null
+        }
+    }
+
+    /**
+     * 提交评教。
+     *
+     * 向 jsxsd/xspj/xspj_save.do 发送 POST 请求，表单参数构建规则：
+     * 1. 以 [EvaluationDetail.keyValueMap] 为基础
+     * 2. 将 issubmit 的值改为 "1"
+     * 3. pj0601id_ 前缀的参数根据 [selectedValues] 中用户的选择复写
+     * 4. [EvaluationDetail.evaluationIdSet] 中每个值都作为 pj06xh 参数添加（允许多个同名 key）
+     * 5. 追加 jynr = [comment]
+     *
+     * @return 响应中 alert(...) 的消息文本，网络异常时返回 null
+     */
+    suspend fun submitEvaluation(
+        detail: EvaluationDetail,
+        selectedValues: Map<String, String>,
+        comment: String
+    ): String? {
+        try {
+            val params = Parameters.build {
+                detail.keyValueMap.forEach { (key, value) ->
+                    if (!key.startsWith("pj0601id_") && key != "issubmit") {
+                        append(key, value)
+                    }
+                }
+                append("issubmit", "1")
+                detail.evaluationList.forEach { item ->
+                    val selected = selectedValues[item.evaluationId]
+                    if (!selected.isNullOrEmpty()) {
+                        append("pj0601id_${item.evaluationId}", selected)
+                    }
+                }
+                detail.evaluationIdSet.forEach { id ->
+                    append("pj06xh", id)
+                }
+                append("jynr", comment)
+            }
+            val html = client.post(url("jsxsd/xspj/xspj_save.do")) {
+                header(HttpHeaders.Cookie, cookies.toHeaderString())
+                setBody(FormDataContent(params))
+            }.bodyAsText()
+            val pattern = Regex("alert\\('([^']*)'\\)")
+            return pattern.find(html)?.groupValues?.get(1)
+        } catch (e: Exception) {
+            return null
+        }
+    }
+
+    /**
+     * 自动评教：所有子项选最高分，随机一项选第二高分，评语留空。
+     *
+     * @param actionUrl 评教详情页的 actionUrl（来自列表项）
+     * @return 提交结果消息，如"保存成功"；获取详情失败或网络异常返回 null
+     */
+    suspend fun autoEvaluate(actionUrl: String): String? {
+        val detail = getEvaluationDetail(actionUrl) ?: return null
+        val selectedValues = mutableMapOf<String, String>()
+        val sortedItems = detail.evaluationList.filter { it.scoreKeyValueMap.isNotEmpty() }
+        if (sortedItems.isEmpty()) return null
+        val secondIndex = sortedItems.indices.random()
+        sortedItems.forEachIndexed { index, item ->
+            val sorted = item.scoreKeyValueMap.entries.sortedByDescending { it.value }
+            selectedValues[item.evaluationId] = if (index == secondIndex && sorted.size > 1) {
+                sorted[1].key
+            } else {
+                sorted[0].key
+            }
+        }
+        return submitEvaluation(detail, selectedValues, "")
+    }
+
 }

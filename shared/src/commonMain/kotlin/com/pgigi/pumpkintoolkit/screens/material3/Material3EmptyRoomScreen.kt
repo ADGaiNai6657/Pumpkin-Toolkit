@@ -279,7 +279,6 @@ private fun M3EmptyRoomOperations(
                     )
                 )
             },
-            showDivider = true
         )
         M3Row(
             title = "教学楼",
@@ -298,7 +297,6 @@ private fun M3EmptyRoomOperations(
                     )
                 )
             },
-            showDivider = true
         )
         M3Row(
             title = "日期",
@@ -311,7 +309,6 @@ private fun M3EmptyRoomOperations(
                 M3TrailingText("${date}(周${dayList[date.dayOfWeek.ordinal]})")
             },
             onClick = onDateClick,
-            showDivider = true
         )
         M3Row(
             title = "节次",
