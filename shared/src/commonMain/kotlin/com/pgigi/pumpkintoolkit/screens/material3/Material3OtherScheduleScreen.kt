@@ -39,7 +39,6 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.components.material3.SchedulePager
 import com.pgigi.pumpkintoolkit.models.Course
-import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
 import com.pgigi.pumpkintoolkit.viewmodel.OtherScheduleViewModel
@@ -145,7 +144,7 @@ fun Material3OtherScheduleScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f)),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }

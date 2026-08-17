@@ -45,7 +45,7 @@ import top.yukonga.miuix.kmp.window.WindowListPopup
 fun MiuixOtherScheduleScreen(viewModel: OtherScheduleViewModel = viewModel(factory = OtherScheduleViewModel.Factory)){
     val navigator = LocalNavigator.current
     var title by remember { mutableStateOf("课程表") }
-    val coroutineScope = rememberCoroutineScope()
+    rememberCoroutineScope()
     var loading by remember { mutableStateOf(true) }
     var initialPage by remember { mutableIntStateOf(0) }
     var pageCount by remember { mutableIntStateOf(0) }

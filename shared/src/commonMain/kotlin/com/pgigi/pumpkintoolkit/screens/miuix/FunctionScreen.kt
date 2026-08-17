@@ -16,8 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
@@ -28,7 +26,6 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextButtonColors
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -50,7 +47,7 @@ import top.yukonga.miuix.kmp.window.WindowDialog
 @Composable
 fun FunctionScreen(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
-    val coroutineScope = rememberCoroutineScope()
+    rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSetTimeDialog by remember { mutableStateOf(false) }
 

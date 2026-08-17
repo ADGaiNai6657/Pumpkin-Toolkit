@@ -38,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,8 +118,8 @@ fun Material3EmptyRoomScreen(
         viewModel.selectedBuilding = 0
     }
 
-    val schoolItems = listOf("红湘", "雨母", "校外")
-    val lessonItems = listOf("第1、2节", "第3、4节", "第5、6节", "第7、8节", "第9、10节")
+    listOf("红湘", "雨母", "校外")
+    listOf("第1、2节", "第3、4节", "第5、6节", "第7、8节", "第9、10节")
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
