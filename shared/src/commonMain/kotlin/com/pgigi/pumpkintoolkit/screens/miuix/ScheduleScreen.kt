@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.LocalAppViewModel
 import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
@@ -57,20 +57,16 @@ import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
-fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = viewModel(factory = AppViewModel.Factory) ){
+fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAppViewModel.current ){
     val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
     val navigator = LocalNavigator.current
     var title by remember { mutableStateOf("课程表") }
     val coroutineScope = rememberCoroutineScope()
-    var loading by remember { mutableStateOf(true) }
     var initialPage by remember { mutableIntStateOf(0) }
     var pageCount by remember { mutableIntStateOf(0) }
     val windowInfo = LocalWindowInfo.current
     val screenWidthDp = windowInfo.containerDpSize.width
-
-    LaunchedEffect(viewModel.courseList.isEmpty()) {
-        loading = viewModel.courseList.isEmpty()
-    }
+    val loading = loggedIn && viewModel.courseList.isEmpty()
 
     val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList) )
 
@@ -151,17 +147,17 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = view
                         val list = QZClient.getAllCourses()
                         list?.let {
                             viewModel.courseList.clear()
-                        viewModel.courseList.addAll(list)
-                        FileStoreUtils.writeString(
-                            FileName.SCHEDULE,
-                            JsonUtil.toJson(
-                                ScheduleCache(
-                                    updateTime = Clock.System.now().toEpochMilliseconds(),
-                                    courses = list
-                                ),
-                                ScheduleCache.serializer()
+                            viewModel.courseList.addAll(list)
+                            FileStoreUtils.writeString(
+                                FileName.SCHEDULE,
+                                JsonUtil.toJson(
+                                    ScheduleCache(
+                                        updateTime = Clock.System.now().toEpochMilliseconds(),
+                                        courses = list
+                                    ),
+                                    ScheduleCache.serializer()
+                                )
                             )
-                        )
                         }
                         val startDate = QZClient.getStartDate()
                         startDate?.let {
@@ -209,7 +205,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = view
                 )
             }
         }
-        if(loading && loggedIn){
+        if(loading){
             InfiniteProgressIndicator(
                 Modifier
                     .fillMaxSize()

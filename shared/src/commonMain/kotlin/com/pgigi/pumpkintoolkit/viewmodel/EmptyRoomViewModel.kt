@@ -4,12 +4,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.pgigi.pumpkintoolkit.screens.miuix.Building
+import kotlinx.datetime.LocalDate
 
 class EmptyRoomViewModel : ViewModel() {
 
@@ -20,6 +22,10 @@ class EmptyRoomViewModel : ViewModel() {
     var selectedBuilding by mutableIntStateOf(0)
     var selectedLesson by mutableIntStateOf(0)
     val emptyRoomMap = mutableStateMapOf<String, Boolean>()
+
+    var selectedTermIndex by mutableIntStateOf(-1)
+    var startDate by mutableStateOf<LocalDate?>(null)
+    val termStartDates = mutableStateMapOf<String, LocalDate>()
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

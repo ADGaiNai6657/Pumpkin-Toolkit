@@ -162,7 +162,7 @@ fun MiuixLoginScreen(){
                                             )
                                         }
                                         logging = false
-                                        navigator.replace(Route.Home)
+                                        navigator.pop()
                                     },
                                     onFailure = {
                                         coroutineScope.launch{

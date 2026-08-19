@@ -43,8 +43,10 @@ android {
         applicationId = "com.pgigi.pumpkintoolkit"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = libs.versions.appVersionCode.get().toInt()
+        versionName = libs.versions.appVersionName.get()
+//        versionCode = 1
+//        versionName = "1.0.0"
     }
 
     signingConfigs {

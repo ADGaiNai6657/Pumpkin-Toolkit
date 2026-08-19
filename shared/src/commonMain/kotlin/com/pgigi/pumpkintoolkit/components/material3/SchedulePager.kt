@@ -4,12 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
@@ -272,6 +273,7 @@ fun SchedulePager(
                 DetailRow(MiuixIcons.Contacts, "教师: " + CourseDetailSheet.teacher.value, CourseDetailSheet.teacher.value)
             }
             DetailRow(MiuixIcons.Months, "周次: " + CourseDetailSheet.weeks.value, CourseDetailSheet.weeks.value)
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
@@ -340,5 +342,4 @@ private fun DetailRow(icon: ImageVector, contentDescription: String, title: Stri
             color = MaterialTheme.colorScheme.onSurface
         )
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }

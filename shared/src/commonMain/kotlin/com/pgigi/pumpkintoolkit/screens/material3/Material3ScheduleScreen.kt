@@ -34,8 +34,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.LocalAppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.material3.SchedulePager
@@ -60,23 +60,20 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun Material3ScheduleScreen(
     modifier: Modifier = Modifier,
-    viewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)
+    viewModel: AppViewModel = LocalAppViewModel.current
 ) {
     val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
     val navigator = LocalNavigator.current
     var title by remember { mutableStateOf("课程表") }
     val coroutineScope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
-    var loading by remember { mutableStateOf(true) }
     var refreshing by remember { mutableStateOf(false) }
     var initialPage by remember { mutableIntStateOf(0) }
     var pageCount by remember { mutableIntStateOf(0) }
     val windowInfo = LocalWindowInfo.current
     val screenWidthDp = windowInfo.containerDpSize.width
 
-    LaunchedEffect(viewModel.courseList.isEmpty()) {
-        loading = viewModel.courseList.isEmpty()
-    }
+    val loading = loggedIn && viewModel.courseList.isEmpty()
 
     val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList))
 
@@ -218,7 +215,7 @@ fun Material3ScheduleScreen(
                 )
             }
         }
-        if (loading && loggedIn) {
+        if (loading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -83,9 +84,11 @@ fun M3Row(
     trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     showDivider: Boolean = false,
+    enabled: Boolean = true,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val rowModifier = if (onClick != null) {
+    val alpha = if (enabled) 1f else 0.4f
+    val rowModifier = if (onClick != null && enabled) {
         Modifier.clickable {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
@@ -103,6 +106,7 @@ fun M3Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
+                .alpha(alpha)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)

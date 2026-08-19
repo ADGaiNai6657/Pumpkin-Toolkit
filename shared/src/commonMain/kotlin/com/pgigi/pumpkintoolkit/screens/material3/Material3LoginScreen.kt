@@ -154,7 +154,7 @@ fun Material3LoginScreen() {
                                         )
                                     }
                                     logging = false
-                                    navigator.replace(Route.Home)
+                                    navigator.pop()
                                 },
                                 onFailure = {
                                     coroutineScope.launch {

@@ -1,18 +1,28 @@
 package com.pgigi.pumpkintoolkit.screens.material3
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
@@ -21,6 +31,7 @@ import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.material3.M3GroupSection
 import com.pgigi.pumpkintoolkit.components.material3.M3Row
 import com.pgigi.pumpkintoolkit.utils.QZClient
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Background
 import top.yukonga.miuix.kmp.icon.extended.Backup
@@ -29,6 +40,7 @@ import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.File
 import top.yukonga.miuix.kmp.icon.extended.Location
 import top.yukonga.miuix.kmp.icon.extended.Notes
+import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.icon.extended.SelectAll
 import top.yukonga.miuix.kmp.icon.extended.Send
 import top.yukonga.miuix.kmp.icon.extended.Settings
@@ -38,13 +50,17 @@ import top.yukonga.miuix.kmp.icon.extended.VerticalSplit
 @Composable
 fun Material3FunctionScreen(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var loading by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(title = { Text("功能") })
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -61,6 +77,50 @@ fun Material3FunctionScreen(modifier: Modifier = Modifier) {
                     onClick = { navigator.push(Route.Login) },
                     showDivider = false
                 )
+                AnimatedVisibility(
+                    AppConfig.username.isNotBlank() &&
+                            AppConfig.password.isNotBlank()
+                ) {
+                    M3Row(
+                        title = if (loading) "正在刷新登录状态..." else "点击刷新登录状态",
+                        icon = MiuixIcons.Refresh,
+                        enabled = !loading,
+                        onClick = {
+                            loading = true
+                            coroutineScope.launch {
+                                QZClient.login(
+                                    onSuccess = {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "登录成功",
+                                                withDismissAction = true
+                                            )
+                                        }
+                                        loading = false
+                                    },
+                                    onFailure = {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = it,
+                                                withDismissAction = true
+                                            )
+                                        }
+                                        loading = false
+                                    }
+                                )
+                            }
+                        },
+                        trailingContent = {
+                            if (loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        },
+                        showDivider = false
+                    )
+                }
             }
 
             // M3GroupHeader("设置")

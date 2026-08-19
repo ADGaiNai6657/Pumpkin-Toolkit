@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -135,6 +136,41 @@ fun sortList(viewModel: EmptyRoomViewModel) {
 @Composable
 fun Operations(modifier: Modifier = Modifier, viewModel: EmptyRoomViewModel, numberDatePickerState: NumberDatePickerState, snackbarHostState: SnackbarHostState, screenWidthDp: Dp, onQuerySuccess: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
+    val todayDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    var showTermSection by remember { mutableStateOf(AppConfig.startDate == null) }
+    var showStartDateDialog by remember { mutableStateOf(false) }
+    val startDatePickerState = rememberNumberDatePickerState()
+    var isFetchingStartDate by remember { mutableStateOf(false) }
+
+    LaunchedEffect(viewModel.startDate) {
+        if (viewModel.startDate == null) showTermSection = true
+    }
+
+    LaunchedEffect(viewModel.selectedTermIndex) {
+        if (viewModel.selectedTermIndex < 0) return@LaunchedEffect
+        if (AppConfig.termValueList.isEmpty()) return@LaunchedEffect
+        val termId = AppConfig.termValueList[viewModel.selectedTermIndex]
+        val cached = viewModel.termStartDates[termId]
+        if (cached != null) {
+            viewModel.startDate = cached
+            return@LaunchedEffect
+        }
+        if (viewModel.startDate != null) {
+            viewModel.termStartDates[termId] = viewModel.startDate!!
+            return@LaunchedEffect
+        }
+        isFetchingStartDate = true
+        val fetched = QZClient.getStartDate(termId)
+        isFetchingStartDate = false
+        if (fetched != null) {
+            viewModel.startDate = fetched
+            viewModel.termStartDates[termId] = fetched
+        } else {
+            viewModel.startDate = null
+            showTermSection = true
+        }
+    }
+
     Column(modifier = modifier) {
         WindowDropdownPreference(
             title = "校区",
@@ -171,7 +207,10 @@ fun Operations(modifier: Modifier = Modifier, viewModel: EmptyRoomViewModel, num
                             numberDatePickerState.month,
                             numberDatePickerState.day
                         ).dayOfWeek.ordinal]
-                    })"
+                    })",
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                    textAlign = TextAlign.End,
                 )
             }
         )
@@ -183,6 +222,48 @@ fun Operations(modifier: Modifier = Modifier, viewModel: EmptyRoomViewModel, num
                 viewModel.selectedLesson = it
             }
         )
+        ArrowPreference(
+            title = "学期及开课日期",
+            onClick = { showTermSection = !showTermSection },
+            endActions = {
+                Text(
+                    text = if(showTermSection) "点击收起设置" else "点击展开设置",
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                    textAlign = TextAlign.End,
+                )
+            }
+        )
+        AnimatedVisibility(showTermSection) {
+            Column {
+                WindowDropdownPreference(
+                    title = "学期",
+                    items = if (AppConfig.termNameList.isEmpty()) listOf("请先登录")
+                           else AppConfig.termNameList.toList(),
+                    selectedIndex = viewModel.selectedTermIndex.coerceAtLeast(0),
+                    onSelectedIndexChange = { viewModel.selectedTermIndex = it }
+                )
+                ArrowPreference(
+                    title = "开课日期",
+                    onClick = {
+                        viewModel.startDate?.let {
+                            startDatePickerState.year = it.year
+                            startDatePickerState.month = it.month.number
+                            startDatePickerState.day = it.day
+                        }
+                        showStartDateDialog = true
+                    },
+                    endActions = {
+                        Text(
+                            text = viewModel.startDate?.toString() ?: "点击设置",
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            textAlign = TextAlign.End,
+                        )
+                    }
+                )
+            }
+        }
         Button(
             modifier = Modifier
                 .fillMaxWidth()
@@ -190,34 +271,50 @@ fun Operations(modifier: Modifier = Modifier, viewModel: EmptyRoomViewModel, num
             enabled = !isLoading,
             colors = ButtonDefaults.buttonColorsPrimary(),
             onClick = {
+                val termId = if (viewModel.selectedTermIndex in AppConfig.termValueList.indices) {
+                    AppConfig.termValueList[viewModel.selectedTermIndex]
+                } else AppConfig.defaultTermId
+
+                if (termId.isEmpty()) {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(message = "请选择学期", withDismissAction = true)
+                    }
+                    return@Button
+                }
+                if (viewModel.startDate == null) {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(message = "请设置开课日期", withDismissAction = true)
+                    }
+                    return@Button
+                }
                 if (viewModel.buildingList[viewModel.selectedBuilding].isEmpty()) {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(message = "请选择教学楼", withDismissAction = true)
                     }
+                    return@Button
                 }
                 isLoading = true
                 coroutineScope.launch {
                     viewModel.emptyRoomMap.clear()
-                    val localDate = LocalDate(
+                    val queryDate = LocalDate(
                         numberDatePickerState.year,
                         numberDatePickerState.month,
                         numberDatePickerState.day
                     )
                     val weekCalculator =
-                        WeekCalculator(AppConfig.startDate!!, 1)
+                        WeekCalculator(viewModel.startDate!!, 1)
 
                     val emptyRooms = QZClient.getEmptyRooms(
-                        AppConfig.defaultTermId,
+                        termId,
                         viewModel.buildingList[viewModel.selectedBuilding],
-                        localDate.dayOfWeek.isoDayNumber,
-                        weekCalculator.getWeekNumber(localDate).toInt(),
+                        queryDate.dayOfWeek.isoDayNumber,
+                        weekCalculator.getWeekNumber(queryDate).toInt(),
                         viewModel.selectedLesson * 2 + 1
                     )
                     if (emptyRooms != null) {
                         viewModel.emptyRoomMap.putAll(emptyRooms)
                         sortList(viewModel = viewModel)
                         isLoading = false
-                        // 查询成功后回调，由父组件决定是否隐藏操作台
                         onQuerySuccess()
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(message = "查询完成", withDismissAction = true)
@@ -240,6 +337,46 @@ fun Operations(modifier: Modifier = Modifier, viewModel: EmptyRoomViewModel, num
                     .fillMaxWidth()
                     .size(22.5.dp),
                 color = MiuixTheme.colorScheme.disabledOnPrimary
+            )
+        }
+    }
+
+    WindowDialog(
+        title = "请选择开课日期",
+        show = showStartDateDialog,
+        onDismissRequest = { showStartDateDialog = false },
+    ) {
+        val dismiss = LocalDismissState.current
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            NumberDatePicker(
+                numberDatePickerState = startDatePickerState,
+                start = LocalDate(todayDate.year - 1, 1, 1),
+                end = LocalDate(todayDate.year + 1, 12, 31)
+            )
+            TextButton(
+                text = "确定",
+                colors = TextButtonColors(
+                    MiuixTheme.colorScheme.primary,
+                    MiuixTheme.colorScheme.disabledPrimary,
+                    MiuixTheme.colorScheme.onPrimary,
+                    MiuixTheme.colorScheme.disabledOnPrimary
+                ),
+                onClick = {
+                    viewModel.startDate = LocalDate(
+                        startDatePickerState.year,
+                        startDatePickerState.month,
+                        startDatePickerState.day
+                    )
+                    if (viewModel.selectedTermIndex in AppConfig.termValueList.indices) {
+                        val termId = AppConfig.termValueList[viewModel.selectedTermIndex]
+                        viewModel.termStartDates[termId] = viewModel.startDate!!
+                    }
+                    showStartDateDialog = false
+                    dismiss?.invoke()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
             )
         }
     }
@@ -295,6 +432,15 @@ fun MiuixEmptyRoomScreen(viewModel: EmptyRoomViewModel = viewModel(factory = Emp
                     viewModel.buildingItems.add(building.name)
                     viewModel.buildingList.add(building.value)
                 }
+            }
+        }
+        if (AppConfig.startDate != null) {
+            viewModel.startDate = AppConfig.startDate
+        }
+        if (AppConfig.defaultTermId.isNotEmpty()) {
+            val index = AppConfig.termValueList.indexOf(AppConfig.defaultTermId)
+            if (index >= 0) {
+                viewModel.selectedTermIndex = index
             }
         }
     }

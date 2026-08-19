@@ -60,6 +60,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -83,6 +84,36 @@ fun Material3EmptyRoomScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var displayList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) }
+    var showTermSection by remember { mutableStateOf(AppConfig.startDate == null) }
+    var showStartDateDialog by remember { mutableStateOf(false) }
+    val startDatePickerState = rememberNumberDatePickerState()
+
+    LaunchedEffect(viewModel.startDate) {
+        if (viewModel.startDate == null) showTermSection = true
+    }
+
+    LaunchedEffect(viewModel.selectedTermIndex) {
+        if (viewModel.selectedTermIndex < 0) return@LaunchedEffect
+        if (AppConfig.termValueList.isEmpty()) return@LaunchedEffect
+        val termId = AppConfig.termValueList[viewModel.selectedTermIndex]
+        val cached = viewModel.termStartDates[termId]
+        if (cached != null) {
+            viewModel.startDate = cached
+            return@LaunchedEffect
+        }
+        if (viewModel.startDate != null) {
+            viewModel.termStartDates[termId] = viewModel.startDate!!
+            return@LaunchedEffect
+        }
+        val fetched = QZClient.getStartDate(termId)
+        if (fetched != null) {
+            viewModel.startDate = fetched
+            viewModel.termStartDates[termId] = fetched
+        } else {
+            viewModel.startDate = null
+            showTermSection = true
+        }
+    }
 
     LaunchedEffect(Unit) {
         val json = ResourceUtils.readText("buildings.json")
@@ -100,6 +131,15 @@ fun Material3EmptyRoomScreen(
                     viewModel.buildingItems.add(building.name)
                     viewModel.buildingList.add(building.value)
                 }
+            }
+        }
+        if (AppConfig.startDate != null) {
+            viewModel.startDate = AppConfig.startDate
+        }
+        if (AppConfig.defaultTermId.isNotEmpty()) {
+            val index = AppConfig.termValueList.indexOf(AppConfig.defaultTermId)
+            if (index >= 0) {
+                viewModel.selectedTermIndex = index
             }
         }
     }
@@ -137,7 +177,9 @@ fun Material3EmptyRoomScreen(
                 },
                 actions = {
                     if (windowInfo.containerDpSize.width <= 800.dp) {
-                        AnimatedVisibility(visible = showOperations) {
+                        AnimatedVisibility(
+                            visible = showOperations,
+                        ) {
                             IconButton(onClick = {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 showOperations = !showOperations
@@ -172,7 +214,18 @@ fun Material3EmptyRoomScreen(
                     isLoading = isLoading,
                     onLoadingChange = { isLoading = it },
                     onQuerySuccess = { },
-                    onDisplayListChange = { displayList = it }
+                    onDisplayListChange = { displayList = it },
+                    showTermSection = showTermSection,
+                    onShowTermSectionChange = { showTermSection = it },
+                    startDatePickerState = startDatePickerState,
+                    onShowStartDateDialog = {
+                        viewModel.startDate?.let {
+                            startDatePickerState.year = it.year
+                            startDatePickerState.month = it.month.number
+                            startDatePickerState.day = it.day
+                        }
+                        showStartDateDialog = true
+                    }
                 )
                 M3EmptyRoomResultList(Modifier.fillMaxSize(), displayList)
             }
@@ -191,7 +244,18 @@ fun Material3EmptyRoomScreen(
                         isLoading = isLoading,
                         onLoadingChange = { isLoading = it },
                         onQuerySuccess = { showOperations = false },
-                        onDisplayListChange = { displayList = it }
+                        onDisplayListChange = { displayList = it },
+                        showTermSection = showTermSection,
+                        onShowTermSectionChange = { showTermSection = it },
+                        startDatePickerState = startDatePickerState,
+                        onShowStartDateDialog = {
+                            viewModel.startDate?.let {
+                                startDatePickerState.year = it.year
+                                startDatePickerState.month = it.month.number
+                                startDatePickerState.day = it.day
+                            }
+                            showStartDateDialog = true
+                        }
                     )
                 }
                 M3EmptyRoomResultList(Modifier.fillMaxSize(), displayList)
@@ -231,6 +295,40 @@ fun Material3EmptyRoomScreen(
         )
     }
 
+    // Start date picker dialog
+    if (showStartDateDialog) {
+        AlertDialog(
+            onDismissRequest = { showStartDateDialog = false },
+            title = { Text("请选择开课日期") },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    NumberDatePicker(
+                        numberDatePickerState = startDatePickerState,
+                        start = LocalDate(localDate.year - 1, 1, 1),
+                        end = LocalDate(localDate.year + 1, 12, 31)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.startDate = LocalDate(
+                        startDatePickerState.year,
+                        startDatePickerState.month,
+                        startDatePickerState.day
+                    )
+                    if (viewModel.selectedTermIndex in AppConfig.termValueList.indices) {
+                        val termId = AppConfig.termValueList[viewModel.selectedTermIndex]
+                        viewModel.termStartDates[termId] = viewModel.startDate!!
+                    }
+                    showStartDateDialog = false
+                }) {
+                    Text("确定")
+                }
+            }
+        )
+    }
+
     // Picker dialog
     pickerState?.let { state ->
         M3PickerDialog(
@@ -256,7 +354,11 @@ private fun M3EmptyRoomOperations(
     isLoading: Boolean,
     onLoadingChange: (Boolean) -> Unit,
     onQuerySuccess: () -> Unit,
-    onDisplayListChange: (List<Pair<String, Boolean>>) -> Unit
+    onDisplayListChange: (List<Pair<String, Boolean>>) -> Unit,
+    showTermSection: Boolean,
+    onShowTermSectionChange: (Boolean) -> Unit,
+    startDatePickerState: com.pgigi.pumpkintoolkit.components.NumberDatePickerState,
+    onShowStartDateDialog: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
@@ -324,6 +426,50 @@ private fun M3EmptyRoomOperations(
             },
             showDivider = false
         )
+        M3Row(
+            title = "学期及开课日期",
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (showTermSection) MiuixIcons.ExpandLess else MiuixIcons.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            onClick = { onShowTermSectionChange(!showTermSection) }
+        )
+        AnimatedVisibility(showTermSection) {
+            Column {
+                M3Row(
+                    title = "学期",
+                    trailingContent = {
+                        M3TrailingText(
+                            if (viewModel.selectedTermIndex >= 0 && viewModel.selectedTermIndex < AppConfig.termNameList.size)
+                                AppConfig.termNameList[viewModel.selectedTermIndex]
+                            else "请选择"
+                        )
+                    },
+                    onClick = {
+                        onPickerChange(
+                            M3EmptyRoomPicker(
+                                title = "学期",
+                                items = if (AppConfig.termNameList.isEmpty()) listOf("请先登录") else AppConfig.termNameList.toList(),
+                                selectedIndex = viewModel.selectedTermIndex.coerceAtLeast(0),
+                                onSelected = { viewModel.selectedTermIndex = it }
+                            )
+                        )
+                    }
+                )
+                M3Row(
+                    title = "开课日期",
+                    trailingContent = { M3TrailingText(viewModel.startDate?.toString() ?: "点击设置") },
+                    onClick = onShowStartDateDialog,
+                    showDivider = false
+                )
+            }
+        }
         Button(
             modifier = Modifier
                 .fillMaxWidth()
@@ -331,6 +477,21 @@ private fun M3EmptyRoomOperations(
             enabled = !isLoading,
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                val termId = if (viewModel.selectedTermIndex in AppConfig.termValueList.indices) {
+                    AppConfig.termValueList[viewModel.selectedTermIndex]
+                } else AppConfig.defaultTermId
+                if (termId.isEmpty()) {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(message = "请选择学期", withDismissAction = true)
+                    }
+                    return@Button
+                }
+                if (viewModel.startDate == null) {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(message = "请设置开课日期", withDismissAction = true)
+                    }
+                    return@Button
+                }
                 if (viewModel.buildingList.getOrElse(viewModel.selectedBuilding) { "" }.isEmpty()) {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(message = "请选择教学楼", withDismissAction = true)
@@ -340,17 +501,17 @@ private fun M3EmptyRoomOperations(
                 onLoadingChange(true)
                 coroutineScope.launch {
                     viewModel.emptyRoomMap.clear()
-                    val localDate = LocalDate(
+                    val queryDate = LocalDate(
                         numberDatePickerState.year,
                         numberDatePickerState.month,
                         numberDatePickerState.day
                     )
-                    val weekCalculator = WeekCalculator(AppConfig.startDate!!, 1)
+                    val weekCalculator = WeekCalculator(viewModel.startDate!!, 1)
                     val emptyRooms = QZClient.getEmptyRooms(
-                        AppConfig.defaultTermId,
+                        termId,
                         viewModel.buildingList[viewModel.selectedBuilding],
-                        localDate.dayOfWeek.isoDayNumber,
-                        weekCalculator.getWeekNumber(localDate).toInt(),
+                        queryDate.dayOfWeek.isoDayNumber,
+                        weekCalculator.getWeekNumber(queryDate).toInt(),
                         viewModel.selectedLesson * 2 + 1
                     )
                     if (emptyRooms != null) {

@@ -90,16 +90,7 @@ private val CrossActivityPredictive: NavTransition = navGraphicsTransition(
         cancel = NavSettleSpec.Spring(stiffness = 1500f),
     ),
     scrim = { scope ->
-        val settle = scope.settle
-        val gesture = scope.gesture
-        when {
-            settle?.phase == NavSettlePhase.Commit ->
-                (1f - settle.elapsedMillis / 450f).coerceIn(0f, 1f)
-            gesture != null ->
-                (scope.relativeDepth.coerceIn(0f, 1f) /
-                    (1f - gesture.progress).coerceAtLeast(0.01f)).coerceIn(0f, 1f)
-            else -> scope.relativeDepth.coerceIn(0f, 1f)
-        }
+        scope.relativeDepth.coerceIn(0f, 1f)
     },
 ) { scope ->
     val depth = scope.relativeDepth

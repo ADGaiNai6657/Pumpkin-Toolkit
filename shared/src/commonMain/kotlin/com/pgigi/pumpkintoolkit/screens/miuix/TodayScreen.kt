@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.LocalAppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
@@ -47,7 +47,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)) {
+fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAppViewModel.current) {
     val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
     val courses = buildWeekCourses(viewModel.courseList)
     val listState = rememberLazyListState()

@@ -71,6 +71,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("No Navigator found!") }
+val LocalAppViewModel = staticCompositionLocalOf<AppViewModel> { error("No AppViewModel found!") }
 
 @Composable
 fun App(
@@ -94,13 +95,7 @@ fun App(
                 val cache = JsonUtil.parseJson(it, ScheduleCache.serializer())
                 viewModel.courseList.clear()
                 viewModel.courseList.addAll(cache.courses)
-            } catch (_: Exception) {
-                try {
-                    val list = JsonUtil.parseListJson(it, Course.serializer())
-                    viewModel.courseList.clear()
-                    viewModel.courseList.addAll(list)
-                } catch (_: Exception) {}
-            }
+            } catch (_: Exception) { }
         }
     }
 
@@ -155,6 +150,7 @@ fun App(
 
     CompositionLocalProvider(
         LocalNavigator provides navigator,
+        LocalAppViewModel provides viewModel,
     ){
         val transition = remember(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection) {
             installerNavTransition(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection)

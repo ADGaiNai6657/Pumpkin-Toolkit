@@ -28,8 +28,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.AppConfig
+import com.pgigi.pumpkintoolkit.LocalAppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.material3.M3Card
@@ -45,7 +45,7 @@ import kotlin.time.Clock
 @Composable
 fun Material3TodayScreen(
     modifier: Modifier = Modifier,
-    viewModel: AppViewModel = viewModel(factory = AppViewModel.Factory)
+    viewModel: AppViewModel = LocalAppViewModel.current
 ) {
     val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
     val courses = buildWeekCourses(viewModel.courseList)

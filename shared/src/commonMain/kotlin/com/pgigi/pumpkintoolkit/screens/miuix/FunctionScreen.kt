@@ -1,5 +1,6 @@
 package com.pgigi.pumpkintoolkit.screens.miuix
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,11 +22,15 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.utils.QZClient
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextButtonColors
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -36,6 +41,7 @@ import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.File
 import top.yukonga.miuix.kmp.icon.extended.Location
 import top.yukonga.miuix.kmp.icon.extended.Notes
+import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.icon.extended.SelectAll
 import top.yukonga.miuix.kmp.icon.extended.Send
 import top.yukonga.miuix.kmp.icon.extended.Settings
@@ -50,14 +56,17 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
     rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showSetTimeDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember{ SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    var loading by remember{ mutableStateOf(false)}
 
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             SmallTopAppBar(title = "功能")
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         val cardPadding = PaddingValues(12.dp, 6.dp)
         Column(modifier = Modifier
@@ -78,6 +87,51 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         )
                     }
                 )
+                AnimatedVisibility(
+                    AppConfig.username.isNotBlank() &&
+                            AppConfig.password.isNotBlank()
+                ){
+                    ArrowPreference(
+                        title = if (loading) "正在刷新登录状态..." else "点击刷新登录状态",
+                        enabled = !loading,
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Refresh,
+                                contentDescription = "刷新"
+                            )
+                        },
+                        endActions = {
+                            if(loading){
+                                InfiniteProgressIndicator()
+                            }
+                        },
+                        onClick = {
+                            loading = true
+                            coroutineScope.launch {
+                                QZClient.login(
+                                    onSuccess = {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "登录成功",
+                                                withDismissAction = true
+                                            )
+                                        }
+                                        loading = false
+                                    },
+                                    onFailure = {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = it,
+                                                withDismissAction = true
+                                            )
+                                        }
+                                        loading = false
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
             }
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(title = "设置", onClick = {
@@ -237,19 +291,5 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                     .padding(8.dp)
             )
         }
-    }
-    WindowDialog(
-        show = showSetTimeDialog,
-        title = "提示",
-        summary = "请先设置课表开始时间!",
-        onDismissRequest = { showSetTimeDialog = false },
-    ) {
-        val dismiss =
-            LocalDismissState.current
-        TextButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = "确定", onClick = {
-                dismiss?.invoke()
-            })
     }
 }
