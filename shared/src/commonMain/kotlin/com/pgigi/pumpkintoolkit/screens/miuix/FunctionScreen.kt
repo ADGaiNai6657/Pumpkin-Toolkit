@@ -172,7 +172,6 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
 
             // 功能 - 平铺模式或列表模式
             if (AppConfig.functionDisplayMode == 1) {
-                SmallTitle("功能")
                 val gridItems = listOf(
                     FunctionGridItem(MiuixIcons.SelectAll, "考试查询") { navigator.push(Route.Exam) },
                     FunctionGridItem(MiuixIcons.File, "成绩查询") { navigator.push(Route.ExamScore) },
@@ -191,29 +190,30 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                     },
                     FunctionGridItem(MiuixIcons.Send, "阳光平台") { navigator.push(Route.SunshineMenu) },
                 )
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                ) {
-                    val columns = (maxWidth / 90.dp).toInt().coerceIn(1, 6)
-                    val spacing = 8.dp
-                    Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        gridItems.chunked(columns).forEach { rowItems ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(spacing)
-                            ) {
-                                rowItems.forEach { item ->
-                                    MiuixGridItem(
-                                        icon = item.icon,
-                                        title = item.title,
-                                        onClick = item.onClick,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                if (rowItems.size < columns) {
-                                    Spacer(Modifier.weight((columns - rowItems.size).toFloat()))
+                Card(modifier = Modifier.fillMaxWidth().padding(cardPadding)) {
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val columns = (maxWidth / 90.dp).toInt().coerceIn(1, 6)
+                        val spacing = 8.dp
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(spacing)
+                        ) {
+                            gridItems.chunked(columns).forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(spacing)
+                                ) {
+                                    rowItems.forEach { item ->
+                                        MiuixGridItem(
+                                            icon = item.icon,
+                                            title = item.title,
+                                            onClick = item.onClick,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    if (rowItems.size < columns) {
+                                        Spacer(Modifier.weight((columns - rowItems.size).toFloat()))
+                                    }
                                 }
                             }
                         }
@@ -376,7 +376,7 @@ private fun MiuixGridItem(
     modifier: Modifier = Modifier,
     loading: Boolean = false
 ) {
-    Card(
+    Column(
         modifier = modifier
             .padding(2.dp)
             .clickable(
@@ -384,30 +384,28 @@ private fun MiuixGridItem(
                 indication = null,
                 onClick = onClick
             )
+            .fillMaxWidth()
+            .padding(vertical = 12.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (loading) {
-                InfiniteProgressIndicator()
-            } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = title,
-                fontSize = 11.sp,
-                maxLines = 2,
-                lineHeight = 13.sp,
-                textAlign = TextAlign.Center,
-                overflow = TextOverflow.Ellipsis,
-                color = MiuixTheme.colorScheme.onSurface
+        if (loading) {
+            InfiniteProgressIndicator()
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                modifier = Modifier.size(28.dp)
             )
         }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            maxLines = 2,
+            lineHeight = 13.sp,
+            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Ellipsis,
+            color = MiuixTheme.colorScheme.onSurface
+        )
     }
 }
