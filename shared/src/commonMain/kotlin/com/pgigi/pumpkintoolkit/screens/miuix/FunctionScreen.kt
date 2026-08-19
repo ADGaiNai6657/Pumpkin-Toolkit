@@ -29,6 +29,7 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextButtonColors
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Background
 import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.Edit
@@ -137,14 +138,24 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                         )
                     })
                 ArrowPreference(title = "学生评教", onClick = {
-                    navigator.push(Route.EvaluationMenu)
-                },
+                        navigator.push(Route.EvaluationMenu)
+                    },
                     startAction = {
                         Icon(
                             imageVector = MiuixIcons.Edit,
                             contentDescription = "学生评教"
                         )
-                    })
+                    }
+                )
+                ArrowPreference(title = "第二课堂成绩单", onClick = {
+                        navigator.push(Route.WebView("https://m1wxluid.yichafen.com/","第二课堂成绩单"))
+                    }, startAction = {
+                        Icon(
+                            imageVector = MiuixIcons.Background,
+                            contentDescription = "第二课堂成绩单"
+                        )
+                    }
+                )
             }
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(title = "教务系统",

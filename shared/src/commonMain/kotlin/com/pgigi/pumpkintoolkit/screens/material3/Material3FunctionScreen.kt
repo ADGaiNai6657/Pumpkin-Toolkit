@@ -22,6 +22,7 @@ import com.pgigi.pumpkintoolkit.components.material3.M3GroupSection
 import com.pgigi.pumpkintoolkit.components.material3.M3Row
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Background
 import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.Edit
@@ -109,6 +110,11 @@ fun Material3FunctionScreen(modifier: Modifier = Modifier) {
                     icon = MiuixIcons.Edit,
                     onClick = { navigator.push(Route.EvaluationMenu) },
                     showDivider = false
+                )
+                M3Row(
+                    title = "第二课堂成绩单",
+                    icon = MiuixIcons.Background,
+                    onClick = {navigator.push(Route.WebView("https://m1wxluid.yichafen.com/","第二课堂成绩单"))}
                 )
             }
 
