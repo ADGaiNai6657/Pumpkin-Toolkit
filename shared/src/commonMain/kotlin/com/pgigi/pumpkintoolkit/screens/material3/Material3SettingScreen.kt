@@ -155,6 +155,22 @@ fun Material3SettingScreen() {
                         AppConfig.save()
                     },
                 )
+                val displayModeItems = listOf("列表", "平铺")
+                M3Row(
+                    title = "功能列表显示模式",
+                    trailingContent = { M3TrailingText(displayModeItems[AppConfig.functionDisplayMode]) },
+                    onClick = {
+                        pickerDialog = PickerState(
+                            title = "功能列表显示模式",
+                            items = displayModeItems,
+                            selectedIndex = AppConfig.functionDisplayMode,
+                            onSelected = {
+                                AppConfig.functionDisplayMode = it
+                                AppConfig.save()
+                            }
+                        )
+                    },
+                )
                 M3Row(
                     title = "模糊效果",
                     summary = "Android 需 13+(SDK 33+) 版本才能使用",

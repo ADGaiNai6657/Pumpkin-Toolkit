@@ -1,13 +1,20 @@
 package com.pgigi.pumpkintoolkit.screens.miuix
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -16,8 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
@@ -28,9 +40,11 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextButtonColors
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -50,6 +64,12 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+
+private data class FunctionGridItem(
+    val icon: ImageVector,
+    val title: String,
+    val onClick: () -> Unit
+)
 
 @Composable
 fun FunctionScreen(modifier: Modifier = Modifier) {
@@ -73,6 +93,8 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .padding(paddingValues)
             .verticalScroll(state = rememberScrollState())) {
+
+            // 账号 - 始终列表模式
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(
                     title = "教务系统账号",
@@ -133,6 +155,8 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                     )
                 }
             }
+
+            // 设置 - 始终列表模式
             Card(modifier = modifier.padding(cardPadding)) {
                 ArrowPreference(title = "设置", onClick = {
                     navigator.push(Route.Settings)
@@ -145,112 +169,165 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                     }
                 )
             }
-            Card(modifier = modifier.padding(cardPadding)) {
-                ArrowPreference(title = "考试查询", onClick = {
-                    navigator.push(Route.Exam)
-                },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.SelectAll,
-                            contentDescription = "考试查询"
-                        )
-                    })
-                ArrowPreference(title = "成绩查询", onClick = {
-                    navigator.push(Route.ExamScore)
-                },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.File,
-                            contentDescription = "成绩查询"
-                        )
-                    })
-                ArrowPreference(title = "空教室查询", onClick = {
-                    navigator.push(Route.EmptyRoom)
-                },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.Location,
-                            contentDescription = "空教室查询"
-                        )
-                    })
-                ArrowPreference(title = "课程执行计划", onClick = {
-                    navigator.push(Route.Plan)
-                },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.Notes,
-                            contentDescription = "课程执行计划"
-                        )
-                    })
-                ArrowPreference(title = "查看其他学期课表", onClick = {
-                    navigator.push(Route.OtherSchedule)
-                },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.VerticalSplit,
-                            contentDescription = "其他学期课表"
-                        )
-                    })
-                ArrowPreference(title = "学生评教", onClick = {
-                        navigator.push(Route.EvaluationMenu)
+
+            // 功能 - 平铺模式或列表模式
+            if (AppConfig.functionDisplayMode == 1) {
+                SmallTitle("功能")
+                val gridItems = listOf(
+                    FunctionGridItem(MiuixIcons.SelectAll, "考试查询") { navigator.push(Route.Exam) },
+                    FunctionGridItem(MiuixIcons.File, "成绩查询") { navigator.push(Route.ExamScore) },
+                    FunctionGridItem(MiuixIcons.Location, "空教室查询") { navigator.push(Route.EmptyRoom) },
+                    FunctionGridItem(MiuixIcons.Notes, "课程执行计划") { navigator.push(Route.Plan) },
+                    FunctionGridItem(MiuixIcons.VerticalSplit, "其他学期课表") { navigator.push(Route.OtherSchedule) },
+                    FunctionGridItem(MiuixIcons.Edit, "学生评教") { navigator.push(Route.EvaluationMenu) },
+                    FunctionGridItem(MiuixIcons.Background, "第二课堂成绩单") {
+                        navigator.push(Route.WebView("https://m1wxluid.yichafen.com/", "第二课堂成绩单"))
                     },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.Edit,
-                            contentDescription = "学生评教"
-                        )
-                    }
-                )
-                ArrowPreference(title = "第二课堂成绩单", onClick = {
-                        navigator.push(Route.WebView("https://m1wxluid.yichafen.com/","第二课堂成绩单"))
-                    }, startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.Background,
-                            contentDescription = "第二课堂成绩单"
-                        )
-                    }
-                )
-            }
-            Card(modifier = modifier.padding(cardPadding)) {
-                ArrowPreference(title = "教务系统",
-                    onClick = {
-                        navigator.push(Route.WebView(
-                            QZClient.loginRedirectUrl.ifEmpty { AppConfig.serverUrl }
-                            ,"教务系统"))
+                    FunctionGridItem(MiuixIcons.Backup, "教务系统") {
+                        navigator.push(Route.WebView(QZClient.loginRedirectUrl.ifEmpty { AppConfig.serverUrl }, "教务系统"))
                     },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.Backup,
-                            contentDescription = "教务系统"
-                        )
-                    }
-                )
-                ArrowPreference(title = "线上注册及成绩单", summary = "与教务系统是两个系统, 可看专业排名成绩单",
-                    onClick = {
-                        navigator.push(Route.WebView("https://ai.usc.edu.cn:9080/gztcyAPP/","排名成绩单"))
+                    FunctionGridItem(MiuixIcons.File, "线上注册及成绩单") {
+                        navigator.push(Route.WebView("https://ai.usc.edu.cn:9080/gztcyAPP/", "排名成绩单"))
                     },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.File,
-                            contentDescription = "线上注册及成绩单"
-                        )
-                    }
+                    FunctionGridItem(MiuixIcons.Send, "阳光平台") { navigator.push(Route.SunshineMenu) },
                 )
-            }
-            Card(modifier = modifier.padding(cardPadding)) {
-                ArrowPreference(title = "阳光平台",
-                    onClick = {
-                        navigator.push(Route.SunshineMenu)
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    val columns = (maxWidth / 90.dp).toInt().coerceIn(1, 6)
+                    val spacing = 8.dp
+                    Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        gridItems.chunked(columns).forEach { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(spacing)
+                            ) {
+                                rowItems.forEach { item ->
+                                    MiuixGridItem(
+                                        icon = item.icon,
+                                        title = item.title,
+                                        onClick = item.onClick,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                if (rowItems.size < columns) {
+                                    Spacer(Modifier.weight((columns - rowItems.size).toFloat()))
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Card(modifier = modifier.padding(cardPadding)) {
+                    ArrowPreference(title = "考试查询", onClick = {
+                        navigator.push(Route.Exam)
                     },
-                    startAction = {
-                        Icon(
-                            imageVector = MiuixIcons.Send,
-                            contentDescription = "阳光平台"
-                        )
-                    }
-                )
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.SelectAll,
+                                contentDescription = "考试查询"
+                            )
+                        })
+                    ArrowPreference(title = "成绩查询", onClick = {
+                        navigator.push(Route.ExamScore)
+                    },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.File,
+                                contentDescription = "成绩查询"
+                            )
+                        })
+                    ArrowPreference(title = "空教室查询", onClick = {
+                        navigator.push(Route.EmptyRoom)
+                    },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Location,
+                                contentDescription = "空教室查询"
+                            )
+                        })
+                    ArrowPreference(title = "课程执行计划", onClick = {
+                        navigator.push(Route.Plan)
+                    },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Notes,
+                                contentDescription = "课程执行计划"
+                            )
+                        })
+                    ArrowPreference(title = "其他学期课表", onClick = {
+                        navigator.push(Route.OtherSchedule)
+                    },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.VerticalSplit,
+                                contentDescription = "其他学期课表"
+                            )
+                        })
+                    ArrowPreference(title = "学生评教", onClick = {
+                            navigator.push(Route.EvaluationMenu)
+                        },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Edit,
+                                contentDescription = "学生评教"
+                            )
+                        }
+                    )
+                    ArrowPreference(title = "第二课堂成绩单", onClick = {
+                            navigator.push(Route.WebView("https://m1wxluid.yichafen.com/","第二课堂成绩单"))
+                        }, startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Background,
+                                contentDescription = "第二课堂成绩单"
+                            )
+                        }
+                    )
+                }
+                Card(modifier = modifier.padding(cardPadding)) {
+                    ArrowPreference(title = "教务系统",
+                        onClick = {
+                            navigator.push(Route.WebView(
+                                QZClient.loginRedirectUrl.ifEmpty { AppConfig.serverUrl }
+                                ,"教务系统"))
+                        },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Backup,
+                                contentDescription = "教务系统"
+                            )
+                        }
+                    )
+                    ArrowPreference(title = "线上注册及成绩单", summary = "与教务系统是两个系统, 可看专业排名成绩单",
+                        onClick = {
+                            navigator.push(Route.WebView("https://ai.usc.edu.cn:9080/gztcyAPP/","排名成绩单"))
+                        },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.File,
+                                contentDescription = "线上注册及成绩单"
+                            )
+                        }
+                    )
+                }
+                Card(modifier = modifier.padding(cardPadding)) {
+                    ArrowPreference(title = "阳光平台",
+                        onClick = {
+                            navigator.push(Route.SunshineMenu)
+                        },
+                        startAction = {
+                            Icon(
+                                imageVector = MiuixIcons.Send,
+                                contentDescription = "阳光平台"
+                            )
+                        }
+                    )
+                }
             }
             BasicComponent()
+            Spacer(modifier = Modifier.height(96.dp))
         }
     }
     WindowDialog(
@@ -280,15 +357,56 @@ fun FunctionScreen(modifier: Modifier = Modifier) {
                 onClick = {
                     AppConfig.username = ""
                     AppConfig.password = ""
-//                    AppConfig.saveAccount()
-//                    client.logged = false
-//                    client.cookies = emptyList()
                     dismiss?.invoke()
                     navigator.replace(Route.Login)
                 },
                 modifier = Modifier
                     .weight(1f)
                     .padding(8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MiuixGridItem(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    loading: Boolean = false
+) {
+    Card(
+        modifier = modifier
+            .padding(2.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (loading) {
+                InfiniteProgressIndicator()
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = title,
+                fontSize = 11.sp,
+                maxLines = 2,
+                lineHeight = 13.sp,
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                color = MiuixTheme.colorScheme.onSurface
             )
         }
     }

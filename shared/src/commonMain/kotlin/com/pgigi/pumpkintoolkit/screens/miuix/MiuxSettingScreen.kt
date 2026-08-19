@@ -134,6 +134,16 @@ fun MiuixSettingScreen() {
                         AppConfig.save()
                     }
                 )
+                val displayModeItems = listOf("列表", "平铺")
+                WindowDropdownPreference(
+                    title = "功能列表显示模式",
+                    items = displayModeItems,
+                    selectedIndex = AppConfig.functionDisplayMode,
+                    onSelectedIndexChange = {
+                        AppConfig.functionDisplayMode = it
+                        AppConfig.save()
+                    }
+                )
                 SwitchPreference(
                     title = "模糊效果",
                     summary = "Android 需 13+(SDK 33+) 版本才能使用",

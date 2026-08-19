@@ -27,6 +27,7 @@ object AppConfig {
     var colorSchemeMode by mutableStateOf(ColorSchemeMode.System)
     var uiMode by mutableIntStateOf(0) // 0=Miuix, 2=Material
     var floatingNavigation by mutableStateOf(false)
+    var functionDisplayMode by mutableIntStateOf(0) // 0=列表, 1=平铺
     var enableBlurEffect by mutableStateOf(true)
     var predictiveBackAnimation by mutableStateOf(PredictiveBackAnimation.AOSP)
     var predictiveBackExitDirection by mutableStateOf(PredictiveBackExitDirection.FOLLOW_GESTURE)
@@ -67,6 +68,7 @@ object AppConfig {
         const val COLOR_MODE = "color_mode"
         const val UI_MODE = "ui_mode"
         const val FLOATING_NAVIGATION = "floating_navigation"
+        const val FUNCTION_DISPLAY_MODE = "function_display_mode"
         const val ENABLE_BLUR_EFFECT = "enable_blur_effect"
         const val PREDICTIVE_BACK_ANIMATION = "predictive_back_animation"
         const val PREDICTIVE_BACK_EXIT_DIRECTION = "predictive_back_exit_direction"
@@ -96,6 +98,7 @@ object AppConfig {
         }
         uiMode = kvault.getInt(KEY.UI_MODE) ?: 0
         floatingNavigation = kvault.getBoolean(KEY.FLOATING_NAVIGATION)?:false
+        functionDisplayMode = kvault.getInt(KEY.FUNCTION_DISPLAY_MODE)?:0
         enableBlurEffect = kvault.getBoolean(KEY.ENABLE_BLUR_EFFECT)?:true
         predictiveBackAnimation = PredictiveBackAnimation.fromName(kvault.getString(KEY.PREDICTIVE_BACK_ANIMATION))
         predictiveBackExitDirection = PredictiveBackExitDirection.fromName(kvault.getString(KEY.PREDICTIVE_BACK_EXIT_DIRECTION))
@@ -127,6 +130,7 @@ object AppConfig {
         kvault.putString(KEY.COLOR_MODE,colorSchemeMode.name)
         kvault.putInt(KEY.UI_MODE, uiMode)
         kvault.putBoolean(KEY.FLOATING_NAVIGATION, floatingNavigation)
+        kvault.putInt(KEY.FUNCTION_DISPLAY_MODE, functionDisplayMode)
         kvault.putBoolean(KEY.ENABLE_BLUR_EFFECT, enableBlurEffect)
         kvault.putString(KEY.PREDICTIVE_BACK_ANIMATION, predictiveBackAnimation.name)
         kvault.putString(KEY.PREDICTIVE_BACK_EXIT_DIRECTION, predictiveBackExitDirection.name)

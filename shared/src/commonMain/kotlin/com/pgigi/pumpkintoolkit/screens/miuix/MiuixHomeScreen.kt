@@ -1,7 +1,10 @@
 package com.pgigi.pumpkintoolkit.screens.miuix
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -29,6 +32,8 @@ import com.pgigi.pumpkintoolkit.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.NavigationRail
+import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -54,73 +59,102 @@ fun MiuixHomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel
     val useBlur = AppConfig.floatingNavigation && AppConfig.enableBlurEffect && liquidGlassSupported
     val backdrop = if (useBlur) rememberLayerBackdrop() else null
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (!AppConfig.floatingNavigation) {
-                NavigationBar {
-                    Navigation.items.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            selected = pagerState.currentPage == index,
-                            onClick = {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isLandscape = maxWidth > maxHeight
+
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            bottomBar = {
+                if (!AppConfig.floatingNavigation && !isLandscape) {
+                    NavigationBar {
+                        Navigation.items.forEachIndexed { index, item ->
+                            NavigationBarItem(
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    coroutineScope.launch {
+                                        viewModel.currentPagerIndex = index
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                                icon = Navigation.icons[index],
+                                label = item
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                if (!AppConfig.floatingNavigation && isLandscape) {
+                    NavigationRail {
+                        Navigation.items.forEachIndexed { index, item ->
+                            NavigationRailItem(
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    coroutineScope.launch {
+                                        viewModel.currentPagerIndex = index
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                                icon = Navigation.icons[index],
+                                label = item
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
+                        beyondViewportPageCount = 1
+                    ) {
+                        when (it) {
+                            0 -> TodayScreen()
+                            1 -> ScheduleScreen()
+                            2 -> FunctionScreen()
+                        }
+                    }
+
+                    if (AppConfig.floatingNavigation) {
+                        FloatingBottomBar(
+                            items = Navigation.items,
+                            selectedIndex = { pagerState.currentPage },
+                            onSelected = { index ->
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 coroutineScope.launch {
                                     viewModel.currentPagerIndex = index
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            icon = Navigation.icons[index],
-                            label = item
+                            backdrop = backdrop,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .navigationBarsPadding()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                            mode = if (useBlur) FloatingBottomBarMode.LiquidGlass else FloatingBottomBarMode.None,
+                            iconContent = { _, index ->
+                                Icon(Navigation.icons[index], contentDescription = null)
+                            },
+                            labelContent = { item, _ ->
+                                Text(item)
+                            }
                         )
                     }
                 }
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
-                beyondViewportPageCount = 1
-            ) {
-                when (it) {
-                    0 -> TodayScreen()
-                    1 -> ScheduleScreen()
-                    2 -> FunctionScreen()
-                }
-            }
-
-            if (AppConfig.floatingNavigation) {
-                FloatingBottomBar(
-                    items = Navigation.items,
-                    selectedIndex = { pagerState.currentPage },
-                    onSelected = { index ->
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        coroutineScope.launch {
-                            viewModel.currentPagerIndex = index
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    backdrop = backdrop,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp),
-                    mode = if (useBlur) FloatingBottomBarMode.LiquidGlass else FloatingBottomBarMode.None,
-                    iconContent = { _, index ->
-                        Icon(Navigation.icons[index], contentDescription = null)
-                    },
-                    labelContent = { item, _ ->
-                        Text(item)
-                    }
-                )
             }
         }
     }

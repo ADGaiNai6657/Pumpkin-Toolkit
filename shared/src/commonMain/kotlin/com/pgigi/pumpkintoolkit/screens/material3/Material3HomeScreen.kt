@@ -1,16 +1,22 @@
 package com.pgigi.pumpkintoolkit.screens.material3
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +50,7 @@ object M3Navigation {
     val icons = listOf(MiuixIcons.ListView, MiuixIcons.VerticalSplit, MiuixIcons.GridView)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Material3HomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)) {
     val coroutineScope = rememberCoroutineScope()
@@ -61,74 +68,103 @@ fun Material3HomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewM
         activeContentColor = MaterialTheme.colorScheme.primary,
     )
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (!AppConfig.floatingNavigation) {
-                NavigationBar {
-                    M3Navigation.items.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            selected = pagerState.currentPage == index,
-                            onClick = {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isLandscape = maxWidth > maxHeight
+
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            bottomBar = {
+                if (!AppConfig.floatingNavigation && !isLandscape) {
+                    NavigationBar {
+                        M3Navigation.items.forEachIndexed { index, item ->
+                            NavigationBarItem(
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    coroutineScope.launch {
+                                        viewModel.currentPagerIndex = index
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                                icon = { Icon(M3Navigation.icons[index], contentDescription = null) },
+                                label = { Text(item) }
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                if (!AppConfig.floatingNavigation && isLandscape) {
+                    NavigationRail {
+                        M3Navigation.items.forEachIndexed { index, item ->
+                            NavigationRailItem(
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    coroutineScope.launch {
+                                        viewModel.currentPagerIndex = index
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                                icon = { Icon(M3Navigation.icons[index], contentDescription = null) },
+                                label = { Text(item) }
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
+                        beyondViewportPageCount = 1
+                    ) {
+                        when (it) {
+                            0 -> Material3TodayScreen()
+                            1 -> Material3ScheduleScreen()
+                            2 -> Material3FunctionScreen()
+                        }
+                    }
+
+                    if (AppConfig.floatingNavigation) {
+                        FloatingBottomBar(
+                            items = M3Navigation.items,
+                            selectedIndex = { pagerState.currentPage },
+                            onSelected = { index ->
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                 coroutineScope.launch {
                                     viewModel.currentPagerIndex = index
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            icon = { Icon(M3Navigation.icons[index], contentDescription = null) },
-                            label = { Text(item) }
+                            backdrop = backdrop,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .navigationBarsPadding()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                            mode = if (useBlur) FloatingBottomBarMode.LiquidGlass else FloatingBottomBarMode.None,
+                            colors = colors,
+                            iconContent = { _, index ->
+                                Icon(M3Navigation.icons[index], contentDescription = null)
+                            },
+                            labelContent = { item, _ ->
+                                Text(item)
+                            }
                         )
                     }
                 }
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues).padding(top = 0.dp)
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
-                beyondViewportPageCount = 1
-            ) {
-                when (it) {
-                    0 -> Material3TodayScreen()
-                    1 -> Material3ScheduleScreen()
-                    2 -> Material3FunctionScreen()
-                }
-            }
-
-            if (AppConfig.floatingNavigation) {
-                FloatingBottomBar(
-                    items = M3Navigation.items,
-                    selectedIndex = { pagerState.currentPage },
-                    onSelected = { index ->
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        coroutineScope.launch {
-                            viewModel.currentPagerIndex = index
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    backdrop = backdrop,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp),
-                    mode = if (useBlur) FloatingBottomBarMode.LiquidGlass else FloatingBottomBarMode.None,
-                    colors = colors,
-                    iconContent = { _, index ->
-                        Icon(M3Navigation.icons[index], contentDescription = null)
-                    },
-                    labelContent = { item, _ ->
-                        Text(item)
-                    }
-                )
             }
         }
     }
