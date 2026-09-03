@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +17,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -52,6 +55,47 @@ fun MiuixLoginScreen(){
     val client = QZClient
     val snackbarHostState = remember{ SnackbarHostState() }
     var logging by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    var username by remember { mutableStateOf(AppConfig.username) }
+    var password by remember { mutableStateOf(AppConfig.password) }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    suspend fun doLogin() {
+        if (username.trim().isEmpty() || password.trim().isEmpty()) {
+            snackbarHostState.showSnackbar(
+                message = "请填写用户名和密码",
+                withDismissAction = true
+            )
+            return
+        }
+        logging = true
+        client.username = username
+        client.password = password
+        client.login(
+            onSuccess = {
+                AppConfig.username = username
+                AppConfig.password = password
+                AppConfig.save()
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "登录成功",
+                        withDismissAction = true
+                    )
+                }
+                logging = false
+                navigator.pop()
+            },
+            onFailure = {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = it,
+                        withDismissAction = true
+                    )
+                }
+                logging = false
+            }
+        )
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -82,7 +126,6 @@ fun MiuixLoginScreen(){
                         .fillMaxWidth()
                         .padding(12.dp)
                 ) {
-                    var username by remember { mutableStateOf(AppConfig.username) }
                     Text(
                         text = "教务系统登录",
                         fontSize = MiuixTheme.textStyles.title1.fontSize,
@@ -103,10 +146,14 @@ fun MiuixLoginScreen(){
                             )
                         },
                         modifier = Modifier.padding(8.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) }
+                        )
                     )
-                    var password by remember { mutableStateOf(AppConfig.password) }
-                    var passwordVisible by remember { mutableStateOf(false) }
 
                     TextField(
                         value = password,
@@ -121,7 +168,18 @@ fun MiuixLoginScreen(){
                         },
                         modifier = Modifier.padding(8.dp),
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusManager.clearFocus()
+                                coroutineScope.launch {
+                                    doLogin()
+                                }
+                            }
+                        ),
                         trailingIcon = {
                             IconButton(
                                 onClick = { passwordVisible = !passwordVisible },
@@ -138,42 +196,7 @@ fun MiuixLoginScreen(){
                     Button(
                         onClick = {
                             coroutineScope.launch {
-                                if (username.trim().isEmpty() || password.trim()
-                                        .isEmpty()
-                                ) {
-                                    snackbarHostState.showSnackbar(
-                                        message = "请填写用户名和密码",
-                                        withDismissAction =  true
-                                    )
-                                    return@launch
-                                }
-                                logging = true
-                                client.username = username
-                                client.password = password
-                                client.login(
-                                    onSuccess = {
-                                        AppConfig.username = username
-                                        AppConfig.password = password
-                                        AppConfig.save()
-                                        coroutineScope.launch{
-                                            snackbarHostState.showSnackbar(
-                                                message = "登录成功",
-                                                withDismissAction = true
-                                            )
-                                        }
-                                        logging = false
-                                        navigator.pop()
-                                    },
-                                    onFailure = {
-                                        coroutineScope.launch{
-                                            snackbarHostState.showSnackbar(
-                                                message = it,
-                                                withDismissAction = true
-                                            )
-                                        }
-                                        logging = false
-                                    }
-                                )
+                                doLogin()
                             }
                         },
                         enabled = !logging,

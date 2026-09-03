@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,6 +54,7 @@ fun LostAndFoundListScreen(viewModel: LostAndFoundListViewModel = viewModel(fact
     val navigator = LocalNavigator.current
     val client = SunshineClient
     var loading by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -97,6 +99,18 @@ fun LostAndFoundListScreen(viewModel: LostAndFoundListViewModel = viewModel(fact
         }
         loading = false
         isRefreshing = false
+    }
+
+    fun doSearch() {
+        focusManager.clearFocus()
+        viewModel.listEnded = false
+        loading = false
+        viewModel.list.clear()
+        viewModel.pageIndex = 1
+        coroutineScope.launch {
+            listState.scrollToItem(0)
+            getList()
+        }
     }
 
     // 监听到底部状态变化
@@ -155,16 +169,7 @@ fun LostAndFoundListScreen(viewModel: LostAndFoundListViewModel = viewModel(fact
                             InputField(
                                 query = viewModel.searchKey,
                                 onQueryChange = { viewModel.searchKey = it },
-                                onSearch = {
-                                    viewModel.listEnded = false
-                                    loading = false
-                                    viewModel.list.clear()
-                                    viewModel.pageIndex = 1
-                                    coroutineScope.launch {
-                                        listState.scrollToItem(0)
-                                        getList()
-                                    }
-                                },
+                                onSearch = { doSearch() },
                                 expanded = expanded,
                                 onExpandedChange = { expanded = it }
                             )

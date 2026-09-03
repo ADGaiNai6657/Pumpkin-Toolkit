@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -55,6 +58,47 @@ fun Material3LoginScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     var logging by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
+    val focusManager = LocalFocusManager.current
+    var username by remember { mutableStateOf(AppConfig.username) }
+    var password by remember { mutableStateOf(AppConfig.password) }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    suspend fun doLogin() {
+        if (username.trim().isEmpty() || password.trim().isEmpty()) {
+            snackbarHostState.showSnackbar(
+                message = "请填写用户名和密码",
+                withDismissAction = true
+            )
+            return
+        }
+        logging = true
+        client.username = username
+        client.password = password
+        client.login(
+            onSuccess = {
+                AppConfig.username = username
+                AppConfig.password = password
+                AppConfig.save()
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "登录成功",
+                        withDismissAction = true
+                    )
+                }
+                logging = false
+                navigator.pop()
+            },
+            onFailure = {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = it,
+                        withDismissAction = true
+                    )
+                }
+                logging = false
+            }
+        )
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -79,10 +123,6 @@ fun Material3LoginScreen() {
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
 
-                var username by remember { mutableStateOf(AppConfig.username) }
-                var password by remember { mutableStateOf(AppConfig.password) }
-                var passwordVisible by remember { mutableStateOf(false) }
-
                 M3TextField(
                     value = username,
                     onValueChange = { username = it },
@@ -95,7 +135,13 @@ fun Material3LoginScreen() {
                         )
                     },
                     modifier = Modifier.padding(bottom = 12.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) }
+                    )
                 )
 
                 M3TextField(
@@ -124,7 +170,18 @@ fun Material3LoginScreen() {
                     },
                     visualTransformation = if (passwordVisible) VisualTransformation.None
                     else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                            coroutineScope.launch {
+                                doLogin()
+                            }
+                        }
+                    ),
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
@@ -132,40 +189,7 @@ fun Material3LoginScreen() {
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         coroutineScope.launch {
-                            if (username.trim().isEmpty() || password.trim().isEmpty()) {
-                                snackbarHostState.showSnackbar(
-                                    message = "请填写用户名和密码",
-                                    withDismissAction = true
-                                )
-                                return@launch
-                            }
-                            logging = true
-                            client.username = username
-                            client.password = password
-                            client.login(
-                                onSuccess = {
-                                    AppConfig.username = username
-                                    AppConfig.password = password
-                                    AppConfig.save()
-                                    coroutineScope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            message = "登录成功",
-                                            withDismissAction = true
-                                        )
-                                    }
-                                    logging = false
-                                    navigator.pop()
-                                },
-                                onFailure = {
-                                    coroutineScope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            message = it,
-                                            withDismissAction = true
-                                        )
-                                    }
-                                    logging = false
-                                }
-                            )
+                            doLogin()
                         }
                     },
                     enabled = !logging,

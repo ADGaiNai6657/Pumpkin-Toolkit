@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -32,9 +34,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.viewmodel.compose.viewModel
 import be.digitalia.compose.htmlconverter.htmlToAnnotatedString
@@ -58,6 +62,7 @@ fun Material3LostAndFoundListScreen(
     val navigator = LocalNavigator.current
     val client = SunshineClient
     val hapticFeedback = LocalHapticFeedback.current
+    val focusManager = LocalFocusManager.current
     var loading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var isRefreshing by rememberSaveable { mutableStateOf(false) }
@@ -94,6 +99,19 @@ fun Material3LostAndFoundListScreen(
         }
         loading = false
         isRefreshing = false
+    }
+
+    fun doSearch() {
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        focusManager.clearFocus()
+        viewModel.listEnded = false
+        loading = false
+        viewModel.list.clear()
+        viewModel.pageIndex = 1
+        coroutineScope.launch {
+            listState.scrollToItem(0)
+            getList()
+        }
     }
 
     LaunchedEffect(isAtBottom) {
@@ -141,18 +159,12 @@ fun Material3LostAndFoundListScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     placeholder = { Text("搜索") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = { doSearch() }
+                    ),
                     trailingIcon = {
-                        IconButton(onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            viewModel.listEnded = false
-                            loading = false
-                            viewModel.list.clear()
-                            viewModel.pageIndex = 1
-                            coroutineScope.launch {
-                                listState.scrollToItem(0)
-                                getList()
-                            }
-                        }) {
+                        IconButton(onClick = { doSearch() }) {
                             Icon(MiuixIcons.ListView, contentDescription = "搜索")
                         }
                     }

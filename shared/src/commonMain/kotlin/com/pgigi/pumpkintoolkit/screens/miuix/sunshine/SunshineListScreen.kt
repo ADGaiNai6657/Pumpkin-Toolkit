@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +56,7 @@ fun SunshineListScreen(typeCode: String = "", submitUrl: String? = null, viewMod
     val navigator = LocalNavigator.current
     val client = SunshineClient
     var loading by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -105,6 +107,18 @@ fun SunshineListScreen(typeCode: String = "", submitUrl: String? = null, viewMod
         }
         loading = false
         isRefreshing = false
+    }
+
+    fun doSearch() {
+        focusManager.clearFocus()
+        viewModel.map.getOrPut(typeCode) { SunshineListItem() }.listEnded = false
+        loading = false
+        viewModel.map.getOrPut(typeCode) { SunshineListItem() }.list.clear()
+        viewModel.map.getOrPut(typeCode) { SunshineListItem() }.pageIndex = 1
+        coroutineScope.launch {
+            listState.scrollToItem(0)
+            getList()
+        }
     }
 
     // 监听到底部状态变化
@@ -165,17 +179,7 @@ fun SunshineListScreen(typeCode: String = "", submitUrl: String? = null, viewMod
                             InputField(
                                 query = viewModel.map.getOrPut(typeCode) { SunshineListItem() }.searchKey,
                                 onQueryChange = { viewModel.map.getOrPut(typeCode) { SunshineListItem() }.searchKey = it },
-                                onSearch = {
-                                    viewModel.map.getOrPut(typeCode) { SunshineListItem() }.listEnded = false
-                                    loading = false
-                                    viewModel.map.getOrPut(typeCode) { SunshineListItem() }.list.clear()
-                                    viewModel.map.getOrPut(typeCode) { SunshineListItem() }.pageIndex = 1
-                                    coroutineScope.launch {
-                                        listState.scrollToItem(0)
-                                        getList()
-                                    }
-//                                Log.i("TAG", "SearchKey: $searchText")
-                                },
+                                onSearch = { doSearch() },
                                 expanded = expanded,
                                 onExpandedChange = { expanded = it }
                             )
