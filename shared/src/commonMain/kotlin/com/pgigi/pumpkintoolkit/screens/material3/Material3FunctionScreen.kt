@@ -1,6 +1,7 @@
 package com.pgigi.pumpkintoolkit.screens.material3
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -12,8 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -154,7 +157,6 @@ fun Material3FunctionScreen(modifier: Modifier = Modifier) {
 
             // 功能 - 平铺模式或列表模式
             if (AppConfig.functionDisplayMode == 1) {
-                M3GroupHeader("功能")
                 val gridItems = listOf(
                     FunctionGridItem(MiuixIcons.SelectAll, "考试查询") { navigator.push(Route.Exam) },
                     FunctionGridItem(MiuixIcons.File, "成绩查询") { navigator.push(Route.ExamScore) },
@@ -173,29 +175,34 @@ fun Material3FunctionScreen(modifier: Modifier = Modifier) {
                     },
                     FunctionGridItem(MiuixIcons.Send, "阳光平台") { navigator.push(Route.SunshineMenu) },
                 )
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
-                    val columns = (maxWidth / 90.dp).toInt().coerceIn(1, 6)
-                    val spacing = 8.dp
-                    Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        gridItems.chunked(columns).forEach { rowItems ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(spacing)
-                            ) {
-                                rowItems.forEach { item ->
-                                    M3GridItem(
-                                        icon = item.icon,
-                                        title = item.title,
-                                        onClick = item.onClick,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                if (rowItems.size < columns) {
-                                    Spacer(Modifier.weight((columns - rowItems.size).toFloat()))
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val columns = (maxWidth / 90.dp).toInt().coerceIn(1, 6)
+                        val spacing = 8.dp
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(spacing)
+                        ) {
+                            gridItems.chunked(columns).forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(spacing)
+                                ) {
+                                    rowItems.forEach { item ->
+                                        M3GridItem(
+                                            icon = item.icon,
+                                            title = item.title,
+                                            onClick = item.onClick,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    if (rowItems.size < columns) {
+                                        Spacer(Modifier.weight((columns - rowItems.size).toFloat()))
+                                    }
                                 }
                             }
                         }
@@ -294,41 +301,39 @@ private fun M3GridItem(
     modifier: Modifier = Modifier,
     loading: Boolean = false
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.padding(2.dp),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        tonalElevation = 0.dp,
-        enabled = !loading
+    Column(
+        modifier = modifier
+            .padding(2.dp)
+            .clickable(
+                enabled = !loading,
+                onClick = onClick
+            )
+            .fillMaxWidth()
+            .padding(vertical = 12.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(28.dp),
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    modifier = Modifier.size(28.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = title,
-                fontSize = 11.sp,
-                maxLines = 2,
-                lineHeight = 13.sp,
-                textAlign = TextAlign.Center,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(28.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                modifier = Modifier.size(28.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
         }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            maxLines = 2,
+            lineHeight = 13.sp,
+            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
