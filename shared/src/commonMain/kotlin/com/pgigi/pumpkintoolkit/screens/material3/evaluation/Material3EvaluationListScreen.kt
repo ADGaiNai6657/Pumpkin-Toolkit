@@ -42,7 +42,7 @@ import com.pgigi.pumpkintoolkit.components.material3.M3Row
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.viewmodel.EvaluationViewModel
 import kotlinx.coroutines.launch
-import test.xspj.EvaluationListItem
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationListItem
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 

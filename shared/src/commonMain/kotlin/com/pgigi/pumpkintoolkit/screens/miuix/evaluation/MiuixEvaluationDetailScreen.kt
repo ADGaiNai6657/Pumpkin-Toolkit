@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import kotlinx.coroutines.launch
-import test.xspj.EvaluationDetail
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationDetail
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Icon

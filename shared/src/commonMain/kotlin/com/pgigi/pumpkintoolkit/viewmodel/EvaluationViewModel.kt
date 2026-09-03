@@ -8,8 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import test.xspj.EvaluationListItem
-import test.xspj.EvaluationMenuItem
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationListItem
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationMenuItem
 
 class EvaluationViewModel : ViewModel() {
     val menuList = mutableStateListOf<EvaluationMenuItem>()

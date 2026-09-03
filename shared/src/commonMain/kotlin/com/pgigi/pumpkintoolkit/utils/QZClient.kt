@@ -30,10 +30,10 @@ import io.ktor.http.setCookie
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
-import test.xspj.EvaluationDetail
-import test.xspj.EvaluationItem
-import test.xspj.EvaluationListItem
-import test.xspj.EvaluationMenuItem
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationDetail
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationItem
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationListItem
+import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationMenuItem
 
 object QZClient {
     val client = HttpClient {

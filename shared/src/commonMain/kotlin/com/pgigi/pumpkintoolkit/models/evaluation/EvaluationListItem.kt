@@ -1,4 +1,4 @@
-package test.xspj
+package com.pgigi.pumpkintoolkit.models.evaluation
 
 data class EvaluationListItem(
     val courseName: String,
