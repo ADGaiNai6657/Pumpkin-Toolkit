@@ -30,6 +30,6 @@ actual object WidgetDataStore {
 actual fun reloadWidgetTimelines() {
     NSNotificationCenter.defaultCenter.postNotificationName(
         WIDGET_DATA_CHANGED_NOTIFICATION,
-        object = null
+        `object` = null
     )
 }
