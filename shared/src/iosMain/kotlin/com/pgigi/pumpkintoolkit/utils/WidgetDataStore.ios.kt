@@ -1,11 +1,12 @@
 package com.pgigi.pumpkintoolkit.utils
 
 import com.pgigi.pumpkintoolkit.models.WidgetData
+import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSUserDefaults
-import platform.WidgetKit.WidgetCenter
 
 private const val APP_GROUP = "group.com.pgigi.pumpkintoolkit"
 private const val WIDGET_DATA_KEY = "widget_data"
+const val WIDGET_DATA_CHANGED_NOTIFICATION = "com.pgigi.pumpkintoolkit.widgetDataChanged"
 
 actual object WidgetDataStore {
 
@@ -27,5 +28,8 @@ actual object WidgetDataStore {
 }
 
 actual fun reloadWidgetTimelines() {
-    WidgetCenter.shared.reloadAllTimelines()
+    NSNotificationCenter.defaultCenter.postNotificationName(
+        WIDGET_DATA_CHANGED_NOTIFICATION,
+        object = null
+    )
 }

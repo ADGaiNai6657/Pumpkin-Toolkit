@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import WidgetKit
 import Shared
 
 struct ComposeView: UIViewControllerRepresentable {
@@ -14,5 +15,8 @@ struct ContentView: View {
     var body: some View {
         ComposeView()
             .ignoresSafeArea()
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("com.pgigi.pumpkintoolkit.widgetDataChanged"))) { _ in
+                WidgetCenter.shared.reloadAllTimelines()
+            }
     }
 }
