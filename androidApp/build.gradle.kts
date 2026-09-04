@@ -22,7 +22,7 @@ val keyStorePath = envProperties.getProperty("KEY_STORE_PATH")
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_11
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 dependencies {
@@ -33,6 +33,11 @@ dependencies {
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
+
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+    implementation(libs.datetime)
+    implementation(libs.serialization.json)
 }
 
 android {
@@ -75,8 +80,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true

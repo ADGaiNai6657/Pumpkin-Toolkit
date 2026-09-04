@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">南瓜工具箱</string>
     <string name="title_activity_navigation">NavigationActivity</string>
+    <string name="widget_today_schedule_description">显示今日课程及明日课程</string>
 </resources>

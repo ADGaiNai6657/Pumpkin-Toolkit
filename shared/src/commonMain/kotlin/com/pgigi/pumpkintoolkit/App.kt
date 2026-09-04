@@ -63,6 +63,9 @@ import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
+import com.pgigi.pumpkintoolkit.utils.WidgetDataHelper
+import com.pgigi.pumpkintoolkit.utils.WidgetDataStore
+import com.pgigi.pumpkintoolkit.utils.reloadWidgetTimelines
 import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -86,6 +89,13 @@ fun App(
             val weekCalculator = WeekCalculator(AppConfig.startDate!!,1)
             viewModel.currentWeek = weekCalculator.getWeekNumber(AppConfig.localDate).toInt()
         }
+        WidgetDataStore.save(WidgetDataHelper.buildWidgetData(
+            viewModel.courseList.toList(),
+            AppConfig.startDate,
+            AppConfig.totalWeek,
+            AppConfig.timeSeason
+        ))
+        reloadWidgetTimelines()
     }
 
     coroutineScope.launch {
@@ -95,6 +105,13 @@ fun App(
                 val cache = JsonUtil.parseJson(it, ScheduleCache.serializer())
                 viewModel.courseList.clear()
                 viewModel.courseList.addAll(cache.courses)
+                WidgetDataStore.save(WidgetDataHelper.buildWidgetData(
+                    viewModel.courseList.toList(),
+                    AppConfig.startDate,
+                    AppConfig.totalWeek,
+                    AppConfig.timeSeason
+                ))
+                reloadWidgetTimelines()
             } catch (_: Exception) { }
         }
     }
@@ -137,6 +154,13 @@ fun App(
                 AppConfig.defaultTermId = defaultTermId
                 AppConfig.save()
             }
+            WidgetDataStore.save(WidgetDataHelper.buildWidgetData(
+                viewModel.courseList.toList(),
+                AppConfig.startDate,
+                AppConfig.totalWeek,
+                AppConfig.timeSeason
+            ))
+            reloadWidgetTimelines()
         }
     }
 
