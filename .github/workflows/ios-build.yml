@@ -116,12 +116,35 @@ jobs:
       - name: Verify version in IPA
         run: |
           APP_PATH="build/PumpkinToolkit.xcarchive/Products/Applications/PumpkinToolkit.app"
-          echo "=== Version Info ==="
+          echo "=== App Version Info ==="
           plutil -p "$APP_PATH/Info.plist" | grep -E 'CFBundleShortVersionString|CFBundleVersion'
           echo ""
           echo "Expected:"
           echo "  CFBundleShortVersionString = ${{ steps.version.outputs.ver_name }}"
           echo "  CFBundleVersion = ${{ steps.version.outputs.ver_code }}"
+
+      # ========== 验证 Widget 扩展 ==========
+      - name: Verify Widget extension in IPA
+        run: |
+          APP_PATH="build/PumpkinToolkit.xcarchive/Products/Applications/PumpkinToolkit.app"
+          WIDGET_PATH="$APP_PATH/PlugIns/TodayScheduleWidget.appex"
+          echo "=== Widget Extension Check ==="
+          if [ -d "$WIDGET_PATH" ]; then
+            echo "✅ Widget extension found"
+            echo "=== Widget Info.plist ==="
+            plutil -p "$WIDGET_PATH/Info.plist" | grep -E 'CFBundleDisplayName|NSExtensionPointIdentifier'
+            echo "=== Widget binary ==="
+            ls -lh "$WIDGET_PATH/TodayScheduleWidget"
+            echo "=== Widget symbols ==="
+            nm "$WIDGET_PATH/TodayScheduleWidget" 2>/dev/null | grep -c "TodaySchedule" || echo "0 symbols (Release stripped)"
+          else
+            echo "❌ Widget extension NOT found in PlugIns directory"
+            echo "=== Contents of app bundle ==="
+            ls -la "$APP_PATH/"
+            echo "=== PlugIns directory ==="
+            ls -la "$APP_PATH/PlugIns/" 2>/dev/null || echo "PlugIns directory does not exist"
+            exit 1
+          fi
 
       # ========== 上传 IPA 作为构建产物 ==========
       - name: Upload IPA artifact

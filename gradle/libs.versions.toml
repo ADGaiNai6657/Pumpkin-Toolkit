@@ -1,7 +1,7 @@
 [versions]
 
-appVersionCode = "2"
-appVersionName = "1.0.1"
+appVersionCode = "3"
+appVersionName = "1.0.2"
 
 agp = "9.1.0"
 android-compileSdk = "37"

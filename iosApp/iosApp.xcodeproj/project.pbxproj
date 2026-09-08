@@ -8,11 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		7E8F90A1B2C3D4E5F6A7B8C9 /* TodayScheduleWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* TodayScheduleWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA1122334455667788990011 /* TodayScheduleWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2233445566778899001122 /* TodayScheduleWidget.swift */; };
+		AA2233445566778899001122 /* TodayScheduleProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3344556677889900112233 /* TodayScheduleProvider.swift */; };
+		AA3344556677889900112233 /* TodayScheduleWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4455667788990011223344 /* TodayScheduleWidgetView.swift */; };
+		AA4455667788990011223344 /* WidgetDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB5566778899001122334455 /* WidgetDataModels.swift */; };
+		AA5566778899001122334455 /* WidgetHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6677889900112233445566 /* WidgetHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		F3087EE7E457E26BB9FE080C /* PumpkinToolkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PumpkinToolkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F60718293A4B5C /* TodayScheduleWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TodayScheduleWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB2233445566778899001122 /* TodayScheduleWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleWidget.swift; sourceTree = "<group>"; };
+		BB3344556677889900112233 /* TodayScheduleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleProvider.swift; sourceTree = "<group>"; };
+		BB4455667788990011223344 /* TodayScheduleWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleWidgetView.swift; sourceTree = "<group>"; };
+		BB5566778899001122334455 /* WidgetDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataModels.swift; sourceTree = "<group>"; };
+		BB6677889900112233445566 /* WidgetHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHelper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,9 +74,13 @@
 			sourceTree = "<group>";
 		};
 		B2C3D4E5F60718293A4B5C6D /* TodayScheduleWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				5C6D7E8F90A1B2C3D4E5F6A7 /* Exceptions for "TodayScheduleWidget" folder in "TodayScheduleWidget" target */,
+			isa = PBXGroup;
+			children = (
+				BB2233445566778899001122 /* TodayScheduleWidget.swift */,
+				BB3344556677889900112233 /* TodayScheduleProvider.swift */,
+				BB4455667788990011223344 /* TodayScheduleWidgetView.swift */,
+				BB5566778899001122334455 /* WidgetDataModels.swift */,
+				BB6677889900112233445566 /* WidgetHelper.swift */,
 			);
 			path = TodayScheduleWidget;
 			sourceTree = "<group>";
@@ -124,12 +138,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D71C3FF67F15DEBFE015C649 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
-				CEF9247E50DA5A6756D9D665 /* Compile Kotlin Framework */,
-				837D3ECB2B5DE8BBAE5D2D97 /* Sources */,
-				D4C613F0567B613BC092B807 /* Frameworks */,
-				E65D7A66385B81A81E77611E /* Resources */,
-				3A4B5C6D7E8F90A1B2C3D4E5 /* Embed App Extensions */,
-			);
+			CEF9247E50DA5A6756D9D665 /* Compile Kotlin Framework */,
+			837D3ECB2B5DE8BBAE5D2D97 /* Sources */,
+			D4C613F0567B613BC092B807 /* Frameworks */,
+			E65D7A66385B81A81E77611E /* Resources */,
+			3A4B5C6D7E8F90A1B2C3D4E5 /* Embed App Extensions */,
+			CC12345678901234567890AB /* Re-sign Widget Entitlements */,
+		);
 			buildRules = (
 			);
 			dependencies = (
@@ -156,9 +171,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				B2C3D4E5F60718293A4B5C6D /* TodayScheduleWidget */,
 			);
 			name = TodayScheduleWidget;
 			packageProductDependencies = (
@@ -256,10 +268,38 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA1122334455667788990011 /* TodayScheduleWidget.swift in Sources */,
+				AA2233445566778899001122 /* TodayScheduleProvider.swift in Sources */,
+				AA3344556677889900112233 /* TodayScheduleWidgetView.swift in Sources */,
+				AA4455667788990011223344 /* WidgetDataModels.swift in Sources */,
+				AA5566778899001122334455 /* WidgetHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CC12345678901234567890AB /* Re-sign Widget Entitlements */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/TodayScheduleWidget/TodayScheduleWidget.entitlements",
+				"$(SRCROOT)/iosApp/PumpkinToolkit.entitlements",
+			);
+			name = "Re-sign Widget Entitlements";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "WIDGET_PATH=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/PlugIns/TodayScheduleWidget.appex\"\nWIDGET_ENTITLEMENTS=\"${SRCROOT}/TodayScheduleWidget/TodayScheduleWidget.entitlements\"\nAPP_ENTITLEMENTS=\"${SRCROOT}/iosApp/PumpkinToolkit.entitlements\"\nAPP_PATH=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\"\n\nif [ -f \"$WIDGET_ENTITLEMENTS\" ] && [ -d \"$WIDGET_PATH\" ]; then\n    /usr/bin/codesign --force --sign - --entitlements \"$WIDGET_ENTITLEMENTS\" --generate-entitlement-der \"$WIDGET_PATH\"\nfi\n\nif [ -f \"$APP_ENTITLEMENTS\" ] && [ -d \"$APP_PATH\" ]; then\n    /usr/bin/codesign --force --sign - --entitlements \"$APP_ENTITLEMENTS\" --generate-entitlement-der \"$APP_PATH\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		6D7E8F90A1B2C3D4E5F6A7B8 /* PBXTargetDependency */ = {
@@ -276,6 +316,7 @@
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/PumpkinToolkit.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
@@ -304,6 +345,7 @@
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/PumpkinToolkit.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
@@ -330,12 +372,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = arm64;
+				CODE_SIGN_ENTITLEMENTS = TodayScheduleWidget/TodayScheduleWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = R6UB6VD355;
-				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TodayScheduleWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今日课程";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -356,12 +400,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = arm64;
+				CODE_SIGN_ENTITLEMENTS = TodayScheduleWidget/TodayScheduleWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = R6UB6VD355;
-				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TodayScheduleWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "今日课程";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

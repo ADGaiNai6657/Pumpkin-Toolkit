@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +35,8 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.ColorSchemeMode
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
 import com.pgigi.pumpkintoolkit.components.material3.M3GroupHeader
 import com.pgigi.pumpkintoolkit.components.material3.M3GroupSection
 import com.pgigi.pumpkintoolkit.components.material3.M3PickerDialog
@@ -46,13 +46,10 @@ import com.pgigi.pumpkintoolkit.components.material3.M3TrailingText
 import com.pgigi.pumpkintoolkit.components.material3.NumberDatePicker
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.constants.TimeList
-import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
-import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
 import com.pgigi.pumpkintoolkit.getPlatform
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -449,8 +446,8 @@ fun Material3SettingScreen() {
             M3GroupHeader("关于")
             M3GroupSection {
                 M3Row(
-                    title = "操作系统",
-                    trailingContent = { M3TrailingText(getPlatform().name) },
+                    title = "应用版本",
+                    trailingContent = { M3TrailingText(getPlatform().appVersion) },
                 )
                 M3Row(
                     title = "开放源代码许可",

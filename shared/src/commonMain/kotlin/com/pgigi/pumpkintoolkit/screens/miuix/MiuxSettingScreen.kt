@@ -363,10 +363,10 @@ fun MiuixSettingScreen() {
             SmallTitle("关于")
             Card(modifier = Modifier.padding(cardPadding)) {
                 BasicComponent (
-                    title = "操作系统",
+                    title = "应用版本",
                     endActions = {
                         Text(
-                            text = getPlatform().name,
+                            text = getPlatform().appVersion,
                             modifier = Modifier
                                 .align(Alignment.CenterVertically)
                                 .weight(1f, fill = false),

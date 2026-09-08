@@ -28,6 +28,7 @@ actual object WidgetDataStore {
 }
 
 actual fun reloadWidgetTimelines() {
+    // Send notification to trigger Widget reload via WidgetReloader.swift in the main app
     NSNotificationCenter.defaultCenter.postNotificationName(
         WIDGET_DATA_CHANGED_NOTIFICATION,
         `object` = null

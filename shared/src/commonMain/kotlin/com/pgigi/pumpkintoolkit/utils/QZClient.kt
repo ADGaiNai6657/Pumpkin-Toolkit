@@ -36,8 +36,10 @@ import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationListItem
 import com.pgigi.pumpkintoolkit.models.evaluation.EvaluationMenuItem
 
 object QZClient {
-    val client = HttpClient {
-        followRedirects = false
+    val client by lazy {
+        HttpClient {
+            followRedirects = false
+        }
     }
     
     var username = ""

@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,20 +39,20 @@ import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.material3.SchedulePager
 import com.pgigi.pumpkintoolkit.constants.FileName
-import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.models.ScheduleCache
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
+import com.pgigi.pumpkintoolkit.utils.reloadWidgetTimelines
 import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.icon.extended.Reset
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,9 +130,11 @@ fun Material3ScheduleScreen(
                                     )
                                 }
                                 val startDate = QZClient.getStartDate()
-                                startDate?.let {
-                                    AppConfig.startDate = startDate
-                                    AppConfig.save()
+                                if (AppConfig.lockStartDate){
+                                    startDate?.let {
+                                        AppConfig.startDate = startDate
+                                        AppConfig.save()
+                                    }
                                 }
                                 val totalWeek = QZClient.getWeekNum()
                                 totalWeek?.let {
@@ -145,6 +146,7 @@ fun Material3ScheduleScreen(
                                     AppConfig.updateTermData(it)
                                 }
                                 refreshing = false
+                                reloadWidgetTimelines()
                             }
                         }) {
                             Icon(MiuixIcons.Refresh, contentDescription = "刷新")
@@ -153,10 +155,9 @@ fun Material3ScheduleScreen(
                 },
                 navigationIcon = {
                     AnimatedVisibility(
-                        visible = viewModel.currentWeek - 1 != pagerState.currentPage &&
+                        visible = maxOf(0, viewModel.currentWeek - 1) != pagerState.currentPage &&
                                 AppConfig.startDate != null &&
-                                viewModel.courseList.isNotEmpty() &&
-                                (viewModel.currentWeek <= 0 && pagerState.currentPage != 0),
+                                viewModel.courseList.isNotEmpty(),
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {

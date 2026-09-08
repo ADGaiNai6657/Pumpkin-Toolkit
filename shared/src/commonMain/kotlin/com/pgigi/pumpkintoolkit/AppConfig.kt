@@ -2,21 +2,18 @@ package com.pgigi.pumpkintoolkit
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
+import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
 import com.pgigi.pumpkintoolkit.constants.TimeList.summerAutumnTime
 import com.pgigi.pumpkintoolkit.constants.TimeList.winterSpringTime
 import com.pgigi.pumpkintoolkit.utils.KVaultUtils
+import com.pgigi.pumpkintoolkit.utils.reloadWidgetTimelines
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
-import com.pgigi.pumpkintoolkit.ColorSchemeMode
-import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
-import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
-import kotlin.collections.set
 import kotlin.time.Clock
 
 object AppConfig {
@@ -148,6 +145,7 @@ object AppConfig {
         kvault.putString(KEY.TERM_FILTER_START, termFilterStartId)
         kvault.putBoolean(KEY.HIDE_FAIL_SCORE, hideFailScore)
         kvault.putBoolean(KEY.LOCK_START_DATE, lockStartDate)
+        reloadWidgetTimelines()
     }
 
     fun updateTermData(map: Map<String, String>) {

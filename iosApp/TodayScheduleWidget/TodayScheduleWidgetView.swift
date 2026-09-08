@@ -41,11 +41,7 @@ struct WidgetBackgroundModifier: ViewModifier {
     let background: LinearGradient
 
     func body(content: Content) -> some View {
-        if #available(iOS 17.0, *) {
-            content.containerBackground(for: .widget) { background }
-        } else {
-            content.background(background)
-        }
+        content.containerBackground(for: .widget) { background }
     }
 }
 
@@ -218,22 +214,20 @@ private struct MediumScheduleView: View {
     var body: some View {
         VStack(spacing: 4) {
             HeaderView(weekNumber: entry.weekNumber, dayOfWeekText: entry.dayOfWeekText, isHoliday: entry.isHoliday)
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
-                    if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
-                        Text("今日无课")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .padding(.vertical, 8)
-                    } else {
-                        ForEach(Array(entry.todayCourses.prefix(3))) { course in
+            VStack(spacing: 2) {
+                if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
+                    Text("今日无课")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(Array(entry.todayCourses.prefix(3))) { course in
+                        CourseCardView(course: course)
+                    }
+                    if !entry.tomorrowCourses.isEmpty {
+                        TomorrowSeparatorView()
+                        ForEach(Array(entry.tomorrowCourses.prefix(2))) { course in
                             CourseCardView(course: course)
-                        }
-                        if !entry.tomorrowCourses.isEmpty {
-                            TomorrowSeparatorView()
-                            ForEach(Array(entry.tomorrowCourses.prefix(2))) { course in
-                                CourseCardView(course: course)
-                            }
                         }
                     }
                 }
@@ -248,22 +242,20 @@ private struct LargeScheduleView: View {
     var body: some View {
         VStack(spacing: 4) {
             HeaderView(weekNumber: entry.weekNumber, dayOfWeekText: entry.dayOfWeekText, isHoliday: entry.isHoliday)
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
-                    if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
-                        Text("今日无课")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .padding(.vertical, 12)
-                    } else {
-                        ForEach(entry.todayCourses) { course in
+            VStack(spacing: 2) {
+                if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
+                    Text("今日无课")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 12)
+                } else {
+                    ForEach(Array(entry.todayCourses.prefix(6))) { course in
+                        CourseCardView(course: course)
+                    }
+                    if !entry.tomorrowCourses.isEmpty {
+                        TomorrowSeparatorView()
+                        ForEach(Array(entry.tomorrowCourses.prefix(4))) { course in
                             CourseCardView(course: course)
-                        }
-                        if !entry.tomorrowCourses.isEmpty {
-                            TomorrowSeparatorView()
-                            ForEach(entry.tomorrowCourses) { course in
-                                CourseCardView(course: course)
-                            }
                         }
                     }
                 }

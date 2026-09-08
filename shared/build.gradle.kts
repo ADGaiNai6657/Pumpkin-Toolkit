@@ -87,8 +87,10 @@ kotlin {
             implementation(libs.miuix.shader)
 
         }
-        iosArm64Main.dependencies {
+        iosMain.dependencies {
             implementation(libs.ktor.darwin)
+        }
+        iosArm64Main.dependencies {
             // miuix
             implementation(libs.miuix.ui.iosarm64)
             implementation(libs.miuix.preference.iosarm64)

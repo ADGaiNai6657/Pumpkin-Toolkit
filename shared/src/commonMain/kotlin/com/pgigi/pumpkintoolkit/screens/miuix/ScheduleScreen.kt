@@ -3,14 +3,13 @@ package com.pgigi.pumpkintoolkit.screens.miuix
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,27 +19,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalAppViewModel
-import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.components.miuix.SchedulePager
 import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.constants.Texts
-import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.models.ScheduleCache
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
+import com.pgigi.pumpkintoolkit.utils.reloadWidgetTimelines
+import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
@@ -53,6 +52,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Reset
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -107,10 +107,9 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                 },
                 navigationIcon = {
                     AnimatedVisibility(
-                        visible = viewModel.currentWeek-1!=pagerState.currentPage &&
+                        visible = maxOf(0, viewModel.currentWeek-1)!=pagerState.currentPage &&
                                 AppConfig.startDate!=null &&
-                                viewModel.courseList.isNotEmpty() &&
-                                (viewModel.currentWeek<=0 && pagerState.currentPage!=0),
+                                viewModel.courseList.isNotEmpty(),
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
@@ -159,10 +158,12 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                                 )
                             )
                         }
-                        val startDate = QZClient.getStartDate()
-                        startDate?.let {
-                            AppConfig.startDate = startDate
-                            AppConfig.save()
+                        if(AppConfig.lockStartDate){
+                            val startDate = QZClient.getStartDate()
+                            startDate?.let {
+                                AppConfig.startDate = startDate
+                                AppConfig.save()
+                            }
                         }
                         val totalWeek = QZClient.getWeekNum()
                         totalWeek?.let {
@@ -174,6 +175,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                             AppConfig.updateTermData(it)
                         }
                         isRefreshing = false
+                        reloadWidgetTimelines()
                     }
                 },
                 pullToRefreshState = pullToRefreshState,
