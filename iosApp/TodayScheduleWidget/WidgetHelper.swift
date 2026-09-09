@@ -5,8 +5,18 @@ enum WidgetHelper {
     static let appGroup = "group.com.pgigi.pumpkintoolkit"
     static let widgetDataKey = "widget_data"
     static let dayOfWeekText = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+    static let widgetDataFile = "widget_data.json"
 
     static func loadWidgetData() -> WidgetData? {
+        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
+            let fileURL = containerURL.appendingPathComponent(widgetDataFile)
+            if let jsonData = try? Data(contentsOf: fileURL) {
+                if let data = try? JSONDecoder().decode(WidgetData.self, from: jsonData) {
+                    return data
+                }
+            }
+        }
+
         guard let defaults = UserDefaults(suiteName: appGroup),
               let jsonString = defaults.string(forKey: widgetDataKey),
               let jsonData = jsonString.data(using: .utf8) else {
