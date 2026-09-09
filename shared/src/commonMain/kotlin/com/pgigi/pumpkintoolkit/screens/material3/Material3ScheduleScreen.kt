@@ -130,7 +130,7 @@ fun Material3ScheduleScreen(
                                     )
                                 }
                                 val startDate = QZClient.getStartDate()
-                                if (AppConfig.lockStartDate){
+                                if (!AppConfig.lockStartDate){
                                     startDate?.let {
                                         AppConfig.startDate = startDate
                                         AppConfig.save()

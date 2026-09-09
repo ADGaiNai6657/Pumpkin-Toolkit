@@ -129,6 +129,57 @@ private struct CourseCardView: View {
     }
 }
 
+private struct SmallCourseCardView: View {
+    let course: DisplayCourse
+    @Environment(\.colorScheme) var colorScheme
+
+    private var textColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.9) : Color.black.opacity(0.85)
+    }
+
+    private var accentColor: Color {
+        course.isTomorrow
+            ? (colorScheme == .dark ? Color(red: 1.0, green: 0.69, blue: 0.42) : Color(red: 0.8, green: 0.29, blue: 0.12))
+            : (colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.45))
+    }
+
+    private var cardBg: Color {
+        if course.isTomorrow {
+            return colorScheme == .dark
+                ? Color(red: 0.18, green: 0.14, blue: 0.10)
+                : Color(red: 1.0, green: 0.96, blue: 0.92)
+        } else {
+            return colorScheme == .dark
+                ? Color(red: 0.16, green: 0.16, blue: 0.19)
+                : Color.white
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(course.name)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(textColor)
+                .lineLimit(1)
+            Text("\(course.startTime)-\(course.endTime)")
+                .font(.system(size: 11))
+                .foregroundColor(accentColor)
+            if !course.classroom.isEmpty {
+                Text(course.classroom)
+                    .font(.system(size: 11))
+                    .foregroundColor(accentColor)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(cardBg)
+        )
+        .padding(.vertical, 2)
+    }
+}
+
 private struct TomorrowSeparatorView: View {
     @Environment(\.colorScheme) var colorScheme
 
@@ -196,10 +247,10 @@ private struct SmallScheduleView: View {
                     .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.4))
                 Spacer()
             } else if let first = entry.todayCourses.first {
-                CourseCardView(course: first)
+                SmallCourseCardView(course: first)
                 Spacer(minLength: 0)
             } else if let first = entry.tomorrowCourses.first {
-                CourseCardView(course: first)
+                SmallCourseCardView(course: first)
                 Spacer(minLength: 0)
             } else {
                 Spacer()
@@ -260,6 +311,7 @@ private struct LargeScheduleView: View {
                     }
                 }
             }
+            Spacer(minLength: 0)
         }
     }
 }

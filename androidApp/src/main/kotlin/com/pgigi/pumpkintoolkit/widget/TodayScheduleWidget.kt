@@ -4,12 +4,14 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
@@ -25,7 +27,6 @@ import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.height
 import androidx.glance.layout.width
-import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -40,9 +41,14 @@ class TodayScheduleWidget : GlanceAppWidget() {
 
     override val sizeMode: SizeMode = SizeMode.Responsive(
         setOf(
-            DpSize(140.dp, 110.dp),
-            DpSize(300.dp, 110.dp),
-            DpSize(300.dp, 300.dp)
+            DpSize(110.dp, 110.dp),
+            DpSize(180.dp, 110.dp),
+            DpSize(250.dp, 110.dp),
+            DpSize(320.dp, 110.dp),
+            DpSize(180.dp, 180.dp),
+            DpSize(250.dp, 250.dp),
+            DpSize(320.dp, 250.dp),
+            DpSize(320.dp, 320.dp)
         )
     )
 
@@ -95,9 +101,18 @@ private fun widgetColors(): WidgetColors {
     )
 }
 
+private data class WidgetState(
+    val data: WidgetData?,
+    val weekNumber: Int,
+    val totalWeek: Int,
+    val isHoliday: Boolean,
+    val dayOfWeekText: String,
+    val todayCourses: List<DisplayCourse>,
+    val tomorrowCourses: List<DisplayCourse>
+)
+
 @Composable
-private fun WidgetContent(data: WidgetData?) {
-    val colors = widgetColors()
+private fun rememberWidgetState(data: WidgetData?): WidgetState {
     val today = WidgetDataHelper.getTodayDate()
     val currentTime = WidgetDataHelper.currentTimeStr()
     val weekNumber = data?.let { WidgetDataHelper.getWeekNumber(it.startDate, today) } ?: 0
@@ -111,80 +126,182 @@ private fun WidgetContent(data: WidgetData?) {
     val tomorrowCourses = if (data != null && !isHoliday)
         WidgetDataHelper.getTomorrowCourses(data, today) else emptyList()
 
+    return WidgetState(data, weekNumber, totalWeek, isHoliday, dayOfWeekText, todayCourses, tomorrowCourses)
+}
+
+@Composable
+private fun WidgetContent(data: WidgetData?) {
+    val colors = widgetColors()
+    val state = rememberWidgetState(data)
+    val size = LocalSize.current
+
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(colors.background)
+            .cornerRadius(16.dp)
             .padding(all = 12.dp)
     ) {
-        if (data == null) {
-            Column(
+        if (state.data == null) {
+            NoDataView(colors)
+        } else if (state.isHoliday) {
+            HolidayView(state.dayOfWeekText, colors)
+        } else {
+            when {
+                size.width < 140.dp && size.height < 140.dp -> SmallWidgetView(state, colors)
+                size.height < 150.dp -> MediumWidgetView(state, colors, size.width)
+                else -> LargeWidgetView(state, colors, size.height)
+            }
+        }
+    }
+}
+
+@Composable
+private fun NoDataView(colors: WidgetColors) {
+    Column(
+        modifier = GlanceModifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "请打开应用刷新",
+            style = TextStyle(
+                color = FixedColorProvider(colors.secondary),
+                fontSize = 14.sp
+            )
+        )
+    }
+}
+
+@Composable
+private fun HolidayView(dayOfWeekText: String, colors: WidgetColors) {
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Header(0, dayOfWeekText, true, colors)
+        Box(
+            modifier = GlanceModifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "假期中",
+                style = TextStyle(
+                    color = FixedColorProvider(colors.secondary),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun SmallWidgetView(state: WidgetState, colors: WidgetColors) {
+    val firstCourse = state.todayCourses.firstOrNull() ?: state.tomorrowCourses.firstOrNull()
+
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
+        if (firstCourse == null) {
+            Box(
                 modifier = GlanceModifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalAlignment = Alignment.CenterVertically
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "请打开应用刷新",
+                    "今日无课",
                     style = TextStyle(
                         color = FixedColorProvider(colors.secondary),
-                        fontSize = 14.sp
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 )
             }
         } else {
-            LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-                item { Header(weekNumber, dayOfWeekText, isHoliday, colors) }
-                if (isHoliday) {
-                    item {
-                        Box(
-                            modifier = GlanceModifier
-                                .fillMaxWidth()
-                                .height(100.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "假期中",
-                                style = TextStyle(
-                                    color = FixedColorProvider(colors.secondary),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
-                    }
-                } else {
-                    if (todayCourses.isEmpty() && tomorrowCourses.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = GlanceModifier
-                                    .fillMaxWidth()
-                                    .height(100.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "今日无课",
-                                    style = TextStyle(
-                                        color = FixedColorProvider(colors.secondary),
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                )
-                            }
-                        }
-                    } else {
-                        items(todayCourses.size) { index ->
-                            CourseCard(todayCourses[index], colors, isTomorrow = false)
-                        }
-                        if (tomorrowCourses.isNotEmpty()) {
-                            item { TomorrowSeparator(colors) }
-                            items(tomorrowCourses.size) { index ->
-                                CourseCard(tomorrowCourses[index], colors, isTomorrow = true)
-                            }
-                        }
-                    }
+            SmallCourseCard(firstCourse, colors)
+            Spacer(modifier = GlanceModifier.defaultWeight())
+        }
+    }
+}
+
+@Composable
+private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp) {
+    val maxToday = when {
+        width < 200.dp -> 1
+        width < 280.dp -> 2
+        else -> 3
+    }
+    val maxTomorrow = if (width < 200.dp) 1 else 2
+
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
+        if (state.todayCourses.isEmpty() && state.tomorrowCourses.isEmpty()) {
+            Box(
+                modifier = GlanceModifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "今日无课",
+                    style = TextStyle(
+                        color = FixedColorProvider(colors.secondary),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
+        } else {
+            state.todayCourses.take(maxToday).forEach { course ->
+                CourseCard(course, colors, isTomorrow = false)
+            }
+            if (state.todayCourses.size < maxToday && state.tomorrowCourses.isNotEmpty()) {
+                TomorrowSeparator(colors)
+                state.tomorrowCourses.take(maxTomorrow).forEach { course ->
+                    CourseCard(course, colors, isTomorrow = true)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LargeWidgetView(state: WidgetState, colors: WidgetColors, height: Dp) {
+    val maxToday = when {
+        height < 200.dp -> 3
+        height < 280.dp -> 5
+        else -> 6
+    }
+    val maxTomorrow = when {
+        height < 200.dp -> 2
+        height < 280.dp -> 3
+        else -> 4
+    }
+
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
+        if (state.todayCourses.isEmpty() && state.tomorrowCourses.isEmpty()) {
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "今日无课",
+                    style = TextStyle(
+                        color = FixedColorProvider(colors.secondary),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
+        } else {
+            state.todayCourses.take(maxToday).forEach { course ->
+                CourseCard(course, colors, isTomorrow = false)
+            }
+            if (state.tomorrowCourses.isNotEmpty()) {
+                TomorrowSeparator(colors)
+                state.tomorrowCourses.take(maxTomorrow).forEach { course ->
+                    CourseCard(course, colors, isTomorrow = true)
+                }
+            }
+        }
+        Spacer(modifier = GlanceModifier.defaultWeight())
     }
 }
 
@@ -251,6 +368,55 @@ private fun TomorrowSeparator(colors: WidgetColors) {
                 .background(colors.secondary)
                 .defaultWeight()
         ) {}
+    }
+}
+
+@Composable
+private fun SmallCourseCard(
+    course: DisplayCourse,
+    colors: WidgetColors
+) {
+    val isTomorrow = course.isTomorrow
+    val bg = if (isTomorrow) colors.tomorrowCardBackground else colors.cardBackground
+    val onColor = if (isTomorrow) colors.onTomorrowCard else colors.onCard
+    val accentColor = if (isTomorrow) colors.onTomorrowCard else colors.secondary
+
+    Box(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp)
+            .background(bg)
+            .cornerRadius(10.dp)
+            .padding(all = 10.dp)
+    ) {
+        Column {
+            Text(
+                course.name,
+                style = TextStyle(
+                    color = FixedColorProvider(onColor),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+            Spacer(modifier = GlanceModifier.height(3.dp))
+            Text(
+                "${course.startTime}-${course.endTime}",
+                style = TextStyle(
+                    color = FixedColorProvider(accentColor),
+                    fontSize = 11.sp
+                )
+            )
+            if (course.classroom.isNotEmpty()) {
+                Spacer(modifier = GlanceModifier.height(3.dp))
+                Text(
+                    course.classroom,
+                    style = TextStyle(
+                        color = FixedColorProvider(accentColor),
+                        fontSize = 11.sp
+                    )
+                )
+            }
+        }
     }
 }
 

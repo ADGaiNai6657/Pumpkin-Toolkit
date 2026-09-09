@@ -158,7 +158,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                                 )
                             )
                         }
-                        if(AppConfig.lockStartDate){
+                        if(!AppConfig.lockStartDate){
                             val startDate = QZClient.getStartDate()
                             startDate?.let {
                                 AppConfig.startDate = startDate
