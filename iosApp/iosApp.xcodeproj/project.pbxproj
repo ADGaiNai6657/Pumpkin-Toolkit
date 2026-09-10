@@ -15,22 +15,12 @@
 		AA5566778899001122334455 /* WidgetHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6677889900112233445566 /* WidgetHelper.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXFileReference section */
-		F3087EE7E457E26BB9FE080C /* PumpkinToolkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PumpkinToolkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1B2C3D4E5F60718293A4B5C /* TodayScheduleWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TodayScheduleWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		BB2233445566778899001122 /* TodayScheduleWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleWidget.swift; sourceTree = "<group>"; };
-		BB3344556677889900112233 /* TodayScheduleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleProvider.swift; sourceTree = "<group>"; };
-		BB4455667788990011223344 /* TodayScheduleWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleWidgetView.swift; sourceTree = "<group>"; };
-		BB5566778899001122334455 /* WidgetDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataModels.swift; sourceTree = "<group>"; };
-		BB6677889900112233445566 /* WidgetHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHelper.swift; sourceTree = "<group>"; };
-/* End PBXFileReference section */
-
 /* Begin PBXContainerItemProxy section */
 		4B5C6D7E8F90A1B2C3D4E5F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1F4A09D98F26E477324FA5F4 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = C3D4E5F60718293A4B5C6D7E /* TodayScheduleWidget */;
+			remoteGlobalIDString = C3D4E5F60718293A4B5C6D7E;
 			remoteInfo = TodayScheduleWidget;
 		};
 /* End PBXContainerItemProxy section */
@@ -48,6 +38,16 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A1B2C3D4E5F60718293A4B5C /* TodayScheduleWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TodayScheduleWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB2233445566778899001122 /* TodayScheduleWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleWidget.swift; sourceTree = "<group>"; };
+		BB3344556677889900112233 /* TodayScheduleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleProvider.swift; sourceTree = "<group>"; };
+		BB4455667788990011223344 /* TodayScheduleWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScheduleWidgetView.swift; sourceTree = "<group>"; };
+		BB5566778899001122334455 /* WidgetDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataModels.swift; sourceTree = "<group>"; };
+		BB6677889900112233445566 /* WidgetHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHelper.swift; sourceTree = "<group>"; };
+		F3087EE7E457E26BB9FE080C /* PumpkinToolkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PumpkinToolkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		313F7B5BC9CDB148472A4D81 /* Exceptions for "iosApp" folder in "iosApp" target */ = {
@@ -72,25 +72,6 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Configuration;
 			sourceTree = "<group>";
-		};
-		B2C3D4E5F60718293A4B5C6D /* TodayScheduleWidget */ = {
-			isa = PBXGroup;
-			children = (
-				BB2233445566778899001122 /* TodayScheduleWidget.swift */,
-				BB3344556677889900112233 /* TodayScheduleProvider.swift */,
-				BB4455667788990011223344 /* TodayScheduleWidgetView.swift */,
-				BB5566778899001122334455 /* WidgetDataModels.swift */,
-				BB6677889900112233445566 /* WidgetHelper.swift */,
-			);
-			path = TodayScheduleWidget;
-			sourceTree = "<group>";
-		};
-		5C6D7E8F90A1B2C3D4E5F6A7 /* Exceptions for "TodayScheduleWidget" folder in "TodayScheduleWidget" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = C3D4E5F60718293A4B5C6D7E /* TodayScheduleWidget */;
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -131,6 +112,18 @@
 			);
 			sourceTree = "<group>";
 		};
+		B2C3D4E5F60718293A4B5C6D /* TodayScheduleWidget */ = {
+			isa = PBXGroup;
+			children = (
+				BB2233445566778899001122 /* TodayScheduleWidget.swift */,
+				BB3344556677889900112233 /* TodayScheduleProvider.swift */,
+				BB4455667788990011223344 /* TodayScheduleWidgetView.swift */,
+				BB5566778899001122334455 /* WidgetDataModels.swift */,
+				BB6677889900112233445566 /* WidgetHelper.swift */,
+			);
+			path = TodayScheduleWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -138,13 +131,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D71C3FF67F15DEBFE015C649 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
-			CEF9247E50DA5A6756D9D665 /* Compile Kotlin Framework */,
-			837D3ECB2B5DE8BBAE5D2D97 /* Sources */,
-			D4C613F0567B613BC092B807 /* Frameworks */,
-			E65D7A66385B81A81E77611E /* Resources */,
-			3A4B5C6D7E8F90A1B2C3D4E5 /* Embed App Extensions */,
-			CC12345678901234567890AB /* Re-sign Widget Entitlements */,
-		);
+				CEF9247E50DA5A6756D9D665 /* Compile Kotlin Framework */,
+				837D3ECB2B5DE8BBAE5D2D97 /* Sources */,
+				D4C613F0567B613BC092B807 /* Frameworks */,
+				E65D7A66385B81A81E77611E /* Resources */,
+				3A4B5C6D7E8F90A1B2C3D4E5 /* Embed App Extensions */,
+			);
 			buildRules = (
 			);
 			dependencies = (
@@ -278,29 +270,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		CC12345678901234567890AB /* Re-sign Widget Entitlements */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/TodayScheduleWidget/TodayScheduleWidget.entitlements",
-				"$(SRCROOT)/iosApp/PumpkinToolkit.entitlements",
-			);
-			name = "Re-sign Widget Entitlements";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "WIDGET_PATH=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/PlugIns/TodayScheduleWidget.appex\"\nWIDGET_ENTITLEMENTS=\"${SRCROOT}/TodayScheduleWidget/TodayScheduleWidget.entitlements\"\nAPP_ENTITLEMENTS=\"${SRCROOT}/iosApp/PumpkinToolkit.entitlements\"\nAPP_PATH=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\"\n\nif [ -f \"$WIDGET_ENTITLEMENTS\" ] && [ -d \"$WIDGET_PATH\" ]; then\n    /usr/bin/codesign --force --sign - --entitlements \"$WIDGET_ENTITLEMENTS\" --generate-entitlement-der \"$WIDGET_PATH\"\nfi\n\nif [ -f \"$APP_ENTITLEMENTS\" ] && [ -d \"$APP_PATH\" ]; then\n    /usr/bin/codesign --force --sign - --entitlements \"$APP_ENTITLEMENTS\" --generate-entitlement-der \"$APP_PATH\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXTargetDependency section */
 		6D7E8F90A1B2C3D4E5F6A7B8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -310,64 +279,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		17AB580BE1363D2A0E874FA0 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = arm64;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = iosApp/PumpkinToolkit.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = R6UB6VD355;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		33FE58035A8AD4FDBCE06754 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = arm64;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = iosApp/PumpkinToolkit.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = R6UB6VD355;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		0718293A4B5C6D7E8F90A1B2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -396,6 +307,38 @@
 			};
 			name = Debug;
 		};
+		17AB580BE1363D2A0E874FA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/PumpkinToolkit.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_TEAM = R6UB6VD355;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "南瓜工具箱";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		18293A4B5C6D7E8F90A1B2C3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -418,6 +361,38 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pgigi.pumpkintoolkit.PumpkinToolkit.TodayScheduleWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		33FE58035A8AD4FDBCE06754 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/PumpkinToolkit.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_TEAM = R6UB6VD355;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "南瓜工具箱";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -550,6 +525,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		293A4B5C6D7E8F90A1B2C3D4 /* Build configuration list for PBXNativeTarget "TodayScheduleWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0718293A4B5C6D7E8F90A1B2 /* Debug */,
+				18293A4B5C6D7E8F90A1B2C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		3891B32DCB0C847DD56819C6 /* Build configuration list for PBXProject "iosApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -564,15 +548,6 @@
 			buildConfigurations = (
 				17AB580BE1363D2A0E874FA0 /* Debug */,
 				33FE58035A8AD4FDBCE06754 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		293A4B5C6D7E8F90A1B2C3D4 /* Build configuration list for PBXNativeTarget "TodayScheduleWidget" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0718293A4B5C6D7E8F90A1B2 /* Debug */,
-				18293A4B5C6D7E8F90A1B2C3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
