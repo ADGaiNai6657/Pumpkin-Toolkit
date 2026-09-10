@@ -153,6 +153,43 @@ fun MiuixSettingScreen() {
                         AppConfig.save()
                     }
                 )
+                SwitchPreference(
+                    title = "自动字体大小",
+                    summary = "根据屏幕尺寸自动调整字体大小",
+                    checked = AppConfig.autoFontScale,
+                    onCheckedChange = {
+                        AppConfig.autoFontScale = it
+                        AppConfig.save()
+                    }
+                )
+                AnimatedVisibility(!AppConfig.autoFontScale){
+                    var fontScale by remember{ mutableStateOf(AppConfig.fontScale) }
+                    SliderPreference(
+                        title = "字体大小",
+                        value = fontScale,
+                        onValueChange = {
+                            fontScale = it
+                            AppConfig.fontScale = it
+                            AppConfig.save()
+                        },
+                        valueRange = 0.7f..1.3f,
+                        steps = 11,
+                        endActions = {
+                            Text(
+                                text = "${(fontScale * 100).roundToInt()}%",
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .weight(1f, fill = false),
+                                fontSize = MiuixTheme.textStyles.body2.fontSize,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                textAlign = TextAlign.End,
+                            )
+                        },
+                        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                        keyPoints = listOf(0.7f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f, 1.0f, 1.05f, 1.1f, 1.15f, 1.2f, 1.25f, 1.3f),
+                        showKeyPoints = true
+                    )
+                }
                 val predictiveBackAnimationItems = PredictiveBackAnimation.entries.map { it.displayName }
                 WindowDropdownPreference(
                     title = "预测返回动画",

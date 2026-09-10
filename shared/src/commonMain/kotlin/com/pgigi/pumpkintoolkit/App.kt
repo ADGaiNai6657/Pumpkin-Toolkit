@@ -1,13 +1,18 @@
 package com.pgigi.pumpkintoolkit
 
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import top.yukonga.miuix.kmp.nav.core.NavDisplay
 import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.NavCornerClipMode
@@ -176,9 +181,38 @@ fun App(
         LocalNavigator provides navigator,
         LocalAppViewModel provides viewModel,
     ){
-        val transition = remember(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection) {
-            installerNavTransition(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection)
-        }
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val screenWidthDp = maxWidth
+            val currentDensity = LocalDensity.current
+            val effectiveFontScale = remember(AppConfig.autoFontScale, AppConfig.fontScale, screenWidthDp) {
+                if (AppConfig.autoFontScale) {
+                    // 自动模式：根据屏幕宽度计算字体缩放比例
+                    // 手机设备（<= 600dp）: 1.0
+                    // 大屏设备: 随宽度增大逐渐缩小字体，最低 0.7
+                    val dpWidth = screenWidthDp.value
+                    when {
+                        dpWidth <= 600f -> 1.0f
+                        dpWidth >= 1200f -> 0.7f
+                        else -> {
+                            // 600dp ~ 1200dp 之间线性插值
+                            val ratio = (dpWidth - 600f) / 600f
+                            1.0f - ratio * 0.3f
+                        }
+                    }
+                } else {
+                    AppConfig.fontScale
+                }
+            }
+            val scaledDensity = remember(currentDensity, effectiveFontScale) {
+                Density(
+                    density = currentDensity.density,
+                    fontScale = currentDensity.fontScale * effectiveFontScale
+                )
+            }
+            CompositionLocalProvider(LocalDensity provides scaledDensity) {
+                val transition = remember(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection) {
+                    installerNavTransition(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection)
+                }
         val cornerRadius = rememberNavSystemCornerRadius().coerceAtLeast(16.dp)
         val effects = remember(cornerRadius) {
             NavDisplayEffects(cornerClipRadius = cornerRadius, cornerClipMode = NavCornerClipMode.All)
@@ -337,6 +371,8 @@ fun App(
                         MiuixEvaluationDetailScreen(route.actionUrl, route.title)
                     }
                 }
+            }
+        }
             }
         }
         }
