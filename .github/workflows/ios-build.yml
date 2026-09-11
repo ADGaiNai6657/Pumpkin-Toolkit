@@ -128,10 +128,17 @@ jobs:
             iosApp/TodayScheduleWidget/TodayScheduleWidget.entitlements; do
 
             echo "Processing $ENT_FILE"
-            # Check if already present
-            if ! /usr/libexec/PlistBuddy -c "Print :com.apple.security.application-groups" "$ENT_FILE" 2>/dev/null | grep -q "$APP_GROUP_ID"; then
-              /usr/libexec/PlistBuddy -c "Add :com.apple.security.application-groups string $APP_GROUP_ID" "$ENT_FILE"
-            fi
+            python3 -c "
+            import plistlib, sys
+            with open('$ENT_FILE', 'rb') as f:
+                data = plistlib.load(f)
+            groups = data.setdefault('com.apple.security.application-groups', [])
+            gid = '$APP_GROUP_ID'
+            if gid not in groups:
+                groups.append(gid)
+            with open('$ENT_FILE', 'wb') as f:
+                plistlib.dump(data, f)
+            "
 
             echo "=== $ENT_FILE contents ==="
             cat "$ENT_FILE"
