@@ -33,7 +33,7 @@
 - [ ] 打开 `AppConfig.kt`，在课表相关字段附近（`timeSeason` 那一堆）加入：
 
 ```kotlin
-var tomorrowScheduleEnabled by mutableStateOf(false)   // 开关，默认关
+var tomorrowScheduleEnable by mutableStateOf(false)   // 开关，默认关
 var tomorrowSwitchHour by mutableIntStateOf(22)         // 几点（0-23），默认 22
 var tomorrowSwitchMinute by mutableIntStateOf(0)        // 几分（0-59），默认 0
 ```
@@ -51,7 +51,7 @@ const val TOMORROW_SWITCH_MINUTE = "tomorrow_switch_minute"
 - [ ] 找到 `load()`，加入（`?:` 表示读不到就用默认值）：
 
 ```kotlin
-tomorrowScheduleEnabled = kvault.getBoolean(KEY.TOMORROW_ENABLED) ?: false
+tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_ENABLED) ?: false
 tomorrowSwitchHour = kvault.getInt(KEY.TOMORROW_SWITCH_HOUR) ?: 22
 tomorrowSwitchMinute = kvault.getInt(KEY.TOMORROW_SWITCH_MINUTE) ?: 0
 ```
@@ -60,7 +60,7 @@ tomorrowSwitchMinute = kvault.getInt(KEY.TOMORROW_SWITCH_MINUTE) ?: 0
 - [ ] 找到 `save()`，加入：
 
 ```kotlin
-kvault.putBoolean(KEY.TOMORROW_ENABLED, tomorrowScheduleEnabled)
+kvault.putBoolean(KEY.TOMORROW_ENABLED, tomorrowScheduleEnable)
 kvault.putInt(KEY.TOMORROW_SWITCH_HOUR, tomorrowSwitchHour)
 kvault.putInt(KEY.TOMORROW_SWITCH_MINUTE, tomorrowSwitchMinute)
 ```
@@ -81,15 +81,26 @@ kvault.putInt(KEY.TOMORROW_SWITCH_MINUTE, tomorrowSwitchMinute)
 ```kotlin
 SwitchPreference(
     title = "晚间自动显示明日课程",
-    checked = AppConfig.tomorrowScheduleEnabled,
+    checked = AppConfig.tomorrowScheduleEnable,
     onCheckedChange = {
-        AppConfig.tomorrowScheduleEnabled = it
+        AppConfig.tomorrowScheduleEnable = it
         AppConfig.save()
     }
 )
 ```
 
-### 2.2 加一个"切换时间"行
+### 2.2 先在函数开头声明弹窗状态（重要！）
+- [ ] 在 `MiuixSettingScreen()` 的**最上面**（`Scaffold` 之前）声明这三样。**必须在引用之前声明**，否则会报 `Unresolved reference: showTimeDialog`：
+
+```kotlin
+val showTimeDialog = remember { mutableStateOf(false) }           // 弹窗开/关
+var tempHour by remember { mutableIntStateOf(AppConfig.tomorrowSwitchHour) }
+var tempMinute by remember { mutableIntStateOf(AppConfig.tomorrowSwitchMinute) }
+```
+
+> `mutableStateOf` / `mutableIntStateOf`、`remember` 忘了就翻《零基础导读》第 2 章。
+
+### 2.3 加一个"切换时间"行
 - [ ] 紧跟在开关后面加（`ArrowPreference` 右侧显示时间）：
 
 ```kotlin
@@ -97,7 +108,9 @@ ArrowPreference(
     title = "切换时间",
     endActions = {
         Text(
-            text = "%02d:%02d".format(AppConfig.tomorrowSwitchHour, AppConfig.tomorrowSwitchMinute),
+            // ⚠️ 不要用 String.format（JVM 专属，iOS 会编译失败）。用 padStart。
+            text = "${AppConfig.tomorrowSwitchHour.toString().padStart(2, '0')}:" +
+                   "${AppConfig.tomorrowSwitchMinute.toString().padStart(2, '0')}",
             modifier = Modifier.align(Alignment.CenterVertically),
             fontSize = MiuixTheme.textStyles.body2.fontSize,
             color = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -107,18 +120,13 @@ ArrowPreference(
 )
 ```
 
-- [ ] 在函数开头声明弹窗开关和临时值（`remember` 表示页面重建时记住）：
+### 2.4 加滚轮弹窗
+- [ ] 在文件末尾，仿照「开课时间」弹窗写一个：
 
 ```kotlin
-val showTimeDialog = remember { mutableStateOf(false) }
-var tempHour by remember { mutableIntStateOf(AppConfig.tomorrowSwitchHour) }
-var tempMinute by remember { mutableIntStateOf(AppConfig.tomorrowSwitchMinute) }
+// 需要这两个 import（放文件顶部）：
+import top.yukonga.miuix.kmp.basic.NumberPicker
 ```
-
-> `mutableStateOf` / `mutableIntStateOf`、`remember` 忘了就翻《零基础导读》第 2 章。
-
-### 2.3 加滚轮弹窗
-- [ ] 在文件末尾，仿照「开课时间」弹窗写一个（`NumberPicker` 需要 `import top.yukonga.miuix.kmp.basic.NumberPicker`）：
 
 ```kotlin
 WindowDialog(
@@ -137,7 +145,7 @@ WindowDialog(
                 wrapAround = true,
                 modifier = Modifier.weight(1f)
             )
-            Text(":", fontWeight = FontWeight.Bold)
+            Text(":")   // 想加粗的话：Text(":", fontWeight = FontWeight.Bold)，并 import androidx.compose.ui.text.font.FontWeight
             NumberPicker(
                 value = tempMinute,
                 onValueChange = { tempMinute = it },
@@ -164,7 +172,7 @@ WindowDialog(
 }
 ```
 
-### 2.4 验证
+### 2.5 验证
 - [ ] 运行 App，进入「设置 → 课表设置」：能看到开关和时间行。
 - [ ] 点时间行 → 出现滚轮 → 选 21:30 → 确认 → 时间行变成 `21:30`。
 - [ ] 杀掉 App 再打开，设置还在（说明存住了）。
@@ -184,36 +192,53 @@ M3Row(
     title = "晚间自动显示明日课程",
     trailingContent = {
         Switch(
-            checked = AppConfig.tomorrowScheduleEnabled,
+            checked = AppConfig.tomorrowScheduleEnable,
             onCheckedChange = {
-                AppConfig.tomorrowScheduleEnabled = it
+                AppConfig.tomorrowScheduleEnable = it
                 AppConfig.save()
             }
         )
     },
     onClick = {
-        AppConfig.tomorrowScheduleEnabled = !AppConfig.tomorrowScheduleEnabled
+        AppConfig.tomorrowScheduleEnable = !AppConfig.tomorrowScheduleEnable
         AppConfig.save()
     },
 )
 ```
 
-### 3.2 加时间行
-- [ ] 加：
+### 3.2 声明弹窗状态 + 加时间行
+- [ ] 先在 `Material3SettingScreen()` 最上面声明（和 Miuix 一样，别漏）：
+
+```kotlin
+val showTimeDialog = remember { mutableStateOf(false) }
+var tempHour by remember { mutableIntStateOf(AppConfig.tomorrowSwitchHour) }
+var tempMinute by remember { mutableIntStateOf(AppConfig.tomorrowSwitchMinute) }
+```
+
+- [ ] 再加时间行：
 
 ```kotlin
 M3Row(
     title = "切换时间",
     trailingContent = {
-        M3TrailingText("%02d:%02d".format(AppConfig.tomorrowSwitchHour, AppConfig.tomorrowSwitchMinute))
+        M3TrailingText(
+            "${AppConfig.tomorrowSwitchHour.toString().padStart(2, '0')}:" +
+            "${AppConfig.tomorrowSwitchMinute.toString().padStart(2, '0')}"
+        )
     },
     onClick = { showTimeDialog.value = true },
 )
 ```
-- [ ] 同样在开头声明 `showTimeDialog` / `tempHour` / `tempMinute`。
 
 ### 3.3 加弹窗（注意颜色！）
 - [ ] 用 `AlertDialog`（参考文件里已有的日期弹窗），里面放两个 `NumberPicker`。
+- [ ] 需要这两个 import（放文件顶部）：
+
+```kotlin
+import top.yukonga.miuix.kmp.basic.NumberPicker
+import top.yukonga.miuix.kmp.basic.NumberPickerDefaults
+```
+
 - [ ] ⚠️ M3 分支没有 `MiuixTheme`，所以**必须显式给颜色和文字样式**，否则可能取不到默认值：
 
 ```kotlin
@@ -235,7 +260,7 @@ NumberPicker(
 ```
 
 ### 3.4 验证
-- [ ] 去「设置 → UI 风格」切到 Material 3，重复阶段 2.4 的验证。
+- [ ] 去「设置 → UI 风格」切到 Material 3，重复阶段 2.5 的验证。
 
 ---
 
@@ -245,6 +270,16 @@ NumberPicker(
 
 ### 4.1 新建文件
 - [ ] 新建 `shared/src/commonMain/.../utils/TodayScheduleResolver.kt`。
+- [ ] 文件顶部需要这些 import（其余交给 IDE 自动补全）：
+
+```kotlin
+import com.pgigi.pumpkintoolkit.models.Course
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
+// WeekCalculator 和 buildWeekCourses 与本文件同属 utils 包，不用 import
+```
 
 ### 4.2 定义返回类型
 - [ ] 写：
@@ -319,25 +354,31 @@ var viewState by remember {
             startDate = AppConfig.startDate,
             currentWeek = viewModel.currentWeek,
             totalWeek = AppConfig.totalWeek,
-            enabled = AppConfig.tomorrowScheduleEnabled,
+            enabled = AppConfig.tomorrowScheduleEnable,
             switchHour = AppConfig.tomorrowSwitchHour,
             switchMinute = AppConfig.tomorrowSwitchMinute
         )
     )
 }
 
-LaunchedEffect(AppConfig.tomorrowScheduleEnabled, AppConfig.tomorrowSwitchHour,
+LaunchedEffect(AppConfig.tomorrowScheduleEnable, AppConfig.tomorrowSwitchHour,
                AppConfig.tomorrowSwitchMinute, viewModel.courseList.size) {
     while (true) {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         viewState = resolveTodayView(
             now, viewModel.courseList, AppConfig.startDate, viewModel.currentWeek,
-            AppConfig.totalWeek, AppConfig.tomorrowScheduleEnabled,
+            AppConfig.totalWeek, AppConfig.tomorrowScheduleEnable,
             AppConfig.tomorrowSwitchHour, AppConfig.tomorrowSwitchMinute
         )
         delay(30_000)   // 每 30 秒重新判断一次
     }
 }
+```
+
+- [ ] `TodayScreen.kt` 顶部加 import（`delay`、`Clock`、`TimeZone`、`toLocalDateTime` 它已经有了，只差这个）：
+
+```kotlin
+import com.pgigi.pumpkintoolkit.utils.resolveTodayView
 ```
 
 - [ ] 原来那两行（算 `weekCourses` / `todayCourses`）**删掉或改掉**。
@@ -360,6 +401,22 @@ LaunchedEffect(AppConfig.tomorrowScheduleEnabled, AppConfig.tomorrowSwitchHour,
 - [ ] **不要用 `AppConfig.localDate`**：它是 App 启动时算死的，跨天会过期。一律用实时的 `Clock.System.now()`。
 - [ ] **`startDate` 为空**：降级用 `viewModel.currentWeek`，不崩溃。
 - [ ] **未登录**：仍显示「请登录使用」。
+
+---
+
+## 常见报错对照表（改到一半报错先看这个）
+
+| 报错信息 | 原因 | 解决 |
+|---|---|---|
+| `Unresolved reference: showTimeDialog` | 没声明，或声明写在了使用之后 | 在函数**最上面**声明 `val showTimeDialog = remember { mutableStateOf(false) }`（阶段 2.2 / 3.2） |
+| `Unresolved reference: format`，或 iOS 编译失败 | 用了 JVM 专属的 `String.format` | 改用 `padStart(2, '0')` 拼字符串（见 2.3 / 3.2） |
+| `Unresolved reference: FontWeight` | 用了 `FontWeight.Bold` 却没 import | 顶部加 `import androidx.compose.ui.text.font.FontWeight`，或去掉加粗 |
+| `Unresolved reference: NumberPicker` / `NumberPickerDefaults` | 没 import | 加 `import top.yukonga.miuix.kmp.basic.NumberPicker`；用默认颜色再加 `import top.yukonga.miuix.kmp.basic.NumberPickerDefaults` |
+| `Unresolved reference: resolveTodayView` | TodayScreen 没 import | 顶部加 `import com.pgigi.pumpkintoolkit.utils.resolveTodayView` |
+| `Unresolved reference: tomorrowScheduleEnable` | AppConfig 字段没加，或两处拼写不一致 | 确认 AppConfig 与页面用的字段名完全一致 |
+| 类型不匹配 / 参数报错 | 传入参数顺序或类型不对 | 对照阶段 4 的函数签名逐个核对 |
+
+> 原则：报"找不到某个名字"的错，90% 是**没 import** 或**没声明/拼写不一致**。
 
 ---
 

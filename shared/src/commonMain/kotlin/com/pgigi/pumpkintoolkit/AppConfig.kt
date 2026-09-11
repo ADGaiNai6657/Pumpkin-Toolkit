@@ -61,7 +61,7 @@ object AppConfig {
     var lockStartDate by mutableStateOf(false)
 
     // 明日模式，用于在用户设置的时间点后切换到明日模式。默认为关闭状态，切换时间为22:00。
-    var tomorrowScheduleEnable by mutableStateOf(false)             // 是否启用明日模式
+    var tomorrowScheduleEnable by mutableStateOf(true)             // 是否启用明日模式
     var tomorrowSwitchHour by mutableIntStateOf(22)         // 明日模式切换的小时
     var tomorrowSwitchMinute by mutableIntStateOf(0)        // 明日模式切换的分钟
 
@@ -87,7 +87,7 @@ object AppConfig {
         const val TERM_FILTER_START = "term_filter_start"
         const val HIDE_FAIL_SCORE = "hide_fail_score"
         const val LOCK_START_DATE = "lock_start_date"
-        const val TOMORROW_ENABLE = "tomorrow_enable"
+        const val TOMORROW_SCHEDULE_ENABLE = "tomorrow_schedule_enable"
         const val TOMMOROW_SWITCH_HOUR = "tomorrow_switch_hour"
         const val TOMMOROW_SWITCH_MINUTE = "tomorrow_switch_minute"
     }
@@ -130,7 +130,7 @@ object AppConfig {
         lockStartDate = kvault.getBoolean(KEY.LOCK_START_DATE)?:false
 
         //明日模式新增
-        tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_ENABLE) ?: false        //从存储中读取状态，如果读到了滚木，就使用 ？: 后所提供的默认值。下面依次类推。
+        tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_SCHEDULE_ENABLE) ?: false        //从存储中读取状态，如果读到了滚木，就使用 ？: 后所提供的默认值。下面依次类推。
         tomorrowSwitchHour = kvault.getInt(KEY.TOMMOROW_SWITCH_HOUR) ?: 22
         tomorrowSwitchMinute = kvault.getInt(KEY.TOMMOROW_SWITCH_MINUTE) ?: 0
     }
@@ -160,7 +160,7 @@ object AppConfig {
         reloadWidgetTimelines()
 
         //明日模式
-        kvault.putBoolean(KEY.TOMORROW_ENABLE,tomorrowScheduleEnable)       //讲状态存储在储存中。
+        kvault.putBoolean(KEY.TOMORROW_SCHEDULE_ENABLE,tomorrowScheduleEnable)       //讲状态存储在储存中。
         kvault.putInt(KEY.TOMMOROW_SWITCH_HOUR,tomorrowSwitchHour)
         kvault.putInt(KEY.TOMMOROW_SWITCH_MINUTE,tomorrowSwitchMinute)
     }
