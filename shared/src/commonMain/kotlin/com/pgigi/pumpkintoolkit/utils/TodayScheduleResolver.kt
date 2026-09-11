@@ -13,6 +13,7 @@ data class TodayViewState(
     val isHoliday: Boolean      //是否为假期
 )
 
+//这个函数被用于决定返回什么课表（今/明）
 fun resolveTodayView(
     now: LocalDateTime,
     courseList: List<Course>,
