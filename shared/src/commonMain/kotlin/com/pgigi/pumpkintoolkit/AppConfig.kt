@@ -135,8 +135,8 @@ object AppConfig {
 
         //明日模式新增
         tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_SCHEDULE_ENABLE) ?: false
-        tomorrowSwitchHour = kvault.getInt(KEY.TOMOROW_SWITCH_HOUR) ?: 22
-        tomorrowSwitchMinute = kvault.getInt(KEY.TOMOROW_SWITCH_MINUTE) ?: 0
+        tomorrowSwitchHour = kvault.getInt(KEY.TOMORROW_SWITCH_HOUR) ?: 22
+        tomorrowSwitchMinute = kvault.getInt(KEY.TOMORROW_SWITCH_MINUTE) ?: 0
         fontScale = kvault.getFloat(KEY.FONT_SCALE) ?: 1.0f
         autoFontScale = kvault.getBoolean(KEY.AUTO_FONT_SCALE) ?: true
     }
@@ -169,8 +169,8 @@ object AppConfig {
 
         //明日模式
         kvault.putBoolean(KEY.TOMORROW_SCHEDULE_ENABLE,tomorrowScheduleEnable)       //讲状态存储在储存中。
-        kvault.putInt(KEY.TOMOROW_SWITCH_HOUR,tomorrowSwitchHour)
-        kvault.putInt(KEY.TOMOROW_SWITCH_MINUTE,tomorrowSwitchMinute)
+        kvault.putInt(KEY.TOMORROW_SWITCH_HOUR,tomorrowSwitchHour)
+        kvault.putInt(KEY.TOMORROW_SWITCH_MINUTE,tomorrowSwitchMinute)
     }
 
     fun updateTermData(map: Map<String, String>) {

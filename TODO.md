@@ -338,14 +338,46 @@ fun resolveTodayView(
 
 ---
 
-## 阶段 5：接到「今日课程」页 + 自动刷新
+## 阶段 5：接到「今日课程」页 + 手动下拉刷新
 
-> 目标：让页面用 Resolver 的结果显示课程。
+> 目标：让 `TodayScreen`（Miuix）和 `Material3TodayScreen`（M3）用 `resolveTodayView` 显示结果。
+> **刷新方式：用户手动下拉才刷新，不要自动刷新、不要死循环。**
 
-### 5.1 改 `TodayScreen.kt`（Miuix）
-- [ ] 在函数里加一个状态和一段定时逻辑（放在原来算 `todayCourses` 的地方）：
+### 5.0 现状
+两个页面现在都是"自己算今天"（以 `TodayScreen.kt` 为例，约 `:53`、`:60-64`）：
 
 ```kotlin
+val courses = buildWeekCourses(viewModel.courseList)                         // 所有周
+// ...
+val weekCourses = courses.getOrElse(viewModel.currentWeek - 1) { emptyList() }
+val localDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+val todayCourses = weekCourses.filter { course ->
+    course.dayOfWeek == (localDate.dayOfWeek.ordinal + 1) % 7
+}
+```
+这几行要整体替换成"调用 resolver + 下拉刷新"。
+
+---
+
+### 5.1 改 `TodayScreen.kt`（Miuix）
+
+#### 5.1.1 补 import
+- [ ] 顶部加（`PullToRefresh`、`rememberPullToRefreshState`、`Clock`、`TimeZone`、`toLocalDateTime` 该文件已有）：
+
+```kotlin
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import com.pgigi.pumpkintoolkit.utils.resolveTodayView
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+```
+
+#### 5.1.2 删掉旧取数，换成"状态 + 手动刷新"
+- [ ] 删掉 `val courses = ...`、`val weekCourses = ...`、`val localDate = ...`、`val todayCourses = ...`（约 `:53`、`:60-64`）。
+- [ ] 换成：
+
+```kotlin
+// 当前显示状态：进入页面时先算一次
 var viewState by remember {
     mutableStateOf(
         resolveTodayView(
@@ -361,36 +393,132 @@ var viewState by remember {
     )
 }
 
-LaunchedEffect(AppConfig.tomorrowScheduleEnable, AppConfig.tomorrowSwitchHour,
-               AppConfig.tomorrowSwitchMinute, viewModel.courseList.size) {
-    while (true) {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        viewState = resolveTodayView(
-            now, viewModel.courseList, AppConfig.startDate, viewModel.currentWeek,
-            AppConfig.totalWeek, AppConfig.tomorrowScheduleEnable,
-            AppConfig.tomorrowSwitchHour, AppConfig.tomorrowSwitchMinute
-        )
-        delay(30_000)   // 每 30 秒重新判断一次
+// 手动刷新：按“此刻”重新算一次（只在用户下拉时调用）
+val refreshToday = {
+    viewState = resolveTodayView(
+        now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        courseList = viewModel.courseList,
+        startDate = AppConfig.startDate,
+        currentWeek = viewModel.currentWeek,
+        totalWeek = AppConfig.totalWeek,
+        enabled = AppConfig.tomorrowScheduleEnable,
+        switchHour = AppConfig.tomorrowSwitchHour,
+        switchMinute = AppConfig.tomorrowSwitchMinute
+    )
+}
+
+// 下拉刷新所需的状态
+var isRefreshing by remember { mutableStateOf(false) }
+val pullToRefreshState = rememberPullToRefreshState()
+val scope = rememberCoroutineScope()
+```
+
+> ⚠️ 关键：**这里没有 `LaunchedEffect { while(true) ... }`，也没有 `delay(30_000)`**。页面不会自己刷新，必须用户下拉。
+
+#### 5.1.3 用 `PullToRefresh` 包住列表
+- [ ] 把原来的 `LazyColumn(...) { ... }` 整体包进 `PullToRefresh`：
+
+```kotlin
+PullToRefresh(
+    isRefreshing = isRefreshing,
+    onRefresh = {
+        scope.launch {
+            isRefreshing = true
+            refreshToday()      // 下拉 → 手动刷新
+            delay(300)          // 让指示器转一下（可去掉）
+            isRefreshing = false
+        }
+    },
+    pullToRefreshState = pullToRefreshState,
+    modifier = Modifier.padding(paddingValues),
+) {
+    LazyColumn(state = listState) {
+        items(viewState.courses.size) { index ->
+            val course = viewState.courses[index]
+            // ...原有卡片代码不变...
+        }
+        if (!loggedIn || viewState.courses.isEmpty()) {
+            item {
+                Text(
+                    text = when {
+                        !loggedIn -> "请登录使用"
+                        viewState.isHoliday -> "假期中"
+                        else -> "暂无课程"
+                    },
+                    // ...原有修饰符不变...
+                )
+            }
+        }
+        item { Spacer(modifier = Modifier.height(64.dp)) }
     }
 }
 ```
 
-- [ ] `TodayScreen.kt` 顶部加 import（`delay`、`Clock`、`TimeZone`、`toLocalDateTime` 它已经有了，只差这个）：
+> 注意：原来 `LazyColumn` 的 `Modifier.padding(paddingValues)` 移到 `PullToRefresh` 上，里面的 `LazyColumn` **不要再加**，否则双重留白。
+
+#### 5.1.4 改标题
+- [ ] `SmallTopAppBar(title = "今日课程", ...)` → `title = viewState.title`
+
+---
+
+### 5.2 改 `Material3TodayScreen.kt`（M3）
+同样思路，M3 用 `PullToRefreshBox`。
+
+#### 5.2.1 补 import
+- [ ] 该文件原本缺少这些：
 
 ```kotlin
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import com.pgigi.pumpkintoolkit.utils.resolveTodayView
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+```
+（该文件已有 `@OptIn(ExperimentalMaterial3Api::class)`。若 `PullToRefreshBox` 报需要 OptIn，补上；若你的版本没有它，就退回"顶栏刷新按钮"，参考 `Material3ScheduleScreen.kt`。）
+
+#### 5.2.2 状态 + 刷新函数 + 包列表
+- [ ] 删掉 `val courses = ...`（约 `:51`）、`val weekCourses = ...`、`val localDate = ...`、`val todayCourses = ...`（约 `:59-63`）。
+- [ ] 换成和 5.1.2 **一字不差**的状态与 `refreshToday`。
+- [ ] 把 `LazyColumn(...)` 包进：
+
+```kotlin
+PullToRefreshBox(
+    isRefreshing = isRefreshing,
+    onRefresh = {
+        scope.launch {
+            isRefreshing = true
+            refreshToday()
+            delay(300)
+            isRefreshing = false
+        }
+    },
+    modifier = Modifier.padding(paddingValues),
+) {
+    LazyColumn(state = listState) { /* 同 5.1.3，把 todayCourses 换成 viewState.courses */ }
+}
 ```
 
-- [ ] 原来那两行（算 `weekCourses` / `todayCourses`）**删掉或改掉**。
-- [ ] 把标题 `"今日课程"` 换成 `viewState.title`。
-- [ ] 把列表数据 `todayCourses` 换成 `viewState.courses`。
-- [ ] 假期时显示「假期中」：判断 `viewState.isHoliday`。
+#### 5.2.3 改标题
+- [ ] `title = { Text("今日课程") }` → `title = { Text(viewState.title) }`
 
-### 5.2 改 `Material3TodayScreen.kt`
-- [ ] 做和 5.1 一模一样的改动（两套 UI 逻辑要一致）。
+---
 
 ### 5.3 验证
-- [ ] 进设置，把时间设成「当前时间 + 1 分钟」，回到「今日课程」页等一分钟，看标题是否自动变成「明日课程」、课是否变成明天的。
+- [ ] 编译通过。
+- [ ] 打开开关、时间设成「当前时间 + 1 分钟」，回到今日页后**什么都不做**：页面**不会自动**变化（已无自动刷新）。
+- [ ] 这时**手动下拉**列表 → 刷新后标题变「明日课程」、课程变明天的。
+- [ ] 关闭开关后下拉：仍显示「今日课程」。
+- [ ] 假期周下拉 → 「假期中」；未登录 → 「请登录使用」。
+- [ ] 两种 UI 风格表现一致。
+
+### 5.4 常见坑
+- 不要写 `LaunchedEffect { while(true) { ...; delay(30_000) } }`——那是自动刷新/死循环，本方案已移除。
+- `viewState` 用 `remember` 只在进入页面时算一次，之后**只在下拉刷新时更新**。
+- 报 `Unresolved reference: remember / rememberCoroutineScope / launch`：是漏了 5.1.1 / 5.2.1 的 import。
 
 ---
 
@@ -441,5 +569,5 @@ import com.pgigi.pumpkintoolkit.utils.resolveTodayView
      是 → 明天 + 明天所在周（可能跨周！）
   → 取出那一周的课，筛出目标星期几
   → 显示（标题随之切换）
-  → 每 30 秒重算一次，保证时间一过就自动切换
+  → 用户下拉刷新时重算（不自动切换）
 ```
