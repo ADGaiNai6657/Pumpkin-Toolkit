@@ -131,8 +131,8 @@ object AppConfig {
 
         //明日模式新增
         tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_SCHEDULE_ENABLE) ?: false        //从存储中读取状态，如果读到了滚木，就使用 ？: 后所提供的默认值。下面依次类推。
-        tomorrowSwitchHour = kvault.getInt(KEY.TOMMOROW_SWITCH_HOUR) ?: 22
-        tomorrowSwitchMinute = kvault.getInt(KEY.TOMMOROW_SWITCH_MINUTE) ?: 0
+        tomorrowSwitchHour = kvault.getInt(KEY.TOMOROW_SWITCH_HOUR) ?: 22
+        tomorrowSwitchMinute = kvault.getInt(KEY.TOMOROW_SWITCH_MINUTE) ?: 0
     }
 
     fun save(){
@@ -161,8 +161,8 @@ object AppConfig {
 
         //明日模式
         kvault.putBoolean(KEY.TOMORROW_SCHEDULE_ENABLE,tomorrowScheduleEnable)       //讲状态存储在储存中。
-        kvault.putInt(KEY.TOMMOROW_SWITCH_HOUR,tomorrowSwitchHour)
-        kvault.putInt(KEY.TOMMOROW_SWITCH_MINUTE,tomorrowSwitchMinute)
+        kvault.putInt(KEY.TOMOROW_SWITCH_HOUR,tomorrowSwitchHour)
+        kvault.putInt(KEY.TOMOROW_SWITCH_MINUTE,tomorrowSwitchMinute)
     }
 
     fun updateTermData(map: Map<String, String>) {
