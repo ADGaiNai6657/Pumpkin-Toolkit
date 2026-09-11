@@ -61,9 +61,9 @@ object AppConfig {
     var lockStartDate by mutableStateOf(false)
 
     // 明日模式，用于在用户设置的时间点后切换到明日模式。默认为关闭状态，切换时间为22:00。
-    var tomorrowEnable by mutableStateOf(false)
-    var tomorrowSwitchHour by mutableIntStateOf(22)
-    var tomorrowSwitchMinute by mutableIntStateOf(0)
+    var tomorrowScheduleEnable by mutableStateOf(false)             // 是否启用明日模式
+    var tomorrowSwitchHour by mutableIntStateOf(22)         // 明日模式切换的小时
+    var tomorrowSwitchMinute by mutableIntStateOf(0)        // 明日模式切换的分钟
 
     object KEY {
         const val COLOR_MODE = "color_mode"
@@ -128,6 +128,11 @@ object AppConfig {
         termFilterStartId = kvault.getString(KEY.TERM_FILTER_START)?:""
         hideFailScore = kvault.getBoolean(KEY.HIDE_FAIL_SCORE)?:false
         lockStartDate = kvault.getBoolean(KEY.LOCK_START_DATE)?:false
+
+        //明日模式新增
+        tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_ENABLE) ?: false        //从存储中读取状态，如果读到了滚木，就使用 ？: 后所提供的默认值。下面依次类推。
+        tomorrowSwitchHour = kvault.getInt(KEY.TOMMOROW_SWITCH_HOUR) ?: 22
+        tomorrowSwitchMinute = kvault.getInt(KEY.TOMMOROW_SWITCH_MINUTE) ?: 0
     }
 
     fun save(){
@@ -153,6 +158,11 @@ object AppConfig {
         kvault.putBoolean(KEY.HIDE_FAIL_SCORE, hideFailScore)
         kvault.putBoolean(KEY.LOCK_START_DATE, lockStartDate)
         reloadWidgetTimelines()
+
+        //明日模式
+        kvault.putBoolean(KEY.TOMORROW_ENABLE,tomorrowScheduleEnable)       //讲状态存储在储存中。
+        kvault.putInt(KEY.TOMMOROW_SWITCH_HOUR,tomorrowSwitchHour)
+        kvault.putInt(KEY.TOMMOROW_SWITCH_MINUTE,tomorrowSwitchMinute)
     }
 
     fun updateTermData(map: Map<String, String>) {
