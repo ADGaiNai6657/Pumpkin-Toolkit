@@ -2,8 +2,8 @@
 
 > 为南瓜们提供便利的工具箱
 
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue)](https://kotlinlang.org/)
-[![Compose Multiplatform](https://img.shields.io/badge/compose-1.12.3-blue)](https://www.jetbrains.com/compose-multiplatform)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.0-blue)](https://kotlinlang.org/)
+[![Compose Multiplatform](https://img.shields.io/badge/Compose-1.12.3-blue)](https://www.jetbrains.com/compose-multiplatform)
 [![Miuix](https://img.shields.io/badge/Miuix-0.8.0--rc07-blue)](https://github.com/compose-miuix-ui/miuix/)
 
 
@@ -23,7 +23,7 @@
 - 教务系统、线上注册及成绩单 快捷入口
 - 学生评教
 - 阳光服务平台接入
-- 
+
 ## 特色功能
 - 两种 UI 风格 (Miuix、Material 3)
 - 浅色、深色、自动切换模式自选

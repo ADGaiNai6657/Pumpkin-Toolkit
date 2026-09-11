@@ -1,8 +1,10 @@
 package com.pgigi.pumpkintoolkit.widget
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -16,6 +18,10 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
+import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -31,6 +37,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.FixedColorProvider
+import com.pgigi.pumpkintoolkit.MainActivity
 import com.pgigi.pumpkintoolkit.models.WidgetData
 import com.pgigi.pumpkintoolkit.utils.DisplayCourse
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
@@ -134,6 +141,8 @@ private fun WidgetContent(data: WidgetData?) {
     val colors = widgetColors()
     val state = rememberWidgetState(data)
     val size = LocalSize.current
+    val context = LocalContext.current
+    val intent = remember { Intent(context, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK } }
 
     Box(
         modifier = GlanceModifier
@@ -141,6 +150,7 @@ private fun WidgetContent(data: WidgetData?) {
             .background(colors.background)
             .cornerRadius(16.dp)
             .padding(all = 12.dp)
+            .clickable(actionStartActivity(intent))
     ) {
         if (state.data == null) {
             NoDataView(colors)
@@ -195,40 +205,6 @@ private fun HolidayView(dayOfWeekText: String, colors: WidgetColors) {
 
 @Composable
 private fun SmallWidgetView(state: WidgetState, colors: WidgetColors) {
-    val firstCourse = state.todayCourses.firstOrNull() ?: state.tomorrowCourses.firstOrNull()
-
-    Column(modifier = GlanceModifier.fillMaxSize()) {
-        Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
-        if (firstCourse == null) {
-            Box(
-                modifier = GlanceModifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "今日无课",
-                    style = TextStyle(
-                        color = FixedColorProvider(colors.secondary),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-            }
-        } else {
-            SmallCourseCard(firstCourse, colors)
-            Spacer(modifier = GlanceModifier.defaultWeight())
-        }
-    }
-}
-
-@Composable
-private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp) {
-    val maxToday = when {
-        width < 200.dp -> 1
-        width < 280.dp -> 2
-        else -> 3
-    }
-    val maxTomorrow = if (width < 200.dp) 1 else 2
-
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
         if (state.todayCourses.isEmpty() && state.tomorrowCourses.isEmpty()) {
@@ -246,13 +222,49 @@ private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp
                 )
             }
         } else {
-            state.todayCourses.take(maxToday).forEach { course ->
-                CourseCard(course, colors, isTomorrow = false)
+            LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
+                items(state.todayCourses) { course ->
+                    SmallCourseCard(course, colors)
+                }
+                if (state.tomorrowCourses.isNotEmpty()) {
+                    item { TomorrowSeparator(colors) }
+                    items(state.tomorrowCourses) { course ->
+                        SmallCourseCard(course, colors)
+                    }
+                }
             }
-            if (state.todayCourses.size < maxToday && state.tomorrowCourses.isNotEmpty()) {
-                TomorrowSeparator(colors)
-                state.tomorrowCourses.take(maxTomorrow).forEach { course ->
-                    CourseCard(course, colors, isTomorrow = true)
+        }
+    }
+}
+
+@Composable
+private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp) {
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
+        if (state.todayCourses.isEmpty() && state.tomorrowCourses.isEmpty()) {
+            Box(
+                modifier = GlanceModifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "今日无课",
+                    style = TextStyle(
+                        color = FixedColorProvider(colors.secondary),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
+        } else {
+            LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
+                items(state.todayCourses) { course ->
+                    CourseCard(course, colors, isTomorrow = false)
+                }
+                if (state.tomorrowCourses.isNotEmpty()) {
+                    item { TomorrowSeparator(colors) }
+                    items(state.tomorrowCourses) { course ->
+                        CourseCard(course, colors, isTomorrow = true)
+                    }
                 }
             }
         }
@@ -261,17 +273,6 @@ private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp
 
 @Composable
 private fun LargeWidgetView(state: WidgetState, colors: WidgetColors, height: Dp) {
-    val maxToday = when {
-        height < 200.dp -> 3
-        height < 280.dp -> 5
-        else -> 6
-    }
-    val maxTomorrow = when {
-        height < 200.dp -> 2
-        height < 280.dp -> 3
-        else -> 4
-    }
-
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Header(state.weekNumber, state.dayOfWeekText, state.isHoliday, colors)
         if (state.todayCourses.isEmpty() && state.tomorrowCourses.isEmpty()) {
@@ -291,17 +292,18 @@ private fun LargeWidgetView(state: WidgetState, colors: WidgetColors, height: Dp
                 )
             }
         } else {
-            state.todayCourses.take(maxToday).forEach { course ->
-                CourseCard(course, colors, isTomorrow = false)
-            }
-            if (state.tomorrowCourses.isNotEmpty()) {
-                TomorrowSeparator(colors)
-                state.tomorrowCourses.take(maxTomorrow).forEach { course ->
-                    CourseCard(course, colors, isTomorrow = true)
+            LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
+                items(state.todayCourses) { course ->
+                    CourseCard(course, colors, isTomorrow = false)
+                }
+                if (state.tomorrowCourses.isNotEmpty()) {
+                    item { TomorrowSeparator(colors) }
+                    items(state.tomorrowCourses) { course ->
+                        CourseCard(course, colors, isTomorrow = true)
+                    }
                 }
             }
         }
-        Spacer(modifier = GlanceModifier.defaultWeight())
     }
 }
 

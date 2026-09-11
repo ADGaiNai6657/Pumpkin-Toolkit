@@ -28,6 +28,8 @@ object AppConfig {
     var enableBlurEffect by mutableStateOf(true)
     var predictiveBackAnimation by mutableStateOf(PredictiveBackAnimation.AOSP)
     var predictiveBackExitDirection by mutableStateOf(PredictiveBackExitDirection.FOLLOW_GESTURE)
+    var fontScale by mutableStateOf(1.0f)
+    var autoFontScale by mutableStateOf(true)
 
     // 课表
     var cellHeight by mutableIntStateOf(70)
@@ -90,6 +92,8 @@ object AppConfig {
         const val TOMORROW_SCHEDULE_ENABLE = "tomorrow_schedule_enable"
         const val TOMOROW_SWITCH_HOUR = "tomorrow_switch_hour"
         const val TOMOROW_SWITCH_MINUTE = "tomorrow_switch_minute"
+        const val FONT_SCALE = "font_scale"
+        const val AUTO_FONT_SCALE = "auto_font_scale"
     }
 
 
@@ -130,9 +134,11 @@ object AppConfig {
         lockStartDate = kvault.getBoolean(KEY.LOCK_START_DATE)?:false
 
         //明日模式新增
-        tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_SCHEDULE_ENABLE) ?: false        //从存储中读取状态，如果读到了滚木，就使用 ？: 后所提供的默认值。下面依次类推。
+        tomorrowScheduleEnable = kvault.getBoolean(KEY.TOMORROW_SCHEDULE_ENABLE) ?: false
         tomorrowSwitchHour = kvault.getInt(KEY.TOMOROW_SWITCH_HOUR) ?: 22
         tomorrowSwitchMinute = kvault.getInt(KEY.TOMOROW_SWITCH_MINUTE) ?: 0
+        fontScale = kvault.getFloat(KEY.FONT_SCALE) ?: 1.0f
+        autoFontScale = kvault.getBoolean(KEY.AUTO_FONT_SCALE) ?: true
     }
 
     fun save(){
@@ -157,6 +163,8 @@ object AppConfig {
         kvault.putString(KEY.TERM_FILTER_START, termFilterStartId)
         kvault.putBoolean(KEY.HIDE_FAIL_SCORE, hideFailScore)
         kvault.putBoolean(KEY.LOCK_START_DATE, lockStartDate)
+        kvault.putFloat(KEY.FONT_SCALE, fontScale)
+        kvault.putBoolean(KEY.AUTO_FONT_SCALE, autoFontScale)
         reloadWidgetTimelines()
 
         //明日模式
