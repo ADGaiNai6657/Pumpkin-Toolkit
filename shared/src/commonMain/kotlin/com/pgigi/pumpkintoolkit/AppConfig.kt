@@ -60,7 +60,7 @@ object AppConfig {
 
     var lockStartDate by mutableStateOf(false)
 
-    // 明日模式，用于在用户设置的时间点后切换到明日模式。默认为关闭状态，切换时间为22:00。
+    // 明日模式，用于在用户设置的时间点后切换到明日模式。默认为开启状态，切换时间为22:00。
     var tomorrowScheduleEnable by mutableStateOf(true)             // 是否启用明日模式
     var tomorrowSwitchHour by mutableIntStateOf(22)         // 明日模式切换的小时
     var tomorrowSwitchMinute by mutableIntStateOf(0)        // 明日模式切换的分钟
