@@ -362,15 +362,17 @@ val todayCourses = weekCourses.filter { course ->
 ### 5.1 改 `TodayScreen.kt`（Miuix）
 
 #### 5.1.1 补 import
-- [ ] 顶部加（`PullToRefresh`、`rememberPullToRefreshState`、`Clock`、`TimeZone`、`toLocalDateTime` 该文件已有）：
+- [ ] 先看文件顶部**已经有什么**，只补缺的。`TodayScreen.kt` 原本**已有** `PullToRefresh`、`rememberPullToRefreshState`、`Clock`、`TimeZone`、`toLocalDateTime`，以及 `kotlinx.coroutines.delay`。
+- [ ] 真正需要新增的是这 4 个：
 
 ```kotlin
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.pgigi.pumpkintoolkit.utils.resolveTodayView
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 ```
+
+> ⚠️ `delay` 已存在，**不要重复 import**（重复多半只是警告，但没必要）。
 
 #### 5.1.2 删掉旧取数，换成"状态 + 手动刷新"
 - [ ] 删掉 `val courses = ...`、`val weekCourses = ...`、`val localDate = ...`、`val todayCourses = ...`（约 `:53`、`:60-64`）。
@@ -416,45 +418,84 @@ val scope = rememberCoroutineScope()
 > ⚠️ 关键：**这里没有 `LaunchedEffect { while(true) ... }`，也没有 `delay(30_000)`**。页面不会自己刷新，必须用户下拉。
 
 #### 5.1.3 用 `PullToRefresh` 包住列表
-- [ ] 把原来的 `LazyColumn(...) { ... }` 整体包进 `PullToRefresh`：
+- [ ] 把 Scaffold 的内容（从 `) { paddingValues ->` 到函数结尾）整体改成下面这样（**完整代码，直接对照，不要留占位符**）：
 
 ```kotlin
-PullToRefresh(
-    isRefreshing = isRefreshing,
-    onRefresh = {
-        scope.launch {
-            isRefreshing = true
-            refreshToday()      // 下拉 → 手动刷新
-            delay(300)          // 让指示器转一下（可去掉）
-            isRefreshing = false
-        }
-    },
-    pullToRefreshState = pullToRefreshState,
-    modifier = Modifier.padding(paddingValues),
-) {
-    LazyColumn(state = listState) {
-        items(viewState.courses.size) { index ->
-            val course = viewState.courses[index]
-            // ...原有卡片代码不变...
-        }
-        if (!loggedIn || viewState.courses.isEmpty()) {
-            item {
-                Text(
-                    text = when {
-                        !loggedIn -> "请登录使用"
-                        viewState.isHoliday -> "假期中"
-                        else -> "暂无课程"
-                    },
-                    // ...原有修饰符不变...
-                )
+    ) { paddingValues ->
+        val cardPadding = PaddingValues(12.dp, 6.dp)
+
+        PullToRefresh(
+            isRefreshing = isRefreshing,          // ① 这里只能传 Boolean（是否正在刷新）
+            onRefresh = {                          // ② 刷新动作放这里，别放进 isRefreshing
+                scope.launch {
+                    isRefreshing = true
+                    refreshToday()                 // 下拉 → 手动刷新
+                    delay(300)                     // 让指示器转一下（可去掉）
+                    isRefreshing = false
+                }
+            },
+            pullToRefreshState = pullToRefreshState,
+            modifier = Modifier.padding(paddingValues),   // ③ 内边距加在这里
+        ) {
+            LazyColumn(state = listState) {        // ④ 里面不要再加 paddingValues
+                items(viewState.courses.size) { index ->
+                    val course = viewState.courses[index]
+                    val classroom = course.classroom
+                        .replace("【红湘校区】", "")
+                        .replace("【雨母校区】", "")
+
+                    val startIndex =
+                        (course.lessonOfDay - 1).coerceIn(0, AppConfig.timeList.size - 1)
+                    val endIndex =
+                        (startIndex + course.duration - 1).coerceIn(0, AppConfig.timeList.size - 1)
+
+                    Card(modifier = Modifier.padding(cardPadding)) {
+                        BasicComponent(
+                            title = course.name,
+                            summary = "${AppConfig.timeList[startIndex].start}-" +
+                                    "${AppConfig.timeList[endIndex].end} " +
+                                    course.teacher,
+                            endActions = {
+                                Text(text = classroom, textAlign = TextAlign.Center)
+                            },
+                        )
+                    }
+                }
+
+                // ⑤ 空状态/假期 必须在 LazyColumn 里面（item 只能在 LazyColumn 内使用）
+                if (!loggedIn || viewState.courses.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxHeight(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = when {
+                                    !loggedIn -> "请登录使用"
+                                    viewState.isHoliday -> "假期中"
+                                    else -> "暂无课程"
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxSize(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+                item {
+                    Spacer(modifier = Modifier.height(64.dp))
+                }
             }
         }
-        item { Spacer(modifier = Modifier.height(64.dp)) }
     }
-}
 ```
 
-> 注意：原来 `LazyColumn` 的 `Modifier.padding(paddingValues)` 移到 `PullToRefresh` 上，里面的 `LazyColumn` **不要再加**，否则双重留白。
+> ⚠️ 三个最容易写错的地方（你的报错就出在这里）：
+> 1. **`isRefreshing` 只能传 Boolean**；刷新逻辑必须放在 **`onRefresh`**，别写反（写错会报类型不匹配、且缺 `onRefresh`）。
+> 2. **`item { ... }` 只能在 `LazyColumn { }` 里面**；别让 `LazyColumn` 的 `}` 提前闭合，否则 `item`/空状态会报 `Unresolved reference`。
+> 3. **列表数据统一用 `viewState.courses`**；原来的 `todayCourses` 要删干净（连注释一起），否则报 `Unresolved reference: todayCourses`。
 
 #### 5.1.4 改标题
 - [ ] `SmallTopAppBar(title = "今日课程", ...)` → `title = viewState.title`
@@ -482,8 +523,14 @@ import kotlinx.coroutines.launch
 
 #### 5.2.2 状态 + 刷新函数 + 包列表
 - [ ] 删掉 `val courses = ...`（约 `:51`）、`val weekCourses = ...`、`val localDate = ...`、`val todayCourses = ...`（约 `:59-63`）。
-- [ ] 换成和 5.1.2 **一字不差**的状态与 `refreshToday`。
-- [ ] 把 `LazyColumn(...)` 包进：
+- [ ] 按 5.1.2 加 `viewState` / `refreshToday` / `isRefreshing` / `scope`。
+  - ⚠️ **唯独不要**加 `val pullToRefreshState = rememberPullToRefreshState()`——那是 Miuix 的；M3 的 `PullToRefreshBox` 内部自带状态，加了会报 `Unresolved reference`。
+- [ ] 把 `LazyColumn(...)` 包进 `PullToRefreshBox`，并把里面的 `todayCourses` **全部换成 `viewState.courses`**：
+  - `items(todayCourses.size)` → `items(viewState.courses.size)`
+  - `val course = todayCourses[index]` → `val course = viewState.courses[index]`
+  - `if (!loggedIn || todayCourses.isEmpty())` → `if (!loggedIn || viewState.courses.isEmpty())`
+
+  然后接：
 
 ```kotlin
 PullToRefreshBox(
@@ -518,6 +565,9 @@ PullToRefreshBox(
 ### 5.4 常见坑
 - 不要写 `LaunchedEffect { while(true) { ...; delay(30_000) } }`——那是自动刷新/死循环，本方案已移除。
 - `viewState` 用 `remember` 只在进入页面时算一次，之后**只在下拉刷新时更新**。
+- **类型不匹配 / 缺 `onRefresh`**：`isRefreshing` 只能传 **Boolean**，刷新逻辑要放 **`onRefresh`**，别写反。
+- **`Unresolved reference: item`**：说明 `item { ... }` 被写到了 `LazyColumn { }` 外面，把 `LazyColumn` 的 `}` 往后挪。
+- **`Unresolved reference: todayCourses`**：旧变量没删干净，统一换成 `viewState.courses`。
 - 报 `Unresolved reference: remember / rememberCoroutineScope / launch`：是漏了 5.1.1 / 5.2.1 的 import。
 
 ---
