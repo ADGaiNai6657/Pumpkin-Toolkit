@@ -88,8 +88,8 @@ object AppConfig {
         const val HIDE_FAIL_SCORE = "hide_fail_score"
         const val LOCK_START_DATE = "lock_start_date"
         const val TOMORROW_SCHEDULE_ENABLE = "tomorrow_schedule_enable"
-        const val TOMMOROW_SWITCH_HOUR = "tomorrow_switch_hour"
-        const val TOMMOROW_SWITCH_MINUTE = "tomorrow_switch_minute"
+        const val TOMOROW_SWITCH_HOUR = "tomorrow_switch_hour"
+        const val TOMOROW_SWITCH_MINUTE = "tomorrow_switch_minute"
     }
 
 
