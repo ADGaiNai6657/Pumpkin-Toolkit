@@ -49,30 +49,54 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # ========== 检测签名 Secrets ==========
-      - name: Check signing secrets
-        id: secrets
+      # ========== 检测 APP_GROUP_ID ==========
+      - name: Check APP_GROUP_ID
+        id: appgroup
         run: |
-          HAS_ALL=true
-          if [ -z "${{ vars.APP_GROUP_ID }}" ]; then HAS_ALL=false; fi
-          if [ -z "${{ secrets.CERTIFICATE_BASE64 }}" ]; then HAS_ALL=false; fi
-          if [ -z "${{ secrets.CERTIFICATE_PASSWORD }}" ]; then HAS_ALL=false; fi
-          if [ -z "${{ secrets.MOBILEPROVISION_BASE64 }}" ]; then HAS_ALL=false; fi
-
-          if [ "$HAS_ALL" = "true" ]; then
-            echo "signing_enabled=true" >> $GITHUB_OUTPUT
-            echo "app_group_id=${{ vars.APP_GROUP_ID }}" >> $GITHUB_OUTPUT
-            echo "✅ All 4 signing parameters detected, will sign IPA"
-            echo "   APP_GROUP_ID: ${{ vars.APP_GROUP_ID }}"
+          APP_GROUP_ID="${{ vars.APP_GROUP_ID }}"
+          if [ -n "$APP_GROUP_ID" ]; then
+            if [[ "$APP_GROUP_ID" == group.* ]]; then
+              echo "valid=true" >> $GITHUB_OUTPUT
+              echo "app_group_id=$APP_GROUP_ID" >> $GITHUB_OUTPUT
+              echo "✅ APP_GROUP_ID detected and valid: $APP_GROUP_ID"
+            else
+              echo "valid=false" >> $GITHUB_OUTPUT
+              echo "app_group_id=" >> $GITHUB_OUTPUT
+              echo "⚠️  APP_GROUP_ID exists but does not start with 'group.', skipping replacement"
+            fi
           else
-            echo "signing_enabled=false" >> $GITHUB_OUTPUT
+            echo "valid=false" >> $GITHUB_OUTPUT
             echo "app_group_id=" >> $GITHUB_OUTPUT
-            echo "⚠️  Not all signing parameters found, building unsigned IPA"
+            echo "ℹ️  APP_GROUP_ID not set, using default"
           fi
+
+      # ========== 版本读取 ==========
+      - name: Read version from libs.versions.toml
+        id: version
+        run: |
+          VER_CODE=$(grep '^appVersionCode\s*=' gradle/libs.versions.toml | sed 's/.*= *"\(.*\)"/\1/')
+          VER_NAME=$(grep '^appVersionName\s*=' gradle/libs.versions.toml | sed 's/.*= *"\(.*\)"/\1/')
+          echo "ver_code=$VER_CODE" >> $GITHUB_OUTPUT
+          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
+          echo "========================================"
+          echo "  Version Name : $VER_NAME"
+          echo "  Version Code : $VER_CODE"
+          echo "  APP_GROUP_ID : ${{ steps.appgroup.outputs.app_group_id || '(default)' }}"
+          echo "========================================"
+
+      # ========== 同步版本到 Xcode 配置 ==========
+      - name: Sync version to Config.xcconfig
+        run: |
+          VER_CODE="${{ steps.version.outputs.ver_code }}"
+          VER_NAME="${{ steps.version.outputs.ver_name }}"
+          XCCONFIG="iosApp/Configuration/Config.xcconfig"
+          sed -i '' "s/^CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=$VER_CODE/" "$XCCONFIG"
+          sed -i '' "s/^MARKETING_VERSION=.*/MARKETING_VERSION=$VER_NAME/" "$XCCONFIG"
+          grep -E '^(CURRENT_PROJECT_VERSION|MARKETING_VERSION)=' "$XCCONFIG"
 
       # ========== 替换 App Group ID ==========
       - name: Replace App Group ID in source code
-        if: steps.secrets.outputs.signing_enabled == 'true'
+        if: steps.appgroup.outputs.valid == 'true'
         env:
           APP_GROUP_ID: ${{ vars.APP_GROUP_ID }}
         run: |
@@ -92,33 +116,9 @@ jobs:
             shared/src/iosMain/kotlin/com/pgigi/pumpkintoolkit/utils/WidgetDataStore.ios.kt \
             iosApp/TodayScheduleWidget/WidgetHelper.swift | head -10
 
-      # ========== 版本读取 ==========
-      - name: Read version from libs.versions.toml
-        id: version
-        run: |
-          VER_CODE=$(grep '^appVersionCode\s*=' gradle/libs.versions.toml | sed 's/.*= *"\(.*\)"/\1/')
-          VER_NAME=$(grep '^appVersionName\s*=' gradle/libs.versions.toml | sed 's/.*= *"\(.*\)"/\1/')
-          echo "ver_code=$VER_CODE" >> $GITHUB_OUTPUT
-          echo "ver_name=$VER_NAME" >> $GITHUB_OUTPUT
-          echo "========================================"
-          echo "  Version Name : $VER_NAME"
-          echo "  Version Code : $VER_CODE"
-          echo "  Signing      : ${{ steps.secrets.outputs.signing_enabled }}"
-          echo "========================================"
-
-      # ========== 同步版本到 Xcode 配置 ==========
-      - name: Sync version to Config.xcconfig
-        run: |
-          VER_CODE="${{ steps.version.outputs.ver_code }}"
-          VER_NAME="${{ steps.version.outputs.ver_name }}"
-          XCCONFIG="iosApp/Configuration/Config.xcconfig"
-          sed -i '' "s/^CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=$VER_CODE/" "$XCCONFIG"
-          sed -i '' "s/^MARKETING_VERSION=.*/MARKETING_VERSION=$VER_NAME/" "$XCCONFIG"
-          grep -E '^(CURRENT_PROJECT_VERSION|MARKETING_VERSION)=' "$XCCONFIG"
-
       # ========== 添加 App Group ID 到 entitlements ==========
       - name: Add APP_GROUP_ID to entitlements
-        if: steps.secrets.outputs.signing_enabled == 'true'
+        if: steps.appgroup.outputs.valid == 'true'
         run: |
           APP_GROUP_ID="${{ vars.APP_GROUP_ID }}"
           echo "Adding App Group: $APP_GROUP_ID"
@@ -128,18 +128,9 @@ jobs:
             iosApp/TodayScheduleWidget/TodayScheduleWidget.entitlements; do
 
             echo "Processing $ENT_FILE"
-            # Use plutil to add the new app group (idempotent, won't duplicate)
-            plutil -insert "com.apple.security.application-groups" -xml \
-              "<array><string>$APP_GROUP_ID</string></array>" \
-              "$ENT_FILE" 2>/dev/null || true
-
-            # If array already exists, append the new group
-            EXISTING=$(plutil -extract "com.apple.security.application-groups" raw "$ENT_FILE" 2>/dev/null || echo "none")
-            if [ "$EXISTING" != "none" ]; then
-              # Check if already present
-              if ! plutil -extract "com.apple.security.application-groups" json "$ENT_FILE" 2>/dev/null | grep -q "$APP_GROUP_ID"; then
-                plutil -insert "com.apple.security.application-groups.0" -string "$APP_GROUP_ID" "$ENT_FILE"
-              fi
+            # Check if already present
+            if ! plutil -extract "com.apple.security.application-groups" json "$ENT_FILE" 2>/dev/null | grep -q "$APP_GROUP_ID"; then
+              plutil -insert "com.apple.security.application-groups.0" -string "$APP_GROUP_ID" "$ENT_FILE"
             fi
 
             echo "=== $ENT_FILE contents ==="
@@ -152,55 +143,8 @@ jobs:
         env:
           GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
 
-      # ========== 导入签名材料 ==========
-      - name: Import signing materials
-        if: steps.secrets.outputs.signing_enabled == 'true'
-        run: |
-          # Create keychain
-          security create-keychain -p "build" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "build" build.keychain
-
-          # Import certificate
-          echo "${{ secrets.CERTIFICATE_BASE64 }}" | base64 -d > build/cert.p12
-          security import build/cert.p12 -k build.keychain -P "${{ secrets.CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign -T /usr/bin/security
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
-
-          # Import provisioning profile
-          echo "${{ secrets.MOBILEPROVISION_BASE64 }}" | base64 -d > build/embedded.mobileprovision
-
-          # Extract UUID from provisioning profile
-          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< \
-            "$(security cms -D -i build/embedded.mobileprovision 2>/dev/null)")
-          echo "Provisioning Profile UUID: $PP_UUID"
-
-          # Install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp build/embedded.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID.mobileprovision"
-
-          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
-          echo "signing_enabled=true" >> $GITHUB_ENV
-
-      # ========== Archive iOS App (已签名) ==========
-      - name: Archive iOS App (Signed)
-        if: steps.secrets.outputs.signing_enabled == 'true'
-        run: |
-          xcodebuild \
-            -project iosApp/iosApp.xcodeproj \
-            -scheme iosApp \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath build/PumpkinToolkit.xcarchive \
-            -destination 'generic/platform=iOS' \
-            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.ver_code }}" \
-            MARKETING_VERSION="${{ steps.version.outputs.ver_name }}" \
-            CODE_SIGNING_ALLOWED=YES \
-            CODE_SIGNING_REQUIRED=YES \
-            archive
-
-      # ========== Archive iOS App (未签名) ==========
-      - name: Archive iOS App (Unsigned)
-        if: steps.secrets.outputs.signing_enabled != 'true'
+      # ========== Archive iOS App ==========
+      - name: Archive iOS App
         run: |
           xcodebuild \
             -project iosApp/iosApp.xcodeproj \
@@ -254,13 +198,6 @@ jobs:
             ls -lh "$WIDGET_PATH/TodayScheduleWidget"
             echo "=== Widget symbols ==="
             nm "$WIDGET_PATH/TodayScheduleWidget" 2>/dev/null | grep -c "TodaySchedule" || echo "0 symbols (Release stripped)"
-
-            if [ "${{ steps.secrets.outputs.signing_enabled }}" = "true" ]; then
-              echo "=== Widget Code Signature ==="
-              codesign -dvv "$WIDGET_PATH" 2>&1 || echo "No code signature"
-              echo "=== Widget Entitlements ==="
-              codesign -d --entitlements - "$WIDGET_PATH" 2>&1 || echo "No entitlements"
-            fi
           else
             echo "❌ Widget extension NOT found in PlugIns directory"
             echo "=== Contents of app bundle ==="
@@ -270,29 +207,9 @@ jobs:
             exit 1
           fi
 
-      # ========== 验证签名状态 ==========
-      - name: Verify code signing
-        if: steps.secrets.outputs.signing_enabled == 'true'
-        run: |
-          APP_PATH="build/PumpkinToolkit.xcarchive/Products/Applications/PumpkinToolkit.app"
-          echo "=== App Code Signature ==="
-          codesign -dvv "$APP_PATH" 2>&1
-          echo ""
-          echo "=== App Entitlements ==="
-          codesign -d --entitlements - "$APP_PATH" 2>&1
-          echo ""
-          echo "=== App Group IDs ==="
-          codesign -d --entitlements - "$APP_PATH" 2>&1 | grep -o 'group\.[a-zA-Z0-9._-]*' | sort -u
-
-      # ========== 清理 Keychain ==========
-      - name: Cleanup keychain
-        if: always() && steps.secrets.outputs.signing_enabled == 'true'
-        run: |
-          security delete-keychain build.keychain 2>/dev/null || true
-
       # ========== 上传 IPA 作为构建产物 ==========
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PumpkinToolkit-${{ steps.version.outputs.ver_name }}-ios${{ steps.secrets.outputs.app_group_id != '' && format('-{0}', steps.secrets.outputs.app_group_id) || '' }}
+          name: PumpkinToolkit-${{ steps.version.outputs.ver_name }}-ios${{ steps.appgroup.outputs.app_group_id != '' && format('-{0}', steps.appgroup.outputs.app_group_id) || '' }}
           path: build/ipa/PumpkinToolkit.ipa
