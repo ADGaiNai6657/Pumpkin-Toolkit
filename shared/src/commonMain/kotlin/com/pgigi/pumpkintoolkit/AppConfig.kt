@@ -60,6 +60,10 @@ object AppConfig {
 
     var lockStartDate by mutableStateOf(false)
 
+    // 明日模式，用于在用户设置的时间点后切换到明日模式。默认为关闭状态，切换时间为22:00。
+    var tomorrowEnable by mutableStateOf(false)
+    var tomorrowSwitchHour by mutableIntStateOf(22)
+    var tomorrowSwitchMinute by mutableIntStateOf(0)
 
     object KEY {
         const val COLOR_MODE = "color_mode"
@@ -83,6 +87,9 @@ object AppConfig {
         const val TERM_FILTER_START = "term_filter_start"
         const val HIDE_FAIL_SCORE = "hide_fail_score"
         const val LOCK_START_DATE = "lock_start_date"
+        const val TOMORROW_ENABLE = "tomorrow_enable"
+        const val TOMMOROW_SWITCH_HOUR = "tomorrow_switch_hour"
+        const val TOMMOROW_SWITCH_MINUTE = "tomorrow_switch_minute"
     }
 
 
