@@ -240,7 +240,7 @@ private struct SmallScheduleView: View {
                             .foregroundStyle(.secondary)
                     }
                     if !entry.tomorrowCourses.isEmpty {
-                        Label("明日 \(entry.tomorrowCourses.count) 节", systemImage: "sun.max.fill")
+                        Label("明日有 \(entry.tomorrowCourses.count) 节", systemImage: "sun.max.fill")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color.orange)
                     }
