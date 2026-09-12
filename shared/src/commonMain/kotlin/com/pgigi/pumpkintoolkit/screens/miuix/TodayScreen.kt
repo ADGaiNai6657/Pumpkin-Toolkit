@@ -125,7 +125,7 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAp
                 scope.launch {
                     isRefreshing = true
                     refreshToday()      //下拉后刷新
-                    delay(300)
+                    delay(200)
                     isRefreshing = false
                 }
             },

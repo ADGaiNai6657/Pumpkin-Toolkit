@@ -375,6 +375,7 @@ fun MiuixSettingScreen() {
                     )
                 }
 
+                //用于展示滚轮时间选择器的弹窗时间
                 //点击”切换时间“按钮后，弹出滚轮事件选择弹窗，进行时间的选择
                 WindowDialog(
                     title = "选择切换时间",
