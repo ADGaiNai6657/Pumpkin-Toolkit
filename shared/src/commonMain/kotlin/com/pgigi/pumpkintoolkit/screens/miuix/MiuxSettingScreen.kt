@@ -348,9 +348,9 @@ fun MiuixSettingScreen() {
                     }
                 )
 
-                //设置中“时间刻后自动显示明日课程”按钮，决定是否启用明日课程功能；同时，决定是否显示“切换时间”设置项
+                //设置中“时间刻后显示明日课程(可能需要手动刷新)”按钮，决定是否启用明日课程功能；同时，决定是否显示“切换时间”设置项
                 SwitchPreference(
-                    title = "时间刻后自动显示明日课程",
+                    title = "时间刻后显示明日课程(可能需要手动刷新)",
                     checked = AppConfig.tomorrowScheduleEnable,
                     onCheckedChange = {
                         AppConfig.tomorrowScheduleEnable = it
