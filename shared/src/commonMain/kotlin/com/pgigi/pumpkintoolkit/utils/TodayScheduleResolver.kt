@@ -6,7 +6,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 
-//数据类，用于今日课程界面的数据结构
+//数据类，用于今日课程界面的数据结构，返回title、单日的课程List，是否为假期的bool值
 data class TodayViewState(
     val title: String,          //“今日课程” or “明日课程”
     val courses: List<Course>,  //课程列表
