@@ -100,10 +100,12 @@ private fun widgetColors(): WidgetColors {
     return WidgetColors(
         background = if (dark) Color(0xFF1B1B1B) else Color(0xFFF7F7F7),
         onBackground = if (dark) Color(0xFFE0E0E0) else Color(0xFF1A1A1A),
-        cardBackground = if (dark) Color(0xFF2A2A2A) else Color.White,
-        onCard = if (dark) Color(0xFFE0E0E0) else Color(0xFF1A1A1A),
-        tomorrowCardBackground = if (dark) Color(0xFF2D2520) else Color(0xFFFFF5F0),
-        onTomorrowCard = if (dark) Color(0xFFFFB08A) else Color(0xFFCC4A1F),
+        // 今日课程使用橙色系（更吸引注意）
+        cardBackground = if (dark) Color(0xFF2D2520) else Color(0xFFFFF5F0),
+        onCard = if (dark) Color(0xFFFFB08A) else Color(0xFFCC4A1F),
+        // 明日课程使用普通颜色
+        tomorrowCardBackground = if (dark) Color(0xFF2A2A2A) else Color.White,
+        onTomorrowCard = if (dark) Color(0xFFE0E0E0) else Color(0xFF1A1A1A),
         secondary = if (dark) Color(0xFF888888) else Color(0xFF666666)
     )
 }
@@ -213,7 +215,7 @@ private fun SmallWidgetView(state: WidgetState, colors: WidgetColors) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "今日无课",
+                    "今日无课了",
                     style = TextStyle(
                         color = FixedColorProvider(colors.secondary),
                         fontSize = 15.sp,
@@ -247,7 +249,7 @@ private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "今日无课",
+                    "今日无课了",
                     style = TextStyle(
                         color = FixedColorProvider(colors.secondary),
                         fontSize = 15.sp,
@@ -283,7 +285,7 @@ private fun LargeWidgetView(state: WidgetState, colors: WidgetColors, height: Dp
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "今日无课",
+                    "今日无课了",
                     style = TextStyle(
                         color = FixedColorProvider(colors.secondary),
                         fontSize = 16.sp,
@@ -379,6 +381,7 @@ private fun SmallCourseCard(
     colors: WidgetColors
 ) {
     val isTomorrow = course.isTomorrow
+    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
     val bg = if (isTomorrow) colors.tomorrowCardBackground else colors.cardBackground
     val onColor = if (isTomorrow) colors.onTomorrowCard else colors.onCard
     val accentColor = if (isTomorrow) colors.onTomorrowCard else colors.secondary
@@ -428,6 +431,7 @@ private fun CourseCard(
     colors: WidgetColors,
     isTomorrow: Boolean
 ) {
+    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
     val bg = if (isTomorrow) colors.tomorrowCardBackground else colors.cardBackground
     val onColor = if (isTomorrow) colors.onTomorrowCard else colors.onCard
     val accentColor = if (isTomorrow) colors.onTomorrowCard else colors.secondary

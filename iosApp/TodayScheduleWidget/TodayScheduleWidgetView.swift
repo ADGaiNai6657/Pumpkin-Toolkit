@@ -92,7 +92,8 @@ private struct CourseRowView: View {
                     }
                 }
                 .font(.system(size: 11))
-                .foregroundStyle(course.isTomorrow ? Color.orange : .secondary)
+                // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
+                .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             }
@@ -100,7 +101,8 @@ private struct CourseRowView: View {
             if !course.teacher.isEmpty {
                 Text(course.teacher)
                     .font(.system(size: 11))
-                    .foregroundStyle(course.isTomorrow ? Color.orange : .secondary)
+                    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
+                    .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .frame(maxWidth: 70, alignment: .trailing)
@@ -122,11 +124,13 @@ private struct SmallCourseRowView: View {
                 .minimumScaleFactor(0.8)
             Text("\(course.startTime)-\(course.endTime)")
                 .font(.system(size: 11))
-                .foregroundStyle(course.isTomorrow ? Color.orange : .secondary)
+                // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
+                .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
             if !course.classroom.isEmpty {
                 Text(course.classroom)
                     .font(.system(size: 11))
-                    .foregroundStyle(course.isTomorrow ? Color.orange : .secondary)
+                    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
+                    .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -142,13 +146,13 @@ private struct TomorrowSeparatorView: View {
     var body: some View {
         HStack(spacing: 8) {
             Rectangle()
-                .fill(Color.orange.opacity(0.4))
+                .fill(Color.secondary.opacity(0.4))
                 .frame(height: 1)
             Text("明日课程")
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color.orange)
+                .foregroundStyle(.secondary)
             Rectangle()
-                .fill(Color.orange.opacity(0.4))
+                .fill(Color.secondary.opacity(0.4))
                 .frame(height: 1)
         }
         .padding(.vertical, 4)
@@ -211,7 +215,7 @@ private struct SmallScheduleView: View {
 
             if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
                 Spacer()
-                Text("今日无课")
+                Text("今日无课了")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(.tertiary)
                 Spacer()
@@ -219,7 +223,7 @@ private struct SmallScheduleView: View {
                 // Only tomorrow courses: show "明日课程" label + first tomorrow course
                 Text("明日课程")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color.orange)
+                    .foregroundStyle(.secondary)
                     .padding(.bottom, 4)
                 if let first = entry.tomorrowCourses.first {
                     SmallCourseRowView(course: first)
@@ -242,7 +246,7 @@ private struct SmallScheduleView: View {
                     if !entry.tomorrowCourses.isEmpty {
                         Label("明日有 \(entry.tomorrowCourses.count) 节", systemImage: "sun.max.fill")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color.orange)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.top, 4)
@@ -269,7 +273,7 @@ private struct MediumScheduleView: View {
 
             if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
                 Spacer()
-                Text("今日无课")
+                Text("今日无课了")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(.tertiary)
                 Spacer()
@@ -335,7 +339,7 @@ private struct LargeScheduleView: View {
 
             if entry.todayCourses.isEmpty && entry.tomorrowCourses.isEmpty {
                 Spacer()
-                Text("今日无课")
+                Text("今日无课了")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(.tertiary)
                 Spacer()
