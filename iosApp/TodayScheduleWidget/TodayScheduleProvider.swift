@@ -23,7 +23,9 @@ struct TodayScheduleProvider: TimelineProvider {
             dayOfWeekText: "周一",
             todayCourses: [
                 DisplayCourse(name: "高等数学", classroom: "教学楼A301", teacher: "张老师",
-                              startTime: "08:00", endTime: "09:40", isTomorrow: false)
+                              startTime: "08:00", endTime: "09:40", isTomorrow: false, isCurrentCourse: false),
+                DisplayCourse(name: "当前测试课程", classroom: "测试教室", teacher: "测试老师",
+                              startTime: "01:50", endTime: "03:00", isTomorrow: false, isCurrentCourse: true)
             ],
             tomorrowCourses: [],
             hasData: true
@@ -58,12 +60,27 @@ struct TodayScheduleProvider: TimelineProvider {
         while count < maxEntries {
             let entry = buildEntry(date: currentDate, data: data)
             entries.append(entry)
+            
+            print("DEBUG: Timeline entry \(count) at \(currentDate)")
+            print("DEBUG: Today courses count: \(entry.todayCourses.count)")
+            for (index, course) in entry.todayCourses.enumerated() {
+                print("DEBUG: Course \(index): \(course.name) \(course.startTime)-\(course.endTime) isCurrent: \(course.isCurrentCourse)")
+            }
 
             let remaining = entry.todayCourses
             var nextDate: Date? = nil
 
-            // 找到下一个课程结束时间作为下一个刷新点
+            // 找到下一个课程开始时间或结束时间作为刷新节点
             for course in remaining {
+                // 课程开始时间（课程开始时立即显示）
+                if let startTime = WidgetHelper.timeToDate(course.startTime, baseDate: currentDate) {
+                    if startTime > currentDate {
+                        if nextDate == nil || startTime < nextDate! {
+                            nextDate = startTime
+                        }
+                    }
+                }
+                // 课程结束时间（课程结束时立即隐藏）
                 if let endTime = WidgetHelper.timeToDate(course.endTime, baseDate: currentDate) {
                     if endTime > currentDate {
                         if nextDate == nil || endTime < nextDate! {
@@ -72,13 +89,15 @@ struct TodayScheduleProvider: TimelineProvider {
                     }
                 }
             }
-
+            
             // 如果今天没有更多课程了，跳到明天第一节课开始时间
             if nextDate == nil {
                 // 跳到明天的 00:00
                 if let midnight = calendar.date(bySettingHour: 0, minute: 0, second: 0,
                                                  of: calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate) {
                     nextDate = midnight
+                } else {
+                    break
                 }
             }
 

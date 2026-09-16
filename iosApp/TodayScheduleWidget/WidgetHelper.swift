@@ -62,10 +62,11 @@ enum WidgetHelper {
             .sorted { $0.lessonOfDay < $1.lessonOfDay }
             .filter { course in
                 let endIndex = min(course.lessonOfDay - 1 + course.duration - 1, data.timeList.count - 1)
-                return data.timeList[endIndex].end >= currentTime
+                // 课程结束时间严格大于当前时间才显示（结束时间点不显示）
+                return data.timeList[endIndex].end > currentTime
             }
             .map { course in
-                toDisplayCourse(course, timeList: data.timeList, isTomorrow: false)
+                toDisplayCourse(course, timeList: data.timeList, isTomorrow: false, currentTime: currentTime)
             }
     }
 
@@ -83,23 +84,29 @@ enum WidgetHelper {
             }
             .sorted { $0.lessonOfDay < $1.lessonOfDay }
             .map { course in
-                toDisplayCourse(course, timeList: data.timeList, isTomorrow: true)
+                // 对于明日课程，isCurrentCourse总是false
+                toDisplayCourse(course, timeList: data.timeList, isTomorrow: true, currentTime: nil)
             }
     }
 
-    static func toDisplayCourse(_ course: WidgetCourseItem, timeList: [WidgetScheduleTime], isTomorrow: Bool) -> DisplayCourse {
+    static func toDisplayCourse(_ course: WidgetCourseItem, timeList: [WidgetScheduleTime], isTomorrow: Bool, currentTime: String? = nil) -> DisplayCourse {
         let startIndex = max(0, min(course.lessonOfDay - 1, timeList.count - 1))
         let endIndex = max(0, min(startIndex + course.duration - 1, timeList.count - 1))
         let classroom = course.classroom
             .replacingOccurrences(of: "【红湘校区】", with: "")
             .replacingOccurrences(of: "【雨母校区】", with: "")
+        let startTime = timeList[startIndex].start
+        let endTime = timeList[endIndex].end
+        // 明日课程的isCurrentCourse总是false
+        let isCurrentCourse = isTomorrow ? false : isCurrentCourse(startTime: startTime, endTime: endTime, currentTime: currentTime)
         return DisplayCourse(
             name: course.name,
             classroom: classroom,
             teacher: course.teacher,
-            startTime: timeList[startIndex].start,
-            endTime: timeList[endIndex].end,
-            isTomorrow: isTomorrow
+            startTime: startTime,
+            endTime: endTime,
+            isTomorrow: isTomorrow,
+            isCurrentCourse: isCurrentCourse
         )
     }
 
@@ -112,5 +119,29 @@ enum WidgetHelper {
         return calendar.date(bySettingHour: timeComps.hour ?? 0,
                              minute: timeComps.minute ?? 0,
                              second: 0, of: baseDate)
+    }
+
+    static func isCurrentCourse(startTime: String, endTime: String, currentTime: String? = nil) -> Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        
+        // 使用传入的当前时间或系统当前时间
+        let now: Date
+        if let currentTimeStr = currentTime, let parsedTime = formatter.date(from: currentTimeStr) {
+            now = parsedTime
+        } else {
+            now = Date()
+        }
+        
+        // 将时间字符串转换为Date对象进行比较
+        guard let startDate = formatter.date(from: startTime),
+              let endDate = formatter.date(from: endTime) else {
+            print("DEBUG: Failed to parse time strings: \(startTime), \(endTime)")
+            return false
+        }
+        
+        let result = now >= startDate && now < endDate
+        print("DEBUG: isCurrentCourse - startTime: \(startTime), endTime: \(endTime), currentTime: \(currentTime ?? "nil"), now: \(formatter.string(from: now)), result: \(result)")
+        return result
     }
 }

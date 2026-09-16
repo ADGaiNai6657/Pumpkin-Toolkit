@@ -31,4 +31,5 @@ struct DisplayCourse: Identifiable {
     let startTime: String
     let endTime: String
     let isTomorrow: Bool
+    let isCurrentCourse: Bool // 是否是当前正在上的课
 }

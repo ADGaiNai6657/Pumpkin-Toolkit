@@ -81,7 +81,8 @@ private struct CourseRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(course.name)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.primary)
+                    // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+                    .foregroundStyle(course.isCurrentCourse ? Color.orange : (course.isTomorrow ? .secondary : .primary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 HStack(spacing: 5) {
@@ -92,8 +93,8 @@ private struct CourseRowView: View {
                     }
                 }
                 .font(.system(size: 11))
-                // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
-                .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
+                // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+                .foregroundStyle(course.isCurrentCourse ? Color.orange : (course.isTomorrow ? .secondary : .primary))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             }
@@ -101,8 +102,8 @@ private struct CourseRowView: View {
             if !course.teacher.isEmpty {
                 Text(course.teacher)
                     .font(.system(size: 11))
-                    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
-                    .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
+                    // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+                    .foregroundStyle(course.isCurrentCourse ? Color.orange : (course.isTomorrow ? .secondary : .primary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .frame(maxWidth: 70, alignment: .trailing)
@@ -119,18 +120,19 @@ private struct SmallCourseRowView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(course.name)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.primary)
+                // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+                .foregroundStyle(course.isCurrentCourse ? Color.orange : (course.isTomorrow ? .secondary : .primary))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             Text("\(course.startTime)-\(course.endTime)")
                 .font(.system(size: 11))
-                // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
-                .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
+                // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+                .foregroundStyle(course.isCurrentCourse ? Color.orange : (course.isTomorrow ? .secondary : .primary))
             if !course.classroom.isEmpty {
                 Text(course.classroom)
                     .font(.system(size: 11))
-                    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
-                    .foregroundStyle(course.isTomorrow ? .secondary : Color.orange)
+                    // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+                    .foregroundStyle(course.isCurrentCourse ? Color.orange : (course.isTomorrow ? .secondary : .primary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -229,6 +231,11 @@ private struct SmallScheduleView: View {
                     SmallCourseRowView(course: first)
                 }
                 Spacer(minLength: 0)
+                if !entry.tomorrowCourses.isEmpty {
+                    Label("明日有 \(entry.tomorrowCourses.count) 节", systemImage: "sun.max.fill")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 // Has today courses: show first today course
                 if let first = entry.todayCourses.first {

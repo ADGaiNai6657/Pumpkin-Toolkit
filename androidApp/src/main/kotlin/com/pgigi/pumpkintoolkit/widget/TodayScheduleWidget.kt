@@ -80,9 +80,7 @@ class TodayScheduleWidget : GlanceAppWidget() {
 private data class WidgetColors(
     val background: Color,
     val onBackground: Color,
-    val cardBackground: Color,
     val onCard: Color,
-    val tomorrowCardBackground: Color,
     val onTomorrowCard: Color,
     val secondary: Color
 )
@@ -100,12 +98,10 @@ private fun widgetColors(): WidgetColors {
     return WidgetColors(
         background = if (dark) Color(0xFF1B1B1B) else Color(0xFFF7F7F7),
         onBackground = if (dark) Color(0xFFE0E0E0) else Color(0xFF1A1A1A),
-        // 今日课程使用橙色系（更吸引注意）
-        cardBackground = if (dark) Color(0xFF2D2520) else Color(0xFFFFF5F0),
-        onCard = if (dark) Color(0xFFFFB08A) else Color(0xFFCC4A1F),
-        // 明日课程使用普通颜色
-        tomorrowCardBackground = if (dark) Color(0xFF2A2A2A) else Color.White,
-        onTomorrowCard = if (dark) Color(0xFFE0E0E0) else Color(0xFF1A1A1A),
+        // 今日课程使用默认颜色
+        onCard = if (dark) Color(0xFFE0E0E0) else Color(0xFF1A1A1A),
+        // 明日课程使用灰色
+        onTomorrowCard = if (dark) Color(0xFF888888) else Color(0xFF666666),
         secondary = if (dark) Color(0xFF888888) else Color(0xFF666666)
     )
 }
@@ -225,13 +221,23 @@ private fun SmallWidgetView(state: WidgetState, colors: WidgetColors) {
             }
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
-                items(state.todayCourses) { course ->
-                    SmallCourseCard(course, colors)
+                // 今日课程
+                state.todayCourses.forEachIndexed { index, course ->
+                    item { CourseItem(course, colors, isTomorrow = false, isSmallWidget = true) }
+                    // 添加分割线（除了最后一个）
+                    // if (index < state.todayCourses.size - 1) {
+                        // item { CourseDivider(colors) }
+                    // }
                 }
+                // 明日课程
                 if (state.tomorrowCourses.isNotEmpty()) {
                     item { TomorrowSeparator(colors) }
-                    items(state.tomorrowCourses) { course ->
-                        SmallCourseCard(course, colors)
+                    state.tomorrowCourses.forEachIndexed { index, course ->
+                        item { CourseItem(course, colors, isTomorrow = true, isSmallWidget = true) }
+                        // 添加分割线（除了最后一个）
+                        // if (index < state.tomorrowCourses.size - 1) {
+                            // item { CourseDivider(colors) }
+                        // }
                     }
                 }
             }
@@ -259,13 +265,23 @@ private fun MediumWidgetView(state: WidgetState, colors: WidgetColors, width: Dp
             }
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
-                items(state.todayCourses) { course ->
-                    CourseCard(course, colors, isTomorrow = false)
+                // 今日课程
+                state.todayCourses.forEachIndexed { index, course ->
+                    item { CourseItem(course, colors, isTomorrow = false, isSmallWidget = false) }
+                    // 添加分割线（除了最后一个）
+                    // if (index < state.todayCourses.size - 1) {
+                        // item { CourseDivider(colors) }
+                    // }
                 }
+                // 明日课程
                 if (state.tomorrowCourses.isNotEmpty()) {
                     item { TomorrowSeparator(colors) }
-                    items(state.tomorrowCourses) { course ->
-                        CourseCard(course, colors, isTomorrow = true)
+                    state.tomorrowCourses.forEachIndexed { index, course ->
+                        item { CourseItem(course, colors, isTomorrow = true, isSmallWidget = false) }
+                        // 添加分割线（除了最后一个）
+                        // if (index < state.tomorrowCourses.size - 1) {
+                            // item { CourseDivider(colors) }
+                        // }
                     }
                 }
             }
@@ -295,13 +311,23 @@ private fun LargeWidgetView(state: WidgetState, colors: WidgetColors, height: Dp
             }
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxWidth()) {
-                items(state.todayCourses) { course ->
-                    CourseCard(course, colors, isTomorrow = false)
+                // 今日课程
+                state.todayCourses.forEachIndexed { index, course ->
+                    item { CourseItem(course, colors, isTomorrow = false, isSmallWidget = false) }
+                    // 添加分割线（除了最后一个）
+                    // if (index < state.todayCourses.size - 1) {
+                        // item { CourseDivider(colors) }
+                    // }
                 }
+                // 明日课程
                 if (state.tomorrowCourses.isNotEmpty()) {
                     item { TomorrowSeparator(colors) }
-                    items(state.tomorrowCourses) { course ->
-                        CourseCard(course, colors, isTomorrow = true)
+                    state.tomorrowCourses.forEachIndexed { index, course ->
+                        item { CourseItem(course, colors, isTomorrow = true, isSmallWidget = false) }
+                        // 添加分割线（除了最后一个）
+                        // if (index < state.tomorrowCourses.size - 1) {
+                            // item { CourseDivider(colors) }
+                        // }
                     }
                 }
             }
@@ -345,6 +371,106 @@ private fun Header(
 }
 
 @Composable
+private fun CourseDivider(colors: WidgetColors) {
+    // 比明日课程分隔线颜色浅的灰色
+    val dividerColor = if (isDarkTheme()) Color(0xFF444444) else Color(0xFFE0E0E0)
+    Box(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .height(1.dp)
+            .background(dividerColor)
+    ) {
+        // 空内容
+    }
+}
+
+@Composable
+private fun CourseItem(
+    course: DisplayCourse,
+    colors: WidgetColors,
+    isTomorrow: Boolean,
+    isSmallWidget: Boolean = false
+) {
+    val isCurrentCourse = course.isCurrentCourse
+    // 当前课程使用橙黄色，今日课程使用默认颜色，明日课程使用灰色
+    val onColor = when {
+        isCurrentCourse -> Color(0xFFFF9800) // 橙黄色文字
+        isTomorrow -> colors.onTomorrowCard
+        else -> colors.onCard // 默认颜色
+    }
+    val accentColor = when {
+        isCurrentCourse -> Color(0xFFFF9800) // 橙黄色文字
+        isTomorrow -> colors.onTomorrowCard
+        else -> colors.secondary // 默认颜色
+    }
+
+    Column(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(all = 4.dp)
+    ) {
+        if(isSmallWidget){
+            // 课程名称
+            Text(
+                course.name,
+                maxLines = 1,
+                style = TextStyle(
+                    color = FixedColorProvider(onColor),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+
+            // 时间
+            Text(
+                "${course.startTime}-${course.endTime}",
+                style = TextStyle(
+                    color = FixedColorProvider(accentColor),
+                    fontSize = 11.sp
+                )
+            )
+
+            // 地点（如果存在）
+            if (course.classroom.isNotEmpty()) {
+                Text(
+                    course.classroom,
+                    style = TextStyle(
+                        color = FixedColorProvider(accentColor),
+                        fontSize = 11.sp
+                    )
+                )
+            }
+        }else{
+            // 课程名称
+            Text(
+                course.name,
+                maxLines = 1,
+                style = TextStyle(
+                    color = FixedColorProvider(onColor),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+
+            val secondTextArray = mutableListOf("${course.startTime}-${course.endTime}")
+            if(course.classroom.isNotEmpty()) secondTextArray.add(course.classroom)
+            if(course.teacher.isNotEmpty()) secondTextArray.add(course.teacher)
+
+            Text(
+                secondTextArray.joinToString("・"),
+                style = TextStyle(
+                    color = FixedColorProvider(accentColor),
+                    fontSize = 11.sp
+                )
+            )
+        }
+        
+
+    }
+}
+
+@Composable
 private fun TomorrowSeparator(colors: WidgetColors) {
     Row(
         modifier = GlanceModifier
@@ -375,117 +501,3 @@ private fun TomorrowSeparator(colors: WidgetColors) {
     }
 }
 
-@Composable
-private fun SmallCourseCard(
-    course: DisplayCourse,
-    colors: WidgetColors
-) {
-    val isTomorrow = course.isTomorrow
-    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
-    val bg = if (isTomorrow) colors.tomorrowCardBackground else colors.cardBackground
-    val onColor = if (isTomorrow) colors.onTomorrowCard else colors.onCard
-    val accentColor = if (isTomorrow) colors.onTomorrowCard else colors.secondary
-
-    Box(
-        modifier = GlanceModifier
-            .fillMaxWidth()
-            .padding(vertical = 3.dp)
-            .background(bg)
-            .cornerRadius(10.dp)
-            .padding(all = 10.dp)
-    ) {
-        Column {
-            Text(
-                course.name,
-                style = TextStyle(
-                    color = FixedColorProvider(onColor),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            )
-            Spacer(modifier = GlanceModifier.height(3.dp))
-            Text(
-                "${course.startTime}-${course.endTime}",
-                style = TextStyle(
-                    color = FixedColorProvider(accentColor),
-                    fontSize = 11.sp
-                )
-            )
-            if (course.classroom.isNotEmpty()) {
-                Spacer(modifier = GlanceModifier.height(3.dp))
-                Text(
-                    course.classroom,
-                    style = TextStyle(
-                        color = FixedColorProvider(accentColor),
-                        fontSize = 11.sp
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CourseCard(
-    course: DisplayCourse,
-    colors: WidgetColors,
-    isTomorrow: Boolean
-) {
-    // 今日课程使用橙色系（更吸引注意），明日课程使用普通颜色
-    val bg = if (isTomorrow) colors.tomorrowCardBackground else colors.cardBackground
-    val onColor = if (isTomorrow) colors.onTomorrowCard else colors.onCard
-    val accentColor = if (isTomorrow) colors.onTomorrowCard else colors.secondary
-
-    Box(
-        modifier = GlanceModifier
-            .fillMaxWidth()
-            .padding(vertical = 3.dp)
-            .background(bg)
-            .cornerRadius(10.dp)
-            .padding(all = 10.dp)
-    ) {
-        Column {
-            Text(
-                course.name,
-                style = TextStyle(
-                    color = FixedColorProvider(onColor),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            )
-            Spacer(modifier = GlanceModifier.height(2.dp))
-            Row(
-                modifier = GlanceModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "${course.startTime}-${course.endTime}",
-                    style = TextStyle(
-                        color = FixedColorProvider(accentColor),
-                        fontSize = 11.sp
-                    )
-                )
-                Spacer(modifier = GlanceModifier.width(6.dp))
-                if (course.classroom.isNotEmpty()) {
-                    Text(
-                        course.classroom,
-                        style = TextStyle(
-                            color = FixedColorProvider(accentColor),
-                            fontSize = 11.sp
-                        )
-                    )
-                }
-                Spacer(modifier = GlanceModifier.defaultWeight())
-                if (course.teacher.isNotEmpty()) {
-                    Text(
-                        course.teacher,
-                        style = TextStyle(
-                            color = FixedColorProvider(accentColor),
-                            fontSize = 11.sp
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
