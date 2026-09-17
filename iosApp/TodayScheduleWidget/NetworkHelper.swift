@@ -6,6 +6,8 @@ import UIKit
 enum NetworkHelper {
 
     static let baseURL = "https://pumpkin-api.pgigi.com"
+    private static let widgetDataFile = "widget_data.json"
+    private static let appGroupID = "group.com.pgigi.pumpkintoolkit"
 
     /// 获取设备 IDFV
     /// UIDevice 在小组件 Extension 中可用（需 import UIKit）
@@ -13,10 +15,51 @@ enum NetworkHelper {
         return UIDevice.current.identifierForVendor?.uuidString
     }
 
+    /// 获取本地缓存文件路径（App Group共享容器）
+    private static func getLocalCachePath() -> URL? {
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ) else {
+            return nil
+        }
+        return containerURL.appendingPathComponent(widgetDataFile)
+    }
+
+    /// 从本地缓存加载数据
+    private static func loadFromLocalCache() -> WidgetData? {
+        guard let cachePath = getLocalCachePath() else { return nil }
+        
+        do {
+            let data = try Data(contentsOf: cachePath)
+            let widgetData = try JSONDecoder().decode(WidgetData.self, from: data)
+            return widgetData
+        } catch {
+            return nil
+        }
+    }
+
+    /// 保存数据到本地缓存
+    private static func saveToLocalCache(_ data: WidgetData) {
+        guard let cachePath = getLocalCachePath() else { return }
+        
+        do {
+            let jsonData = try JSONEncoder().encode(data)
+            try jsonData.write(to: cachePath)
+        } catch {
+            // 保存失败不影响主流程
+        }
+    }
+
     /// 从网络获取课表数据（同步阻塞）
     /// POST https://pumpkin-api.pgigi.com/get/{IDFV}
     /// - Returns: 解码后的 WidgetData，失败返回 nil
     static func loadWidgetData() -> WidgetData? {
+        // 首先尝试从本地缓存加载
+        if let cachedData = loadFromLocalCache() {
+            return cachedData
+        }
+        
+        // 如果本地没有缓存，从网络获取
         guard let idfv = getIDFV(), !idfv.isEmpty else { return nil }
 
         let urlString = "\(baseURL)/get/\(idfv)"
@@ -42,6 +85,11 @@ enum NetworkHelper {
         }
         task.resume()
         semaphore.wait()
+
+        // 如果网络请求成功，保存到本地缓存
+        if let data = result {
+            saveToLocalCache(data)
+        }
 
         return result
     }
