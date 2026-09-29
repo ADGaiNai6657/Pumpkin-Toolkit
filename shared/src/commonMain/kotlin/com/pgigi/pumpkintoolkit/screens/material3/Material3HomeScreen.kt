@@ -46,6 +46,7 @@ import com.pgigi.pumpkintoolkit.components.FloatingBottomBar
 import com.pgigi.pumpkintoolkit.components.FloatingBottomBarColors
 import com.pgigi.pumpkintoolkit.components.FloatingBottomBarMode
 import com.pgigi.pumpkintoolkit.components.isLiquidGlassSupported
+import com.pgigi.pumpkintoolkit.components.sceneChrome
 import com.pgigi.pumpkintoolkit.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -160,7 +161,8 @@ fun Material3HomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewM
                                 .padding(end = fabPadding, bottom = fabPadding)
                                 .fillMaxWidth(0.5f)
                                 .fillMaxHeight()
-                                .background(MaterialTheme.colorScheme.surface)
+                                // 自定义背景时铺半透明纱，面板轮廓依然可见
+                                .background(sceneChrome(MaterialTheme.colorScheme.surface))
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }

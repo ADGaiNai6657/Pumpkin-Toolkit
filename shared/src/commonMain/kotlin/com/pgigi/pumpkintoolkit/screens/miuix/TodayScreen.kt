@@ -1,23 +1,24 @@
 package com.pgigi.pumpkintoolkit.screens.miuix
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,12 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pgigi.pumpkintoolkit.AppConfig
@@ -56,8 +56,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
@@ -67,6 +65,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Clock
 
 private sealed class TimelineItem {
@@ -76,8 +75,7 @@ private sealed class TimelineItem {
         val course: Course,
         val startTime: String,
         val endTime: String,
-        val classroom: String,
-        val isLastInDay: Boolean
+        val classroom: String
     ) : TimelineItem()
 }
 
@@ -104,8 +102,7 @@ private fun buildDayItems(
                 endTime = AppConfig.timeList[ei].end,
                 classroom = course.classroom
                     .replace("【红湘校区】", "")
-                    .replace("【雨母校区】", ""),
-                isLastInDay = false
+                    .replace("【雨母校区】", "")
             )
         }
 
@@ -113,9 +110,7 @@ private fun buildDayItems(
 
     val result = mutableListOf<TimelineItem>()
     result.add(TimelineItem.DayHeader(date, date == today))
-    dayCourses.forEachIndexed { index, card ->
-        result.add(card.copy(isLastInDay = index == dayCourses.size - 1))
-    }
+    result.addAll(dayCourses)
     return result
 }
 
@@ -211,7 +206,7 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAp
             )
         }
     ) { paddingValues ->
-        if (!loggedIn || weekCalculator == null) {
+        if (!loggedIn) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -219,8 +214,21 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAp
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (loggedIn) "暂无课程" else "请登录使用",
+                    text = "请登录使用",
                     textAlign = TextAlign.Center
+                )
+            }
+        } else if (weekCalculator == null || timelineData.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "近期暂无课程安排",
+                    textAlign = TextAlign.Center,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                 )
             }
         } else {
@@ -248,7 +256,14 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAp
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 64.dp)
+                    // 与 PumpkinCampus 日程页一致：左右 16dp、条目间距 8dp
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        top = 4.dp,
+                        end = 16.dp,
+                        bottom = 64.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
                         count = timelineData.size,
@@ -270,91 +285,127 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAp
     }
 }
 
+/** 卡片左右分隔的红色竖线颜色（与 PumpkinCampus 日程页一致）。 */
+private val AgendaAccentLine = Color(0xFFE53935)
+
+/** 日期标题：`9月26日 周五`，今天高亮并带「今天」徽标。 */
 @Composable
 private fun TimelineDayHeader(date: LocalDate, isToday: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "${date.month.number}月${date.day}日",
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = if (isToday) Color(0xFF1A73E8) else Color.Unspecified
+            color = if (isToday) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = getDayOfWeekText(date.dayOfWeek),
-            fontSize = 14.sp,
-            color = Color.Gray
+            fontSize = 12.sp,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
         )
         if (isToday) {
             Spacer(modifier = Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFF1A73E8))
+                    .background(MiuixTheme.colorScheme.primary)
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
-                Text("今天", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Medium)
+                Text("今天", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Medium)
             }
         }
         Spacer(modifier = Modifier.weight(1f))
     }
 }
 
+/**
+ * 课程卡片（样式与 PumpkinCampus 日程页一致）：
+ * ```
+ * ┌───────────────────────────────────────────┐
+ * │ 08:00   │ 高等数学              A101   │
+ * │ 09:40   │ 张伟（小字）                       │
+ * └───────────────────────────────────────────┘
+ *  ↑左列          ↑5dp + 红竖线 + 5dp
+ * ```
+ */
 @Composable
 private fun TimelineCourseCard(item: TimelineItem.CourseCard) {
-    val dotColor = Color(0xFF1A73E8)
-    val lineColor = Color(0xFFE0E0E0)
-
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.Top
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .clip(RoundedCornerShape(12.dp))
+            // 跟随系统时是卡片底色；自定义背景下该 token 会自动换成半透明纱
+            .background(MiuixTheme.colorScheme.surfaceContainer)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.width(56.dp), horizontalAlignment = Alignment.End) {
-            Text(item.startTime, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(item.endTime, fontSize = 11.sp, color = Color.Gray.copy(alpha = 0.6f))
-        }
-
-        Box(
-            modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp),
-            contentAlignment = Alignment.Center
+        // 左：上面开始时间，下面结束时间
+        Column(
+            modifier = Modifier.width(56.dp),
+            horizontalAlignment = Alignment.End
         ) {
-            if (!item.isLastInDay) {
-                Canvas(Modifier.width(1.dp).height(24.dp).align(Alignment.TopCenter)) {
-                    drawRect(lineColor, Offset.Zero, Size(size.width, size.height))
-                }
-            }
-            Box(Modifier.size(8.dp).clip(CircleShape).background(dotColor))
-            if (!item.isLastInDay) {
-                Canvas(Modifier.width(1.dp).height(56.dp).align(Alignment.BottomCenter)) {
-                    drawRect(lineColor, Offset.Zero, Size(size.width, size.height))
-                }
-            }
-        }
-
-//        Spacer(modifier = Modifier.width(8.dp))
-
-        Card(modifier = Modifier.weight(1f).padding(end = 16.dp, bottom = 8.dp)) {
-            /*Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Text(item.course.name, fontSize = 15.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(item.classroom, fontSize = 14.sp, maxLines = 1)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(item.course.teacher, fontSize = 12.sp, color = Color.Gray, maxLines = 1)
-            }*/
-
-            BasicComponent(
-                title = item.course.name,
-                summary = item.course.teacher,
-                endActions = {
-                    Text(item.classroom)
-                }
+            Text(
+                text = item.startTime,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MiuixTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = item.endTime,
+                fontSize = 12.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
             )
         }
+
+        // 中：左右各 5dp 间距，中间红色竖线
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .width(4.dp)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(2.dp))
+                .background(AgendaAccentLine)
+        )
+
+        // 右：上面课程名，下面小字老师名
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.course.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MiuixTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = item.course.teacher,
+                fontSize = 12.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        // 最右：教室
+        Text(
+            text = item.classroom,
+            fontSize = 12.sp,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .widthIn(max = 110.dp)
+        )
     }
 }

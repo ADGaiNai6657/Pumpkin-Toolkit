@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
+import com.pgigi.pumpkintoolkit.components.scenePageColor
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
@@ -118,7 +119,8 @@ fun MiuixLoginScreen(){
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = MiuixTheme.colorScheme.background)
+                // 自定义背景时页面底透明，让背景整屏透出
+                .background(color = scenePageColor(MiuixTheme.colorScheme.background))
         ) {
             Card(Modifier.align(Alignment.Center)) {
                 Column(

@@ -24,6 +24,7 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.components.miuix.MiuixFloatingDropdown
 import com.pgigi.pumpkintoolkit.components.miuix.SchedulePager
+import com.pgigi.pumpkintoolkit.components.sceneChrome
 import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
@@ -115,7 +116,8 @@ fun MiuixOtherScheduleScreen(viewModel: OtherScheduleViewModel = viewModel(facto
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (windowInfo.containerDpSize.width < 800.dp) {
-                NavigationBar {
+                // 自定义背景时底栏铺半透明纱
+                NavigationBar(color = sceneChrome(MiuixTheme.colorScheme.surface)) {
                     // Add navigation items for single column view
                     NavigationBarItem(
                         selected = !showComment,

@@ -9,7 +9,7 @@
 
 ## 系统支持
 
-![Android](https://img.shields.io/badge/Android_7.0+-SDK_24+-green?logo=android)
+![Android](https://img.shields.io/badge/Android-7.0+-green?logo=android)
 ![HarmonyOS](https://img.shields.io/badge/HarmonyOS-%E5%8D%93%E6%98%93%E9%80%9A-green?logo=harmonyos)
 ![Apple iOS](https://img.shields.io/badge/iOS-18.1+-green?logo=apple)
 
@@ -27,5 +27,6 @@
 ## 特色功能
 - 两种 UI 风格 (Miuix、Material 3)
 - 浅色、深色、自动切换模式自选
+- 自定义背景
 - 成绩查询时，隐藏不及格成绩 (手动设置)
 - 一键自动完成学生评教 (手动发起操作)

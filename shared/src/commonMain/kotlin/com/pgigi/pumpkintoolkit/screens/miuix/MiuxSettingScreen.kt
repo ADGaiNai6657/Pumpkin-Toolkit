@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,11 +29,21 @@ import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
 import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
+import com.pgigi.pumpkintoolkit.components.BackgroundColorPalette
+import com.pgigi.pumpkintoolkit.components.BackgroundPreviewStrip
+import com.pgigi.pumpkintoolkit.components.BackgroundTypeLabels
+import com.pgigi.pumpkintoolkit.components.backgroundTypeAt
+import com.pgigi.pumpkintoolkit.components.backgroundTypeIndexOf
+import com.pgigi.pumpkintoolkit.components.isValidBackgroundColor
 import com.pgigi.pumpkintoolkit.components.miuix.NumberDatePicker
+import com.pgigi.pumpkintoolkit.components.rememberBackgroundImagePicker
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.constants.TimeList
 import com.pgigi.pumpkintoolkit.getPlatform
+import com.pgigi.pumpkintoolkit.models.BackgroundConfig
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
+import com.pgigi.pumpkintoolkit.utils.deleteBackgroundImage
+import com.pgigi.pumpkintoolkit.utils.loadBackgroundImage
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -48,6 +60,7 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextButtonColors
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -179,6 +192,148 @@ fun MiuixSettingScreen() {
                         }
                     )
                 }
+
+                // —— 自定义背景（全局生效） ——
+                val bgConfig = AppConfig.background
+                val bgTypeIndex = backgroundTypeIndexOf(bgConfig)
+                val bgPreviewImage = remember(bgConfig?.image) {
+                    bgConfig?.image?.takeIf { it.isNotEmpty() }?.let { loadBackgroundImage(it) }
+                }
+                var imageError by remember { mutableStateOf(false) }
+                val pickBackgroundImage = rememberBackgroundImagePicker(
+                    onSaved = { fileName ->
+                        // 全局只有一处引用：换图时删掉旧文件
+                        bgConfig?.image?.let { old -> if (old != fileName) deleteBackgroundImage(old) }
+                        AppConfig.background = (bgConfig ?: BackgroundConfig())
+                            .copy(type = BackgroundConfig.TYPE_IMAGE, image = fileName)
+                        imageError = false
+                        AppConfig.save()
+                    },
+                    onError = { imageError = true },
+                )
+                BackgroundPreviewStrip(
+                    config = bgConfig,
+                    image = bgPreviewImage,
+                    fallback = MiuixTheme.colorScheme.background,
+                    borderColor = MiuixTheme.colorScheme.dividerLine,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                )
+                WindowDropdownPreference(
+                    title = "背景类型",
+                    summary = "两种 UI 风格下全局生效；跟随系统时不使用自定义背景",
+                    items = BackgroundTypeLabels,
+                    selectedIndex = bgTypeIndex,
+                    onSelectedIndexChange = { index ->
+                        AppConfig.background = (bgConfig ?: BackgroundConfig())
+                            .copy(type = backgroundTypeAt(index))
+                        AppConfig.save()
+                    }
+                )
+                if (bgTypeIndex == 1) {
+                    BackgroundColorPalette(
+                        selected = bgConfig?.color ?: BackgroundConfig.DEFAULT_COLOR,
+                        onSelect = { hex ->
+                            AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                .copy(type = BackgroundConfig.TYPE_COLOR, color = hex)
+                            AppConfig.save()
+                        },
+                        selectedBorder = MiuixTheme.colorScheme.primary,
+                        normalBorder = MiuixTheme.colorScheme.dividerLine,
+                    )
+                    var hexInput by remember(bgConfig?.color) {
+                        mutableStateOf(bgConfig?.color ?: BackgroundConfig.DEFAULT_COLOR)
+                    }
+                    TextField(
+                        value = hexInput,
+                        onValueChange = { input ->
+                            hexInput = input
+                            if (isValidBackgroundColor(input)) {
+                                AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                    .copy(
+                                        type = BackgroundConfig.TYPE_COLOR,
+                                        color = input.trim()
+                                    )
+                                AppConfig.save()
+                            }
+                        },
+                        label = "自定义色值 #RRGGBB",
+                        useLabelAsPlaceholder = true,
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                } else if (bgTypeIndex == 2) {
+                    TextButton(
+                        text = if (bgConfig?.image == null) "选择图片背景" else "更换图片",
+                        onClick = { pickBackgroundImage() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                    if (imageError) {
+                        Text(
+                            text = "图片处理失败，请换一张图片重试",
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = Color(0xFFFF3B30),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        )
+                    }
+                    SwitchPreference(
+                        title = "图片高斯模糊",
+                        summary = "虚化背景，文字更易读",
+                        checked = bgConfig?.blur == true,
+                        onCheckedChange = {
+                            AppConfig.background = (bgConfig ?: BackgroundConfig()).copy(blur = it)
+                            AppConfig.save()
+                        }
+                    )
+                    val currentDimPercent = (bgConfig ?: BackgroundConfig()).clampedDim() * 100f
+                    SliderPreference(
+                        title = "暗色蒙层",
+                        summary = "压暗背景，保证文字可读",
+                        value = currentDimPercent,
+                        onValueChange = {
+                            AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                .copy(dim = (it / 100f).coerceIn(0f, 0.85f))
+                            AppConfig.save()
+                        },
+                        valueRange = 0f..85f,
+                        steps = 84,
+                        valueText = "${currentDimPercent.roundToInt()}%",
+                    )
+                }
+                SliderPreference(
+                    title = "卡片 / 底栏不透明度",
+                    summary = "仅自定义背景时生效",
+                    value = AppConfig.chromeOpacity * 100f,
+                    onValueChange = {
+                        AppConfig.chromeOpacity = (it / 100f).coerceIn(0.25f, 1f)
+                        AppConfig.save()
+                    },
+                    valueRange = 25f..100f,
+                    steps = 74,
+                    valueText = "${(AppConfig.chromeOpacity * 100f).roundToInt()}%",
+                )
+                if (bgConfig != null) {
+                    TextButton(
+                        text = "恢复默认（清除自定义背景）",
+                        onClick = {
+                            bgConfig.image?.let { deleteBackgroundImage(it) }
+                            AppConfig.background = null
+                            AppConfig.save()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+                Text(
+                    text = "背景在所有页面与两种 UI 风格下全局生效。",
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    color = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
             }
 
             SmallTitle("课表设置")

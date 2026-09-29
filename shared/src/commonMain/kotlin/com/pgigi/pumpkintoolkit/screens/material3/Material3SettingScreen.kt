@@ -3,6 +3,7 @@ package com.pgigi.pumpkintoolkit.screens.material3
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -37,17 +39,28 @@ import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
 import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
+import com.pgigi.pumpkintoolkit.components.BackgroundColorPalette
+import com.pgigi.pumpkintoolkit.components.BackgroundPreviewStrip
+import com.pgigi.pumpkintoolkit.components.BackgroundTypeLabels
+import com.pgigi.pumpkintoolkit.components.backgroundTypeAt
+import com.pgigi.pumpkintoolkit.components.backgroundTypeIndexOf
+import com.pgigi.pumpkintoolkit.components.isValidBackgroundColor
 import com.pgigi.pumpkintoolkit.components.material3.M3GroupHeader
 import com.pgigi.pumpkintoolkit.components.material3.M3GroupSection
 import com.pgigi.pumpkintoolkit.components.material3.M3PickerDialog
 import com.pgigi.pumpkintoolkit.components.material3.M3Row
 import com.pgigi.pumpkintoolkit.components.material3.M3SectionSpacer
+import com.pgigi.pumpkintoolkit.components.material3.M3TextField
 import com.pgigi.pumpkintoolkit.components.material3.M3TrailingText
 import com.pgigi.pumpkintoolkit.components.material3.NumberDatePicker
+import com.pgigi.pumpkintoolkit.components.rememberBackgroundImagePicker
 import com.pgigi.pumpkintoolkit.components.rememberNumberDatePickerState
 import com.pgigi.pumpkintoolkit.constants.TimeList
 import com.pgigi.pumpkintoolkit.getPlatform
+import com.pgigi.pumpkintoolkit.models.BackgroundConfig
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
+import com.pgigi.pumpkintoolkit.utils.deleteBackgroundImage
+import com.pgigi.pumpkintoolkit.utils.loadBackgroundImage
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -227,6 +240,184 @@ fun Material3SettingScreen() {
                         },
                     )
                 }
+
+                // —— 自定义背景（全局生效） ——
+                val bgConfig = AppConfig.background
+                val bgTypeIndex = backgroundTypeIndexOf(bgConfig)
+                val bgPreviewImage = remember(bgConfig?.image) {
+                    bgConfig?.image?.takeIf { it.isNotEmpty() }?.let { loadBackgroundImage(it) }
+                }
+                var imageError by remember { mutableStateOf(false) }
+                val pickBackgroundImage = rememberBackgroundImagePicker(
+                    onSaved = { fileName ->
+                        // 全局只有一处引用：换图时删掉旧文件
+                        bgConfig?.image?.let { old -> if (old != fileName) deleteBackgroundImage(old) }
+                        AppConfig.background = (bgConfig ?: BackgroundConfig())
+                            .copy(type = BackgroundConfig.TYPE_IMAGE, image = fileName)
+                        imageError = false
+                        AppConfig.save()
+                    },
+                    onError = { imageError = true },
+                )
+                BackgroundPreviewStrip(
+                    config = bgConfig,
+                    image = bgPreviewImage,
+                    fallback = MaterialTheme.colorScheme.background,
+                    borderColor = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                )
+                M3Row(
+                    title = "背景类型",
+                    trailingContent = { M3TrailingText(BackgroundTypeLabels[bgTypeIndex]) },
+                    onClick = {
+                        pickerDialog = PickerState(
+                            title = "背景类型",
+                            items = BackgroundTypeLabels,
+                            selectedIndex = bgTypeIndex,
+                            onSelected = { index ->
+                                AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                    .copy(type = backgroundTypeAt(index))
+                                AppConfig.save()
+                            }
+                        )
+                    },
+                )
+                if (bgTypeIndex == 1) {
+                    BackgroundColorPalette(
+                        selected = bgConfig?.color ?: BackgroundConfig.DEFAULT_COLOR,
+                        onSelect = { hex ->
+                            AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                .copy(type = BackgroundConfig.TYPE_COLOR, color = hex)
+                            AppConfig.save()
+                        },
+                        selectedBorder = MaterialTheme.colorScheme.primary,
+                        normalBorder = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    var hexInput by remember(bgConfig?.color) {
+                        mutableStateOf(bgConfig?.color ?: BackgroundConfig.DEFAULT_COLOR)
+                    }
+                    M3TextField(
+                        value = hexInput,
+                        onValueChange = { input ->
+                            hexInput = input
+                            if (isValidBackgroundColor(input)) {
+                                AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                    .copy(
+                                        type = BackgroundConfig.TYPE_COLOR,
+                                        color = input.trim()
+                                    )
+                                AppConfig.save()
+                            }
+                        },
+                        placeholder = "自定义色值 #RRGGBB",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    )
+                } else if (bgTypeIndex == 2) {
+                    M3Row(
+                        title = "选择图片",
+                        summary = if (bgConfig?.image == null) "从相册或文件中选择" else "已设置，点击更换",
+                        onClick = { pickBackgroundImage() },
+                    )
+                    if (imageError) {
+                        Text(
+                            text = "图片处理失败，请换一张图片重试",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        )
+                    }
+                    M3Row(
+                        title = "图片高斯模糊",
+                        summary = "虚化背景，文字更易读",
+                        trailingContent = {
+                            Switch(
+                                checked = bgConfig?.blur == true,
+                                onCheckedChange = {
+                                    AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                        .copy(blur = it)
+                                    AppConfig.save()
+                                }
+                            )
+                        },
+                    )
+                    // 暗色蒙层
+                    val currentDimPercent = (bgConfig ?: BackgroundConfig()).clampedDim() * 100f
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "暗色蒙层",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text(
+                                text = "${currentDimPercent.roundToInt()}%",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Slider(
+                            value = currentDimPercent,
+                            onValueChange = {
+                                AppConfig.background = (bgConfig ?: BackgroundConfig())
+                                    .copy(dim = (it / 100f).coerceIn(0f, 0.85f))
+                                AppConfig.save()
+                            },
+                            valueRange = 0f..85f,
+                            steps = 84,
+                        )
+                    }
+                }
+                // 卡片 / 底栏不透明度（仅自定义背景时生效）
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "卡片 / 底栏不透明度",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "${(AppConfig.chromeOpacity * 100f).roundToInt()}%",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Slider(
+                        value = AppConfig.chromeOpacity * 100f,
+                        onValueChange = {
+                            AppConfig.chromeOpacity = (it / 100f).coerceIn(0.25f, 1f)
+                            AppConfig.save()
+                        },
+                        valueRange = 25f..100f,
+                        steps = 74,
+                    )
+                }
+                if (bgConfig != null) {
+                    M3Row(
+                        title = "恢复默认",
+                        summary = "清除自定义背景",
+                        onClick = {
+                            bgConfig.image?.let { deleteBackgroundImage(it) }
+                            AppConfig.background = null
+                            AppConfig.save()
+                        },
+                    )
+                }
+                Text(
+                    text = "背景在所有页面与两种 UI 风格下全局生效。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                )
             }
 
             // Schedule settings

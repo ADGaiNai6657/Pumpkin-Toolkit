@@ -180,7 +180,7 @@ fun Material3FunctionScreen(modifier: Modifier = Modifier) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                        val columns = (maxWidth / 130.dp).toInt().coerceIn(1, 6)
+                        val columns = (maxWidth / 120.dp).toInt().coerceIn(1, 6)
                         val spacing = 8.dp
                         Column(
                             modifier = Modifier.padding(12.dp),

@@ -35,6 +35,7 @@ import com.parkwoocheol.composewebview.WebViewSettings
 import com.parkwoocheol.composewebview.rememberWebViewController
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.components.material3.M3Row
+import com.pgigi.pumpkintoolkit.components.sceneOpaque
 import com.pgigi.pumpkintoolkit.viewmodel.WebViewViewModel
 import io.ktor.http.URLParserException
 import io.ktor.http.Url
@@ -130,7 +131,9 @@ fun Material3WebViewScreen(
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false },
-            sheetState = sheetState
+            sheetState = sheetState,
+            // 自定义背景时抹平纱色透明度，弹层内容压得住背景
+            containerColor = sceneOpaque(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
             Column(
                 modifier = Modifier

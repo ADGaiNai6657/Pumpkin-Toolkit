@@ -40,6 +40,7 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.components.FloatingBottomBar
 import com.pgigi.pumpkintoolkit.components.FloatingBottomBarMode
 import com.pgigi.pumpkintoolkit.components.isLiquidGlassSupported
+import com.pgigi.pumpkintoolkit.components.sceneChrome
 import com.pgigi.pumpkintoolkit.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -158,7 +159,8 @@ fun MiuixHomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel
                                 .padding(end = fabPadding, bottom = fabPadding)
                                 .fillMaxWidth(0.5f)
                                 .fillMaxHeight()
-                                .background(MiuixTheme.colorScheme.surface)
+                                // 自定义背景时铺半透明纱，面板轮廓依然可见
+                                .background(sceneChrome(MiuixTheme.colorScheme.surface))
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
@@ -197,7 +199,8 @@ fun MiuixHomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel
                     contentWindowInsets = WindowInsets(0, 0, 0, 0),
                     bottomBar = {
                         if (!AppConfig.floatingNavigation && !isLandscape) {
-                            NavigationBar {
+                            // 自定义背景时底栏铺半透明纱，否则纯黑一块盖住背景
+                            NavigationBar(color = sceneChrome(MiuixTheme.colorScheme.surface)) {
                                 Navigation.items.forEachIndexed { index, item ->
                                     NavigationBarItem(
                                         selected = pagerState.currentPage == index,
@@ -222,7 +225,8 @@ fun MiuixHomeScreen(viewModel: HomeViewModel = viewModel(factory = HomeViewModel
                             .padding(paddingValues)
                     ) {
                         if (!AppConfig.floatingNavigation && isLandscape) {
-                            NavigationRail {
+                            // 自定义背景时侧栏铺半透明纱
+                            NavigationRail(color = sceneChrome(MiuixTheme.colorScheme.surface)) {
                                 Navigation.items.forEachIndexed { index, item ->
                                     NavigationRailItem(
                                         selected = pagerState.currentPage == index,

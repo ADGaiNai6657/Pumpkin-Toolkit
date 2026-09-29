@@ -13,6 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
 import com.pgigi.pumpkintoolkit.animation.predictiveback.installerNavTransition
+import com.pgigi.pumpkintoolkit.components.Material3SceneBackdrop
+import com.pgigi.pumpkintoolkit.components.MiuixSceneBackdrop
+import com.pgigi.pumpkintoolkit.components.backdropCullingTransition
+import com.pgigi.pumpkintoolkit.components.rememberSceneBackdrop
 import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.models.ScheduleCache
 import com.pgigi.pumpkintoolkit.screens.material3.Material3AppTheme
@@ -186,8 +190,17 @@ fun App(
         LocalAppViewModel provides viewModel,
     ){
         Box(modifier = Modifier.fillMaxSize()) {
-            val transition = remember(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection) {
+            // 自定义背景状态（配置 + 图片 + 是否生效）：宿主图层、主题纱与转场共用同一份
+            val backdrop = rememberSceneBackdrop()
+            val baseTransition = remember(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection) {
                 installerNavTransition(AppConfig.predictiveBackAnimation, AppConfig.predictiveBackExitDirection)
+            }
+            // 自定义背景时页面底是透明的：把「被覆盖页保留一层」的可见窗口压到 1 以下，
+            // 静止时只渲染顶层页面，否则下层页面会透过来叠在背景上
+            val transition = if (backdrop.custom) {
+                remember(baseTransition) { backdropCullingTransition(baseTransition) }
+            } else {
+                baseTransition
             }
             val effects = if (AppConfig.predictiveBackAnimation == PredictiveBackAnimation.None) {
                 remember { NavDisplayEffects() }
@@ -200,74 +213,76 @@ fun App(
             when (AppConfig.uiMode) {
                 2 -> {
                     Material3AppTheme {
-                        NavDisplay(
-                            backStack = viewModel.backStack,
-                            onBack = { navigator.pop() },
-                            transition = transition,
-                            effects = effects,
-                        ) {
-                            entry<Route.Home> {
-                                Material3HomeScreen()
-                            }
-                            entry<Route.Login> {
-                                Material3LoginScreen()
-                            }
-                            entry<Route.Settings> {
-                                Material3SettingScreen()
-                            }
-                            entry<Route.OtherSchedule> {
-                                Material3OtherScheduleScreen()
-                            }
-                            entry<Route.WebView>{route ->
-                                Material3WebViewScreen(url = route.url, route.title)
-                            }
-                            entry<Route.WebViewWithData>{route ->
-                                Material3WebViewWithDataScreen(html = route.html, route.title)
-                            }
-                            entry<Route.SunshineMenu>{
-                                Material3SunshineContainerScreen()
-                            }
-                            entry<Route.SunshineList>{route ->
-                                Material3SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
-                            }
-                            entry<Route.SunshineDetail>{route ->
-                                Material3SunshineDetailScreen(route.item)
-                            }
-                            entry<Route.LostAndFoundList>{
-                                Material3LostAndFoundListScreen()
-                            }
-                            entry<Route.LostAndFoundDetail>{route ->
-                                Material3LostAndFoundDetailScreen(route.item)
-                            }
-                            entry<Route.SimpleHtml>{route ->
-                                Material3SimpleHtmlScreen(html = route.html, route.title)
-                            }
-                            entry<Route.OssLicense>{
-                                Material3OssLicenseScreen()
-                            }
-                            entry<Route.OssLicenseDetail>{route ->
-                                Material3OssLicenseDetailScreen(route.license)
-                            }
-                            entry<Route.EmptyRoom> {
-                                Material3EmptyRoomScreen()
-                            }
-                            entry<Route.Exam> {
-                                Material3ExamScreen()
-                            }
-                            entry<Route.ExamScore> {
-                                Material3ExamScoreScreen()
-                            }
-                            entry<Route.Plan> {
-                                Material3PlanScreen()
-                            }
-                            entry<Route.EvaluationMenu> {
-                                Material3EvaluationContainerScreen()
-                            }
-                            entry<Route.EvaluationList> { route ->
-                                Material3EvaluationListScreen(route.actionUrl, route.title)
-                            }
-                            entry<Route.EvaluationDetail> { route ->
-                                Material3EvaluationDetailScreen(route.actionUrl, route.title)
+                        Material3SceneBackdrop(backdrop) {
+                            NavDisplay(
+                                backStack = viewModel.backStack,
+                                onBack = { navigator.pop() },
+                                transition = transition,
+                                effects = effects,
+                            ) {
+                                entry<Route.Home> {
+                                    Material3HomeScreen()
+                                }
+                                entry<Route.Login> {
+                                    Material3LoginScreen()
+                                }
+                                entry<Route.Settings> {
+                                    Material3SettingScreen()
+                                }
+                                entry<Route.OtherSchedule> {
+                                    Material3OtherScheduleScreen()
+                                }
+                                entry<Route.WebView>{route ->
+                                    Material3WebViewScreen(url = route.url, route.title)
+                                }
+                                entry<Route.WebViewWithData>{route ->
+                                    Material3WebViewWithDataScreen(html = route.html, route.title)
+                                }
+                                entry<Route.SunshineMenu>{
+                                    Material3SunshineContainerScreen()
+                                }
+                                entry<Route.SunshineList>{route ->
+                                    Material3SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
+                                }
+                                entry<Route.SunshineDetail>{route ->
+                                    Material3SunshineDetailScreen(route.item)
+                                }
+                                entry<Route.LostAndFoundList>{
+                                    Material3LostAndFoundListScreen()
+                                }
+                                entry<Route.LostAndFoundDetail>{route ->
+                                    Material3LostAndFoundDetailScreen(route.item)
+                                }
+                                entry<Route.SimpleHtml>{route ->
+                                    Material3SimpleHtmlScreen(html = route.html, route.title)
+                                }
+                                entry<Route.OssLicense>{
+                                    Material3OssLicenseScreen()
+                                }
+                                entry<Route.OssLicenseDetail>{route ->
+                                    Material3OssLicenseDetailScreen(route.license)
+                                }
+                                entry<Route.EmptyRoom> {
+                                    Material3EmptyRoomScreen()
+                                }
+                                entry<Route.Exam> {
+                                    Material3ExamScreen()
+                                }
+                                entry<Route.ExamScore> {
+                                    Material3ExamScoreScreen()
+                                }
+                                entry<Route.Plan> {
+                                    Material3PlanScreen()
+                                }
+                                entry<Route.EvaluationMenu> {
+                                    Material3EvaluationContainerScreen()
+                                }
+                                entry<Route.EvaluationList> { route ->
+                                    Material3EvaluationListScreen(route.actionUrl, route.title)
+                                }
+                                entry<Route.EvaluationDetail> { route ->
+                                    Material3EvaluationDetailScreen(route.actionUrl, route.title)
+                                }
                             }
                         }
                     }
@@ -281,74 +296,76 @@ fun App(
                         }
                     }
                     MiuixTheme(controller = controller){
-                        NavDisplay(
-                            backStack = viewModel.backStack,
-                            onBack = { navigator.pop() },
-                            transition = transition,
-                            effects = effects,
-                        ) {
-                            entry<Route.Home> {
-                                MiuixHomeScreen()
-                            }
-                            entry<Route.Login> {
-                                MiuixLoginScreen()
-                            }
-                            entry<Route.Settings> {
-                                MiuixSettingScreen()
-                            }
-                            entry<Route.OtherSchedule> {
-                                MiuixOtherScheduleScreen()
-                            }
-                            entry<Route.WebView>{route ->
-                                WebViewScreen(url = route.url, route.title)
-                            }
-                            entry<Route.WebViewWithData>{route ->
-                                WebViewWithDataScreen(html = route.html, route.title)
-                            }
-                            entry<Route.SunshineMenu>{
-                                SunshineContainerScreen()
-                            }
-                            entry<Route.SunshineList>{route ->
-                                SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
-                            }
-                            entry<Route.SunshineDetail>{route ->
-                                SunshineDetailScreen(route.item)
-                            }
-                            entry<Route.LostAndFoundList>{
-                                LostAndFoundListScreen()
-                            }
-                            entry<Route.LostAndFoundDetail>{route ->
-                                LostAndFoundDetailScreen(route.item)
-                            }
-                            entry<Route.SimpleHtml>{route ->
-                                SimpleHtmlScreen(html = route.html, route.title)
-                            }
-                            entry<Route.OssLicense>{
-                                OssLicenseScreen()
-                            }
-                            entry<Route.OssLicenseDetail>{route ->
-                                OssLicenseDetailScreen(route.license)
-                            }
-                            entry<Route.EmptyRoom> {
-                                MiuixEmptyRoomScreen()
-                            }
-                            entry<Route.Exam> {
-                                MiuixExamScreen()
-                            }
-                            entry<Route.ExamScore> {
-                                MiuixExamScoreScreen()
-                            }
-                            entry<Route.Plan> {
-                                MiuixPlanScreen()
-                            }
-                            entry<Route.EvaluationMenu> {
-                                EvaluationContainerScreen()
-                            }
-                            entry<Route.EvaluationList> { route ->
-                                MiuixEvaluationListScreen(route.actionUrl, route.title)
-                            }
-                            entry<Route.EvaluationDetail> { route ->
-                                MiuixEvaluationDetailScreen(route.actionUrl, route.title)
+                        MiuixSceneBackdrop(backdrop) {
+                            NavDisplay(
+                                backStack = viewModel.backStack,
+                                onBack = { navigator.pop() },
+                                transition = transition,
+                                effects = effects,
+                            ) {
+                                entry<Route.Home> {
+                                    MiuixHomeScreen()
+                                }
+                                entry<Route.Login> {
+                                    MiuixLoginScreen()
+                                }
+                                entry<Route.Settings> {
+                                    MiuixSettingScreen()
+                                }
+                                entry<Route.OtherSchedule> {
+                                    MiuixOtherScheduleScreen()
+                                }
+                                entry<Route.WebView>{route ->
+                                    WebViewScreen(url = route.url, route.title)
+                                }
+                                entry<Route.WebViewWithData>{route ->
+                                    WebViewWithDataScreen(html = route.html, route.title)
+                                }
+                                entry<Route.SunshineMenu>{
+                                    SunshineContainerScreen()
+                                }
+                                entry<Route.SunshineList>{route ->
+                                    SunshineListScreen(typeCode = route.typeCode, submitUrl = route.submitUrl)
+                                }
+                                entry<Route.SunshineDetail>{route ->
+                                    SunshineDetailScreen(route.item)
+                                }
+                                entry<Route.LostAndFoundList>{
+                                    LostAndFoundListScreen()
+                                }
+                                entry<Route.LostAndFoundDetail>{route ->
+                                    LostAndFoundDetailScreen(route.item)
+                                }
+                                entry<Route.SimpleHtml>{route ->
+                                    SimpleHtmlScreen(html = route.html, route.title)
+                                }
+                                entry<Route.OssLicense>{
+                                    OssLicenseScreen()
+                                }
+                                entry<Route.OssLicenseDetail>{route ->
+                                    OssLicenseDetailScreen(route.license)
+                                }
+                                entry<Route.EmptyRoom> {
+                                    MiuixEmptyRoomScreen()
+                                }
+                                entry<Route.Exam> {
+                                    MiuixExamScreen()
+                                }
+                                entry<Route.ExamScore> {
+                                    MiuixExamScoreScreen()
+                                }
+                                entry<Route.Plan> {
+                                    MiuixPlanScreen()
+                                }
+                                entry<Route.EvaluationMenu> {
+                                    EvaluationContainerScreen()
+                                }
+                                entry<Route.EvaluationList> { route ->
+                                    MiuixEvaluationListScreen(route.actionUrl, route.title)
+                                }
+                                entry<Route.EvaluationDetail> { route ->
+                                    MiuixEvaluationDetailScreen(route.actionUrl, route.title)
+                                }
                             }
                         }
                     }

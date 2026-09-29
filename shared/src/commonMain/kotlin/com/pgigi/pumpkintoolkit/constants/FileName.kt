@@ -4,4 +4,5 @@ object FileName{
     const val SCHEDULE = "schedule.json"
     const val EXAM = "exam.json"
     const val SCORE = "score.json"
+    const val BACKGROUND_DIR = "background"
 }

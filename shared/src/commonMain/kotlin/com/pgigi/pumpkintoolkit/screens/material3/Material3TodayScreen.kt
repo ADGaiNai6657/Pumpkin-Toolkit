@@ -1,25 +1,25 @@
 package com.pgigi.pumpkintoolkit.screens.material3
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,19 +37,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalAppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
-import com.pgigi.pumpkintoolkit.components.material3.M3Row
 import com.pgigi.pumpkintoolkit.constants.Texts
 import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
@@ -77,8 +77,7 @@ private sealed class TimelineItem {
         val course: Course,
         val startTime: String,
         val endTime: String,
-        val classroom: String,
-        val isLastInDay: Boolean
+        val classroom: String
     ) : TimelineItem()
 }
 
@@ -105,8 +104,7 @@ private fun buildDayItems(
                 endTime = AppConfig.timeList[ei].end,
                 classroom = course.classroom
                     .replace("【红湘校区】", "")
-                    .replace("【雨母校区】", ""),
-                isLastInDay = false
+                    .replace("【雨母校区】", "")
             )
         }
 
@@ -114,9 +112,7 @@ private fun buildDayItems(
 
     val result = mutableListOf<TimelineItem>()
     result.add(TimelineItem.DayHeader(date, date == today))
-    dayCourses.forEachIndexed { index, card ->
-        result.add(card.copy(isLastInDay = index == dayCourses.size - 1))
-    }
+    result.addAll(dayCourses)
     return result
 }
 
@@ -212,7 +208,7 @@ fun Material3TodayScreen(
             )
         }
     ) { paddingValues ->
-        if (!loggedIn || weekCalculator == null) {
+        if (!loggedIn) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -220,7 +216,20 @@ fun Material3TodayScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (loggedIn) "暂无课程" else "请登录使用",
+                    text = "请登录使用",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else if (weekCalculator == null || timelineData.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "近期暂无课程安排",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -249,7 +258,15 @@ fun Material3TodayScreen(
             ) {
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    // 与 PumpkinCampus 日程页一致：左右 16dp、条目间距 8dp
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        top = 4.dp,
+                        end = 16.dp,
+                        bottom = 64.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
                         count = timelineData.size,
@@ -265,31 +282,35 @@ fun Material3TodayScreen(
                             is TimelineItem.CourseCard -> M3TimelineCourseCard(item)
                         }
                     }
-                    item { Spacer(modifier = Modifier.height(64.dp)) }
                 }
             }
         }
     }
 }
 
+/** 卡片左右分隔的红色竖线颜色（与 PumpkinCampus 日程页一致）。 */
+private val AgendaAccentLine = Color(0xFFE53935)
+
+/** 日期标题：`9月26日 周五`，今天高亮并带「今天」徽标。 */
 @Composable
 private fun M3TimelineDayHeader(date: LocalDate, isToday: Boolean) {
     val accent = MaterialTheme.colorScheme.primary
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "${date.month.number}月${date.day}日",
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = if (isToday) accent else MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = getDayOfWeekText(date.dayOfWeek),
-            fontSize = 14.sp,
+            fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (isToday) {
@@ -300,68 +321,95 @@ private fun M3TimelineDayHeader(date: LocalDate, isToday: Boolean) {
                     .background(accent)
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
-                Text("今天", fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Medium)
+                Text("今天", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Medium)
             }
         }
         Spacer(modifier = Modifier.weight(1f))
     }
 }
 
+/**
+ * 课程卡片（样式与 PumpkinCampus 日程页一致）：
+ * ```
+ * ┌───────────────────────────────────────────┐
+ * │ 08:00   │ 高等数学              A101   │
+ * │ 09:40   │ 张伟（小字）                       │
+ * └───────────────────────────────────────────┘
+ *  ↑左列          ↑5dp + 红竖线 + 5dp
+ * ```
+ */
 @Composable
 private fun M3TimelineCourseCard(item: TimelineItem.CourseCard) {
-    val accent = MaterialTheme.colorScheme.primary
-    val lineColor = MaterialTheme.colorScheme.outlineVariant
-
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.Top
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .clip(RoundedCornerShape(12.dp))
+            // 自定义背景下该 token 会自动换成半透明纱，背景透出来
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.width(56.dp), horizontalAlignment = Alignment.End) {
-            Text(item.startTime, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+        // 左：上面开始时间，下面结束时间
+        Column(
+            modifier = Modifier.width(56.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = item.startTime,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(2.dp))
-            Text(item.endTime, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = item.endTime,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
+        // 中：左右各 5dp 间距，中间红色竖线
         Box(
-            modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!item.isLastInDay) {
-                Canvas(Modifier.width(1.dp).height(24.dp).align(Alignment.TopCenter)) {
-                    drawRect(lineColor, Offset.Zero, Size(size.width, size.height))
-                }
-            }
-            Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
-            if (!item.isLastInDay) {
-                Canvas(Modifier.width(1.dp).height(56.dp).align(Alignment.BottomCenter)) {
-                    drawRect(lineColor, Offset.Zero, Size(size.width, size.height))
-                }
-            }
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .width(4.dp)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(2.dp))
+                .background(AgendaAccentLine)
+        )
+
+        // 右：上面课程名，下面小字老师名
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.course.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = item.course.teacher,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
 
-        Card(
-            modifier = Modifier.weight(1f).padding(end = 16.dp, bottom = 8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-            )
-        ) {
-            /*Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Text(item.course.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(item.course.teacher, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(item.classroom, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-            }*/
-            M3Row(
-                modifier = Modifier.fillMaxWidth(),
-                title = item.course.name,
-                summary = item.course.teacher,
-                trailingContent = {
-                    Text(item.classroom)
-                }
-            )
-        }
+        // 最右：教室
+        Text(
+            text = item.classroom,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .widthIn(max = 110.dp)
+        )
     }
 }

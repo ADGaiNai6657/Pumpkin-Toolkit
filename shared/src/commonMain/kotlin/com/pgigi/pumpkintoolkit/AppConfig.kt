@@ -1,6 +1,7 @@
 package com.pgigi.pumpkintoolkit
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,6 +9,8 @@ import com.pgigi.pumpkintoolkit.animation.PredictiveBackAnimation
 import com.pgigi.pumpkintoolkit.animation.PredictiveBackExitDirection
 import com.pgigi.pumpkintoolkit.constants.TimeList.summerAutumnTime
 import com.pgigi.pumpkintoolkit.constants.TimeList.winterSpringTime
+import com.pgigi.pumpkintoolkit.models.BackgroundConfig
+import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.KVaultUtils
 import com.pgigi.pumpkintoolkit.utils.reloadWidgetTimelines
 import kotlinx.datetime.LocalDate
@@ -61,6 +64,11 @@ object AppConfig {
     var lockStartDate by mutableStateOf(false)
     var disableWidgetUpload by mutableStateOf(false)
 
+    // 自定义背景（全局唯一一份；null = 跟随系统）
+    var background by mutableStateOf<BackgroundConfig?>(null)
+    // 卡片 / 底栏等 chrome 底色的不透明度（仅自定义背景时生效，0.25..1）
+    var chromeOpacity by mutableFloatStateOf(0.6f)
+
     object KEY {
         const val COLOR_MODE = "color_mode"
         const val UI_MODE = "ui_mode"
@@ -84,6 +92,8 @@ object AppConfig {
         const val HIDE_FAIL_SCORE = "hide_fail_score"
         const val LOCK_START_DATE = "lock_start_date"
         const val DISABLE_WIDGET_UPLOAD = "disable_widget_upload"
+        const val BACKGROUND = "background"
+        const val CHROME_OPACITY = "chrome_opacity"
     }
 
 
@@ -123,6 +133,10 @@ object AppConfig {
         hideFailScore = kvault.getBoolean(KEY.HIDE_FAIL_SCORE)?:false
         lockStartDate = kvault.getBoolean(KEY.LOCK_START_DATE)?:false
         disableWidgetUpload = kvault.getBoolean(KEY.DISABLE_WIDGET_UPLOAD)?:false
+        background = kvault.getString(KEY.BACKGROUND)?.let {
+            runCatching { JsonUtil.parseJson(it, BackgroundConfig.serializer()) }.getOrNull()
+        }
+        chromeOpacity = (kvault.getFloat(KEY.CHROME_OPACITY) ?: 0.6f).coerceIn(0.25f, 1f)
     }
 
     fun save(){
@@ -148,6 +162,10 @@ object AppConfig {
         kvault.putBoolean(KEY.HIDE_FAIL_SCORE, hideFailScore)
         kvault.putBoolean(KEY.LOCK_START_DATE, lockStartDate)
         kvault.putBoolean(KEY.DISABLE_WIDGET_UPLOAD, disableWidgetUpload)
+        background?.let {
+            kvault.putString(KEY.BACKGROUND, JsonUtil.toJson(it, BackgroundConfig.serializer()))
+        } ?: kvault.remove(KEY.BACKGROUND)
+        kvault.putFloat(KEY.CHROME_OPACITY, chromeOpacity)
         reloadWidgetTimelines()
     }
 
