@@ -18,6 +18,12 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 
+# Local prompt notes
+custom-course-prompt.md
+
+# Global AI Agent notes, include the personal info
+AGENT.md
+
 # Secrets / signing keys
 .env
 *.jks
