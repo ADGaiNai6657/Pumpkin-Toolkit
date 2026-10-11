@@ -82,7 +82,7 @@ object CustomCourseStore {
         }
     }
 
-    //这个函数的目的是更新指定id的课程（id信息包含于Course）
+    //这个函数的目的是更新指定id的课程（id信息包含于CustomCourse）
     //传入一个Course，自动将原列表的Course.id的id下的课程更新
     //返回值代表是否成功执行操作
     fun update(updated: CustomCourse): Boolean {
