@@ -97,6 +97,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
     var startLesson by remember { mutableIntStateOf(1) }
     var endLesson by remember { mutableIntStateOf(2) }  //[startLesson, endLesson]
     val lessonCount = AppConfig.timeList.size   //决定滑块做多划多少
+    var saveError by remember { mutableStateOf<String?>(null) }
 
 //    val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList) )           //过往只传入教务的课表
     val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.mergedCourses())) //传入融合的课表
@@ -138,6 +139,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
         startLesson = 1
         endLesson = 2
         showAddEditor = false
+        saveError = null
     }
 
     Scaffold(
@@ -399,7 +401,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
             }
 
             //节次选择的滑块绘制
-            Text("节次：第 ${startLesson} ~ ${endLesson} 节")
+            Text("节次：第 $startLesson ~ $endLesson 节")
             RangeSlider(
                 value = startLesson.toFloat()..endLesson.toFloat(),
                 onValueChange = { range ->
@@ -409,6 +411,15 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                 valueRange = 1f..lessonCount.toFloat(),
                 steps = (lessonCount - 2).coerceAtLeast(0)
             )
+
+            //出现错误了？在添加课程按钮上方显示。仅 !null 时执行
+            saveError?.let { message ->
+                Text(
+                    text = message,
+                    color = MiuixTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
 
             //添加课程按钮的绘制
             Button(
@@ -429,6 +440,8 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
 
                     if (viewModel.addCustomCourse(course)) {    //添加成功？关闭页面
                         resetPara()
+                    } else {
+                        saveError = "保存失败，请重试！"
                     }
                 },
                 modifier = Modifier
