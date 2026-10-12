@@ -143,7 +143,8 @@ private fun getDayOfWeekText(dayOfWeek: DayOfWeek): String = when (dayOfWeek) {
 @Composable
 fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAppViewModel.current) {
     val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
-    val courses = remember(viewModel.courseList.size) { buildWeekCourses(viewModel.courseList) }
+//    val courses = remember(viewModel.courseList.size) { buildWeekCourses(viewModel.courseList) }  //原先remember会依据教务科表进行更新，修改自定义课表后可能会拿到过时的融合课表
+    val courses = buildWeekCourses(viewModel.mergedCourses())
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
@@ -176,11 +177,21 @@ fun TodayScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = LocalAp
             .coerceAtLeast(0)
     }
 
-    LaunchedEffect(viewModel.courseList.size) {
-        if (weekCalculator != null && viewModel.courseList.isNotEmpty()) {
+//    LaunchedEffect(viewModel.courseList.size) {
+//        if (weekCalculator != null && viewModel.courseList.isNotEmpty()) {
+//            val end = today.plus(120, DateTimeUnit.DAY)
+//            timelineData = generateRange(courses, weekCalculator, today, end, today)
+//            dataStart = today
+//        }
+//    }
+
+    LaunchedEffect(courses, weekCalculator) {   //当courses 或 weekCalculator变化时，重新生成日程数据；启用源代码的原因是只会监听教务课程，不会监听融合课程表
+        if (weekCalculator != null && courses.any { it.isNotEmpty() }) {
             val end = today.plus(120, DateTimeUnit.DAY)
             timelineData = generateRange(courses, weekCalculator, today, end, today)
             dataStart = today
+        } else {
+            timelineData = emptyList()
         }
     }
 

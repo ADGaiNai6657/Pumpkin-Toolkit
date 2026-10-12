@@ -57,7 +57,7 @@ android {
     signingConfigs {
         getByName("debug") {
             keyStorePath?.let{
-                storeFile = file(keyStorePath)
+                storeFile = rootProject.file(keyStorePath)
                 storePassword = password?:""
                 keyAlias = key0?:""
                 keyPassword = keyPwd?:""
