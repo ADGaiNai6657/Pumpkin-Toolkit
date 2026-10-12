@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -171,12 +171,37 @@ fun CourseCell(course: Course, conflictCourses: List<Course> = emptyList(), modi
 }
 
 @Composable
-fun CourseRow(dayCourses: List<Course>, cellHeight: Dp = 70.dp, modifier: Modifier = Modifier) {
+fun CourseRow(dayCourses: List<Course>,
+              cellHeight: Dp = 70.dp,
+              modifier: Modifier = Modifier,
+              onEmptyCellClick: (Int) -> Unit = {}      //实现点击滚木卡片添加自定义课程，这是一个点击空白格时调用的回调函数；回调函数，通过层层上报拿到完整的卡片信息
+    ) {
     val courseGroups = remember(dayCourses) {
         groupConflictingCourses(dayCourses)
     }
+    val occupiedLessons = mutableSetOf<Int>()   //标记哪些节次编号已经有课了
+    val lessonCount = AppConfig.timeList.size   //通过Config获取一天课数量，避免硬编码
 
-    Box(modifier = modifier.height(cellHeight * 10)) {
+    dayCourses.forEach { course ->              //依次取出当天的每门课程
+        for (lesson in course.lessonOfDay until course.lessonOfDay + course.duration) { //[3,4] == [3,5)    //负责将一节课所占的小课填入occupiedLessons
+            occupiedLessons.add(lesson)
+        }
+    }
+
+    //负责实现滚木卡片可点击的功能
+    Box(modifier = modifier.height(cellHeight * lessonCount)) {
+        for (lesson in 1..lessonCount) {
+            if(lesson !in occupiedLessons) {    //如果卡片所在的课为滚木课，就添加可点击的滚木卡片
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(cellHeight)
+                        .offset(y = cellHeight * (lesson - 1))
+                        .clickable { onEmptyCellClick(lesson) }
+                )
+            }
+        }
+
         courseGroups.forEach { group ->
             val course = group.first()
             CourseCell(

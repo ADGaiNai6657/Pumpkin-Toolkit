@@ -87,7 +87,8 @@ fun ScheduleTable(
     timeList: List<ScheduleTime>,
     modifier: Modifier = Modifier,
     cellHeight: Dp = 70.dp,
-    firstDay: LocalDate? = null
+    firstDay: LocalDate? = null,
+    onAddCell: (Int, Int) -> Unit = { _, _ -> } //回调函数，通过层层上报拿到完整的卡片信息
 ) {
     var dayList by remember { mutableStateOf(listOf("日", "一", "二", "三", "四", "五", "六")) }
 
@@ -165,11 +166,15 @@ fun ScheduleTable(
         ) {
             TimeColumn(timeList, cellHeight)
 
-            dayCourses.forEach { dayCourseList ->
+//            dayCourses.forEach { dayCourseList ->
+            dayCourses.forEachIndexed { dayIndex, dayCourseList ->
                 CourseRow(
                     dayCourses = dayCourseList,
                     cellHeight = cellHeight,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onEmptyCellClick = {lesson ->   //点击滚木卡片的时候，把星期和节次一起传给上层
+                        onAddCell(dayIndex, lesson)
+                    }
                 )
             }
         }
@@ -183,7 +188,8 @@ fun SchedulePager(
     timeList: List<ScheduleTime>,
     cellHeight: Dp = 70.dp,
     pagerState: PagerState,
-    startDate: LocalDate? = null
+    startDate: LocalDate? = null,
+    onAddCell: (Int, Int, Int) -> Unit = {_, _, _ -> }  //(星期， 节次， 周次）
 ) {
     HorizontalPager(
         state = pagerState,
@@ -195,13 +201,19 @@ fun SchedulePager(
                 courses = courseListByWeek.getOrElse(page) { listOf() },
                 timeList = timeList,
                 cellHeight = cellHeight,
-                firstDay = weekCalculator.getWeekFirstDay(page + 1)
+                firstDay = weekCalculator.getWeekFirstDay(page + 1),
+                onAddCell = { day, lesson ->
+                    onAddCell(day, lesson, page + 1)
+                }
             )
         } else {
             ScheduleTable(
                 courses = courseListByWeek.getOrElse(page) { listOf() },
                 timeList = timeList,
-                cellHeight = cellHeight
+                cellHeight = cellHeight,
+                onAddCell = { day, lesson ->
+                    onAddCell(day, lesson, page + 1)
+                }
             )
         }
     }
