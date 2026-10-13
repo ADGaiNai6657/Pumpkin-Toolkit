@@ -29,6 +29,7 @@ import com.pgigi.pumpkintoolkit.components.CourseDetailSheet
 import com.pgigi.pumpkintoolkit.components.CourseRow
 import com.pgigi.pumpkintoolkit.components.mergeCoursesForDisplay
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.ScheduleCourseEntry
 import com.pgigi.pumpkintoolkit.models.ScheduleTime
 import com.pgigi.pumpkintoolkit.utils.WeekCalculator
 import kotlinx.datetime.DateTimeUnit
@@ -84,6 +85,7 @@ fun TimeColumn(timeList: List<ScheduleTime>, cellHeight: Dp = 70.dp) {
 @Composable
 fun ScheduleTable(
     courses: List<Course>,
+    entries: List<ScheduleCourseEntry>,
     timeList: List<ScheduleTime>,
     modifier: Modifier = Modifier,
     cellHeight: Dp = 70.dp,
@@ -185,6 +187,7 @@ fun ScheduleTable(
 fun SchedulePager(
     modifier: Modifier = Modifier,
     courseListByWeek: List<List<Course>>,
+    entriesListByWeek: List<List<ScheduleCourseEntry>> = emptyList(),   //打了个包的数据结构
     timeList: List<ScheduleTime>,
     cellHeight: Dp = 70.dp,
     pagerState: PagerState,
@@ -199,6 +202,7 @@ fun SchedulePager(
             val weekCalculator = WeekCalculator(startDate)
             ScheduleTable(
                 courses = courseListByWeek.getOrElse(page) { listOf() },
+                entries = entriesListByWeek.getOrElse(page) {emptyList()},
                 timeList = timeList,
                 cellHeight = cellHeight,
                 firstDay = weekCalculator.getWeekFirstDay(page + 1),
@@ -209,6 +213,7 @@ fun SchedulePager(
         } else {
             ScheduleTable(
                 courses = courseListByWeek.getOrElse(page) { listOf() },
+                entries = entriesListByWeek.getOrElse(page) {emptyList()},
                 timeList = timeList,
                 cellHeight = cellHeight,
                 onAddCell = { day, lesson ->

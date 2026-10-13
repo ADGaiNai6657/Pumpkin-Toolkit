@@ -49,6 +49,7 @@ import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
 import com.pgigi.pumpkintoolkit.utils.QZClient
 import com.pgigi.pumpkintoolkit.utils.buildWeekCourses
+import com.pgigi.pumpkintoolkit.utils.buildWeekScheduleEntries
 import com.pgigi.pumpkintoolkit.utils.reloadWidgetTimelines
 import com.pgigi.pumpkintoolkit.viewmodel.AppViewModel
 import kotlinx.coroutines.delay
@@ -96,11 +97,12 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
     val weekCount = if (AppConfig.totalWeek > 0) AppConfig.totalWeek else 20   //使用AppConfig中的设置参数；否则默认20周
     var startLesson by remember { mutableIntStateOf(1) }
     var endLesson by remember { mutableIntStateOf(2) }  //[startLesson, endLesson]
-    val lessonCount = AppConfig.timeList.size   //决定滑块做多划多少
+    val lessonCount = AppConfig.timeList.size   //决定滑块最多滑多少
     var saveError by remember { mutableStateOf<String?>(null) }
 
 //    val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList) )           //过往只传入教务的课表
     val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.mergedCourses())) //传入融合的课表
+    val scheduleEntriesByWeek = buildWeekScheduleEntries(viewModel.scheduleCourseEntries())
 
     //原先只需要判断教务科表，可放置在前；现在需要判断融合课表，故放在持有融合课表之后判断
     val loading = loggedIn && courseListByWeek.none{it.isNotEmpty()}    //由于所持有的课表是二维列表，故需要降低维度去观察，而非直接.isNotEmpty()
@@ -242,9 +244,22 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                     modifier = Modifier.fillMaxSize(),
                     cellHeight = AppConfig.cellHeight.dp,
                     courseListByWeek = courseListByWeek,
+                    entriesListByWeek = scheduleEntriesByWeek,
                     pagerState = pagerState,
                     timeList = AppConfig.timeList,
-                    startDate = AppConfig.startDate
+                    startDate = AppConfig.startDate,
+                    onAddCell = { day, lesson,week ->   //当点击滚木卡片后，自动填写表单
+                        resetPara()
+                        selectedDay = day
+                        selectedWeeks = setOf(week)
+                        startLesson = if ( lesson % 2 ==1 ){    //我们使用大课为单位进行填写。点击奇数卡片的时候，就是奇数没啥说的；点击偶数卡片的时候，我们需要 - 1 以获取正确的开始时间，而不是默认延后一节课
+                            lesson
+                        } else {
+                            lesson - 1
+                        }
+                        endLesson = (startLesson + 1).coerceAtMost(lessonCount)
+                        showAddEditor = true    //显示表单
+                    }
                 )
             }
         } else {

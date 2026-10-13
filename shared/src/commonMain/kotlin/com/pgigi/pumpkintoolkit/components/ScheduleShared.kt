@@ -52,6 +52,7 @@ object CourseDetailSheet {
     val classroom = mutableStateOf("")
     val teacher = mutableStateOf("")
     val weeks = mutableStateOf("")
+    val selectedCourse = mutableStateOf<Course?>(null)  //用于记住所点击的课程
 
     fun show(course: Course) {
         name.value = course.name
@@ -73,6 +74,7 @@ object CourseDetailSheet {
             weeks.value += "、"
         }
         weeks.value = weeks.value.dropLast(1) + "周"
+        selectedCourse.value = course
         show.value = true
     }
 }

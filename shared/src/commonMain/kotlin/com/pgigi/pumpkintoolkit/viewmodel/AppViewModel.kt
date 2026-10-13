@@ -12,6 +12,7 @@ import top.yukonga.miuix.kmp.nav.core.NavKey
 import com.pgigi.pumpkintoolkit.Route
 import com.pgigi.pumpkintoolkit.models.Course
 import com.pgigi.pumpkintoolkit.models.CustomCourse
+import com.pgigi.pumpkintoolkit.models.ScheduleCourseEntry
 import com.pgigi.pumpkintoolkit.utils.CustomCourseStore
 import kotlin.time.Clock
 
@@ -37,8 +38,20 @@ class AppViewModel : ViewModel(){
 
     //此函数用于合并教务课程与自定义课程
     //从customCourseList中抽取出所有的course，与原courseList合并成新列表后返回
-    fun mergedCourses(): List<Course> {
+    fun mergedCourses(): List<Course> { //此函数调用后会丢失CustomCourse的id信息！
         return courseList + customCourseList.map { it.course }
+    }
+
+    //给所有的教务课程和自定义课程套层壳，丢给课表展示页
+    fun scheduleCourseEntries(): List<ScheduleCourseEntry> {
+        val remote = courseList.map { ScheduleCourseEntry(course = it) }
+        val custom = customCourseList.map {
+            ScheduleCourseEntry(
+                course = it.course,
+                customCourseIds = listOf(it.id)
+            )
+        }
+        return remote + custom
     }
 
     //传入一个课程，创建标识符后打包成CustomCourse，后写入json并加入customCourseList列表；返回bool标志是否成功
