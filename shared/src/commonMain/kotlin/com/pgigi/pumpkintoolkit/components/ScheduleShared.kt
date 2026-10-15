@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.ScheduleCourseEntry
 
 val ScheduleCellColors = arrayOf(
     Color(0xffff1644),
@@ -45,6 +46,8 @@ val ScheduleCellColors = arrayOf(
 
 val colorMap = mutableMapOf<String, Int>()
 val colorIndex = mutableIntStateOf(0)
+
+private val courseMergeRanges = listOf(1..4, 5..8)  //存储可合并的范围，以避免硬编码
 
 object CourseDetailSheet {
     var show = mutableStateOf(false)
@@ -218,6 +221,20 @@ fun CourseRow(dayCourses: List<Course>,
     }
 }
 
+//这个方法用于合并两张卡片。例如，1~4节 合称为一张卡片
+//传入两个Entry，传出合并后的ScheduleCourseEntry，id列表： [A, B]
+private fun mergeAdjacentEntries(
+    current: ScheduleCourseEntry,
+    next: ScheduleCourseEntry,
+): ScheduleCourseEntry {
+    return current.copy(
+        course = current.course.copy(
+            duration = current.course.duration + next.course.duration
+        ),
+        customCourseIds = (current.customCourseIds + next.customCourseIds).distinct()
+    )
+}
+
 private fun Array<IntArray>.weeksEquals(other: Array<IntArray>): Boolean {
     if (size != other.size) return false
     return indices.all { idx -> this[idx].contentEquals(other[idx]) }
@@ -266,6 +283,62 @@ internal fun mergeCoursesForDisplay(courses: List<Course>): List<Course> {
     })
 
     return result.sortedBy { it.lessonOfDay }
+}
+
+//这个函数的目的是检查是否有可以合并的卡片，并进行合并，返回合并后的列表
+//判断是否可合并的代码不是我写的，我直接用的，合并条件看他源码去 awa
+//如果说两张卡片课程一样，就进行卡片的合并
+private fun mergeEntriesInBlock(
+    block: List<ScheduleCourseEntry>
+): List<ScheduleCourseEntry> {
+    if (block.isEmpty()) return emptyList()
+
+    val result = mutableListOf<ScheduleCourseEntry>()
+    var current = block.first()
+
+    for (next in block.drop(1)) {
+        val currentEnd = current.course.lessonOfDay + current.course.duration - 1   //一节课上课节次为 [3, 4]， 即记录4
+        val isAdjacent = next.course.lessonOfDay == currentEnd + 1      //上张卡片为 [1, 2]，下张卡片为 [3, 4]，2 + 1 == 3，即毗连
+
+        if (isAdjacent && canMergeCourse(current.course, next.course)) {    //毗连且可合并？
+            current = mergeAdjacentEntries(current, next)
+        } else {
+            result.add(current)
+            current = next
+        }
+    }
+
+    result.add(current)
+    return result
+}
+
+//
+internal fun mergeScheduleEntriesForDisplay(
+    entries: List<ScheduleCourseEntry>
+): List<ScheduleCourseEntry> {
+    val sorted = entries.sortedBy { it.course.lessonOfDay }
+    val result = mutableListOf<ScheduleCourseEntry>()
+
+    courseMergeRanges.forEach { range ->    //分别将上午、下午的课丢进mergeEntriesInBlock里面，他会自动处理毗连的卡片，返回一个list
+        val block = sorted.filter { entry ->
+            val start = entry.course.lessonOfDay
+            val end = start + entry.course.duration - 1
+
+            start in range && end in range
+        }
+        result.addAll(mergeEntriesInBlock(block))
+    }
+
+    result.addAll(sorted.filter { entry ->  //这里专门处理跨range课程，例如 [4, 5]、 [9, 10]。不跨区间的上面处理了，这里进行额外处理
+        val start = entry.course.lessonOfDay
+        val end = start + entry.course.duration - 1
+
+        courseMergeRanges.none { range ->   //不跨区间的处理过了，故使用none排除；剩下的再add进去
+            start in range && end in range
+        }
+    })
+
+    return result.sortedBy { it.course.lessonOfDay }   //返回根据时间排序的List
 }
 
 private fun groupConflictingCourses(courses: List<Course>): List<List<Course>> {
