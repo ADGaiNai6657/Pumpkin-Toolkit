@@ -185,7 +185,8 @@ fun ScheduleTable(
                     modifier = Modifier.weight(1f),
                     onEmptyCellClick = {lesson ->   //点击滚木卡片的时候，把星期和节次一起传给上层
                         onAddCell(dayIndex, lesson)
-                    }
+                    },
+                    dayEntries = dayEntries[dayIndex]
                 )
             }
         }
@@ -285,13 +286,16 @@ fun SchedulePager(
         title = "课程详细 (${ConflictSheet.courses.size}门)",
         onDismissRequest = { ConflictSheet.show.value = false }
     ) {
-        ConflictSheet.courses.forEach { course ->
+        ConflictSheet.courses.forEachIndexed { index, course ->
             BasicComponent(
                 title = course.name,
                 summary = "@${course.classroom} ${course.teacher}",
                 onClick = {
                     ConflictSheet.show.value = false
-                    CourseDetailSheet.show(course)
+                    CourseDetailSheet.show(
+                        course,
+                        ConflictSheet.entries.getOrNull(index)?.customCourseIds ?: emptyList()
+                    )
                 }
             )
         }
