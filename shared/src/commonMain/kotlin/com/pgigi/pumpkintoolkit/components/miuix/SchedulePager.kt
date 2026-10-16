@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.Info
@@ -49,6 +51,7 @@ import top.yukonga.miuix.kmp.icon.extended.Location
 import top.yukonga.miuix.kmp.icon.extended.Months
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import top.yukonga.miuix.kmp.window.WindowDialog
 import kotlin.time.Clock
 
 @Composable
@@ -202,8 +205,11 @@ fun SchedulePager(
     cellHeight: Dp = 70.dp,
     pagerState: PagerState,
     startDate: LocalDate? = null,
-    onAddCell: (Int, Int, Int) -> Unit = {_, _, _ -> }  //(星期， 节次， 周次）
+    onAddCell: (Int, Int, Int) -> Unit = {_, _, _ -> },  //(星期， 节次， 周次）
+    onDeleteCustomCourse: (String) -> Boolean = { false }   //String为id，bool为是否删除成功
 ) {
+    var courseIdToConfirmDeletion by remember { mutableStateOf<String?>(null) } //记录等待确认删除的课程id， null代表没有删除请求，故null时不显示确认删除弹窗，有就显示
+
     HorizontalPager(
         state = pagerState,
         modifier = modifier,
@@ -278,7 +284,26 @@ fun SchedulePager(
                 )
             }
         )
+
+        courseIdToConfirmDeletion = CourseDetailSheet.selectedCustomCourseIds.value.singleOrNull()
+
         BasicComponent()
+    }
+
+    //确认删除弹窗，courseIdToConfirm置null时关闭，有元素就开启
+    WindowDialog(
+        show = courseIdToConfirmDeletion != null,
+        title = "删除课程",
+        summary = "确定删除这门课程吗？这会丢失课程很久（真的很久！）",
+        onDismissRequest = { courseIdToConfirmDeletion = null }
+    ) {
+        Row {
+            TextButton(
+                text = "取消",
+                onClick = { courseIdToConfirmDeletion = null },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 
     WindowBottomSheet(
