@@ -260,6 +260,9 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                         endLesson = (startLesson + 1).coerceAtMost(lessonCount)
                         showAddEditor = true    //显示表单
                     },
+                    onEditCustomCourse = {id ->
+//                        viewModel.
+                    },
                     onDeleteCustomCourse = { id ->
                         viewModel.removeCustomCourse(id)
                     }

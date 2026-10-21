@@ -206,9 +206,11 @@ fun SchedulePager(
     pagerState: PagerState,
     startDate: LocalDate? = null,
     onAddCell: (Int, Int, Int) -> Unit = {_, _, _ -> },  //(星期， 节次， 周次）
+    onEditCustomCourse:(String) -> Unit = {},
     onDeleteCustomCourse: (String) -> Boolean = { false }   //String为id，bool为是否删除成功
 ) {
     var courseIdToConfirmDeletion by remember { mutableStateOf<String?>(null) } //记录等待确认删除的课程id， null代表没有删除请求，故null时不显示确认删除弹窗，有就显示
+    var deleteFail by remember { mutableStateOf(false) }    //标记是否删除成功
 
     HorizontalPager(
         state = pagerState,
@@ -285,7 +287,24 @@ fun SchedulePager(
             }
         )
 
-        courseIdToConfirmDeletion = CourseDetailSheet.selectedCustomCourseIds.value.singleOrNull()
+
+        CourseDetailSheet.selectedCustomCourseIds.value.singleOrNull()?.let { id ->
+            BasicComponent (    //修改课程按钮绘制
+                title = "修改课程",
+                onClick = {
+
+                    onEditCustomCourse(id)
+                }
+            )
+
+            BasicComponent (    //删除课程按钮的绘制
+                title = "删除课程",
+                onClick = {
+                    deleteFail = false  //重置flag
+                    courseIdToConfirmDeletion = id
+                }
+            )
+        }
 
         BasicComponent()
     }
@@ -293,14 +312,30 @@ fun SchedulePager(
     //确认删除弹窗，courseIdToConfirm置null时关闭，有元素就开启
     WindowDialog(
         show = courseIdToConfirmDeletion != null,
-        title = "删除课程",
-        summary = "确定删除这门课程吗？这会丢失课程很久（真的很久！）",
+        title = "确认删除",
+        summary = if (deleteFail) "删除失败！请重试！" else "确定删除这门课程吗？\n这门课将会永久丢失！\t（真的很久！）",
         onDismissRequest = { courseIdToConfirmDeletion = null }
     ) {
         Row {
             TextButton(
                 text = "取消",
                 onClick = { courseIdToConfirmDeletion = null },
+                modifier = Modifier.weight(1f)
+            )
+
+            TextButton(
+                text = "确认删除",
+                onClick = {
+                    courseIdToConfirmDeletion?.let { id ->
+                        if (onDeleteCustomCourse(id)) { //如果成功删除
+                            deleteFail = false  //reset
+                            courseIdToConfirmDeletion = null
+                            CourseDetailSheet.show.value = false
+                        } else {
+                            deleteFail = true
+                        }
+                    }
+                },
                 modifier = Modifier.weight(1f)
             )
         }
