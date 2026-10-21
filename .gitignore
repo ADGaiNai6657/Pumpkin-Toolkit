@@ -27,6 +27,9 @@ AGENT.md
 # Local Material3 adaptation report
 /material3-adaptation-report.md
 
+# Local classroom update investigation report
+/classroom-update-investigation-report.md
+
 # Secrets / signing keys
 .env
 *.jks
