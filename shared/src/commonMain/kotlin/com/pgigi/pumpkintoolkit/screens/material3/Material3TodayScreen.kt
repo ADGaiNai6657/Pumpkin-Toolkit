@@ -149,7 +149,8 @@ fun Material3TodayScreen(
     viewModel: AppViewModel = LocalAppViewModel.current
 ) {
     val loggedIn = AppConfig.username.isNotEmpty() && AppConfig.password.isNotEmpty()
-    val courses = remember(viewModel.courseList.size) { buildWeekCourses(viewModel.courseList) }
+//    val courses = remember(viewModel.courseList.size) { buildWeekCourses(viewModel.courseList) }   //原先remember只依据教务课程数量更新，修改自定义课程后可能拿到过时的课表
+    val courses = buildWeekCourses(viewModel.mergedCourses())   //传入融合的课表，页面重新计算时也能拿到修改后的课程
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
@@ -175,11 +176,20 @@ fun Material3TodayScreen(
             .coerceAtLeast(0)
     }
 
-    LaunchedEffect(viewModel.courseList.size) {
-        if (weekCalculator != null && viewModel.courseList.isNotEmpty()) {
+//    LaunchedEffect(viewModel.courseList.size) {
+//        if (weekCalculator != null && viewModel.courseList.isNotEmpty()) {
+//            val end = today.plus(120, DateTimeUnit.DAY)
+//            timelineData = generateRange(courses, weekCalculator, today, end, today)
+//            dataStart = today
+//        }
+//    }
+    LaunchedEffect(courses, weekCalculator) {   //当courses或weekCalculator变化时重新生成日程；旧代码只监听教务课程数量，不会随自定义课程修改而更新
+        if (weekCalculator != null && courses.any { it.isNotEmpty() }) {
             val end = today.plus(120, DateTimeUnit.DAY)
             timelineData = generateRange(courses, weekCalculator, today, end, today)
             dataStart = today
+        } else {
+            timelineData = emptyList()   //没有课程或开学日期时清空旧日程，避免删完后还显示之前的内容
         }
     }
 
