@@ -206,7 +206,7 @@ fun SchedulePager(
     pagerState: PagerState,
     startDate: LocalDate? = null,
     onAddCell: (Int, Int, Int) -> Unit = {_, _, _ -> },  //(星期， 节次， 周次）
-    onEditCustomCourse:(String) -> Unit = {},
+    onEditCustomCourse:(String) -> Unit = {},   //保存id，通过回调实现id对应课程的修改
     onDeleteCustomCourse: (String) -> Boolean = { false }   //String为id，bool为是否删除成功
 ) {
     var courseIdToConfirmDeletion by remember { mutableStateOf<String?>(null) } //记录等待确认删除的课程id， null代表没有删除请求，故null时不显示确认删除弹窗，有就显示

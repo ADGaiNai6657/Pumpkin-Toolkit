@@ -40,10 +40,12 @@ import com.pgigi.pumpkintoolkit.AppConfig
 import com.pgigi.pumpkintoolkit.LocalAppViewModel
 import com.pgigi.pumpkintoolkit.LocalNavigator
 import com.pgigi.pumpkintoolkit.Route
+import com.pgigi.pumpkintoolkit.components.CourseDetailSheet
 import com.pgigi.pumpkintoolkit.components.miuix.SchedulePager
 import com.pgigi.pumpkintoolkit.constants.FileName
 import com.pgigi.pumpkintoolkit.constants.Texts
 import com.pgigi.pumpkintoolkit.models.Course
+import com.pgigi.pumpkintoolkit.models.CustomCourse
 import com.pgigi.pumpkintoolkit.models.ScheduleCache
 import com.pgigi.pumpkintoolkit.utils.FileStoreUtils
 import com.pgigi.pumpkintoolkit.utils.JsonUtil
@@ -99,6 +101,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
     var endLesson by remember { mutableIntStateOf(2) }  //[startLesson, endLesson]
     val lessonCount = AppConfig.timeList.size   //决定滑块最多滑多少
     var saveError by remember { mutableStateOf<String?>(null) }
+    var editingCourse by remember { mutableStateOf<CustomCourse?>(null) }   //保存所编辑的自定义课程
 
 //    val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.courseList) )           //过往只传入教务的课表
     val courseListByWeek by mutableStateOf(buildWeekCourses(viewModel.mergedCourses())) //传入融合的课表
@@ -142,6 +145,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
         endLesson = 2
         showAddEditor = false
         saveError = null
+        editingCourse = null
     }
 
     Scaffold(
@@ -261,7 +265,28 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                         showAddEditor = true    //显示表单
                     },
                     onEditCustomCourse = {id ->
-//                        viewModel.
+                        val original = viewModel.customCourseList.firstOrNull { it.id == id } //拿到id所对应的课程    可能为空！
+
+                        original?.let { customCourse ->
+                            resetPara()
+                            editingCourse = customCourse    //存储现在正在修改的课程
+
+                            val course = customCourse.course
+
+                            //临时存储变量，用于自动填写表单
+                            courseName = course.name
+                            classroom = course.classroom
+                            teacher = course.teacher
+                            selectedDay = course.dayOfWeek
+                            selectedWeeks = course.weeks.flatMap { range ->
+                                (range[0]..range[1]).toList()
+                            }.toSet()
+                            startLesson = course.lessonOfDay
+                            endLesson = course.lessonOfDay + course.duration - 1
+
+                            CourseDetailSheet.show.value = false    //关闭课程详情页
+                            showAddEditor = true    //拉起表单
+                        }
                     },
                     onDeleteCustomCourse = { id ->
                         viewModel.removeCustomCourse(id)
@@ -294,11 +319,11 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
 
     }
 
-    //关于添加自定义课程的弹窗组件
+    //关于添加/修改自定义课程的弹窗组件
     WindowBottomSheet(
-        title = "添加自定义课程",
+        title = if (editingCourse == null) "添加自定义课程" else "修改自定义课程",
         show = showAddEditor,
-        onDismissRequest = {resetPara()}  //用户点击后，重新置false
+        onDismissRequest = { resetPara() }  //用户点击后，重新置false
     ) {
         Column (
             modifier = Modifier.verticalScroll(rememberScrollState())
@@ -442,7 +467,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                 )
             }
 
-            //添加课程按钮的绘制
+            //添加/修改课程按钮点击后逻辑实现及绘制
             Button(
                 onClick = {
                     val weeks = selectedWeeks.sorted()
@@ -459,9 +484,17 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                         duration = endLesson - startLesson + 1
                     )
 
-                    if (viewModel.addCustomCourse(course)) {    //添加成功？关闭页面
+                    val original = editingCourse    //保存点击的卡片处所在的课程，空为新增，非空则为修改
+
+                    val saved = if (original == null){  //如果original为空，则说明是第一次添加
+                        viewModel.addCustomCourse(course)
+                    } else {    //否则为修改
+                        viewModel.updateCustomCourse(original.copy(course = course))
+                    }
+
+                    if (saved) {    //保存成功？reset并关闭
                         resetPara()
-                    } else {
+                    } else {    //否则报错误
                         saveError = "保存失败，请重试！"
                     }
                 },
@@ -472,7 +505,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier, viewModel: AppViewModel = Loca
                     selectedDay in 0..6 &&
                     selectedWeeks.isNotEmpty()
             ) {
-                Text("添加课程")
+                Text(if (editingCourse == null ) "添加课程" else "保存修改")
             }
         }
     }
