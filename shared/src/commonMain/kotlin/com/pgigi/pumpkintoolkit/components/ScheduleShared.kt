@@ -117,11 +117,9 @@ fun CourseCell(course: Course,
 
     val baseColor = ScheduleCellColors[colorIndex % ScheduleCellColors.size]
 
-    val classroom = remember(course.name) {
-        course.classroom
-            .replace("【雨母校区】", "")
-            .replace("【红湘校区】", "")
-    }
+    val classroom = course.classroom    //修改为直接计算，避免了自定义课程修改了教室后显示过时的字段的问题
+        .replace("【雨母校区】", "")
+        .replace("【红湘校区】", "")
 
     val textColor = Color.White
 
